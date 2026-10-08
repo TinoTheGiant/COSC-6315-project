@@ -12,6 +12,7 @@ Start here depending on what you need.
 | Know what is tested and what is not | [testing-strategy.md](testing-strategy.md) |
 | Know what is still wrong or unsettled | [open-questions.md](open-questions.md) |
 | Know what happens next | [roadmap.md](roadmap.md) |
+| Know what is rotting and what it costs | [tech-debt.md](tech-debt.md) |
 
 ## Architecture decision records
 
@@ -26,6 +27,7 @@ Start here depending on what you need.
 | [0007](adr/ADR-0007-real-database-validation.md) | Train in simulation, validate on a real database, and use CockroachDB for it. **Superseded by 0008; contains two corrected factual errors** |
 | [0008](adr/ADR-0008-database-selection.md) | Citus over CockroachDB, with a twenty-one-system screen. **Superseded by 0009; the screen stands, the conclusion does not** |
 | [0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md) | Reverse to CockroachDB, because sim-to-real transfer requires cost-model parity |
+| [0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md) | A session-scoped cluster and episode-checkpointed runs, for a laptop that cannot stay on |
 
 ## Reading order for someone new
 

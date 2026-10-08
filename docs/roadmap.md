@@ -38,7 +38,8 @@ between them that decides whether the headline result is measured or modeled.
 
 | Block | Dates | Track A, simulator | Track B, cluster |
 |---|---|---|---|
-| 1 | 07–12 Oct | Fix the `MOVE_REPLICA` encoding; set RF 3; tabular Q sanity check | Licence key; six nodes up; verify five settings; **falsification test** |
+| 0 | **today** | Push to private GitHub; pin dependencies | Obtain the free licence key |
+| 1 | 07–12 Oct | `MOVE_REPLICA` encoding; RF 3; **reward normalization**; tabular Q sanity check | `cluster-up`/`down` scripts; six nodes; verify five settings; **falsification test** |
 | 2 | 13–19 Oct | DQN wired; first runs on the reduced instance | Measurement protocol, fix `N`; `placement.py`; `executor.py` |
 | 3 | 20–26 Oct | Full pre-training; pre-training converged and saved | `driver.py`; `harness/env.py`; `DQN.load` parity check |
 | 4 | 27 Oct–02 Nov | Simulator results, sweeps, all figures | **Fine-tuning run**, overnight; cluster results |
@@ -86,16 +87,28 @@ schedule.
 
 Six days, and the ordering matters because each item de-risks the next.
 
+**Block 0, today, 30 minutes total.** Three things that are pure risk reduction,
+itemized in [`tech-debt.md`](tech-debt.md): push the repository to a private
+GitHub repo so an off-machine copy exists, pin the dependencies, and obtain the
+licence key. The first of those is the highest-value half hour remaining in the
+project.
+
 **Track B first, because it has a hardware answer that could change everything.**
 
-1. **Obtain the Enterprise Free licence key.** Minutes. Do it before touching
-   Docker. A cluster running without one is throttled to five concurrent
-   transactions after seven days, and that throttle looks exactly like a
-   catastrophic latency regression rather than like a licensing event.
-2. **Six nodes up under Docker**, one per region, `--cache=256MiB
-   --max-sql-memory=512MiB`, distinct `--locality`, Toxiproxy between regions at
-   half the intended round trip per direction. If six will not fit in 16 GB, call
-   the four-region fallback **today**.
+1. **Obtain the Enterprise Free licence key.** Free, no payment method, a few
+   minutes. Do it before touching Docker. A cluster running without one is
+   throttled to five concurrent transactions after seven days, and that throttle
+   looks exactly like a catastrophic latency regression rather than like a
+   licensing event.
+2. **Six nodes up under Docker, driven by a script from the first attempt.**
+   One node per region, `--cache=128MiB --max-sql-memory=256MiB` (about 2.3 GB
+   total, so the laptop stays usable), distinct `--locality`, Toxiproxy between
+   regions at half the intended round trip per direction. Write `cluster-up` and
+   `cluster-down` as scripts immediately, per
+   [ADR-0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md): the
+   cluster is rebuilt at the start of every working session, so a manual startup
+   performed twice a day will be got wrong. If six nodes will not fit, call the
+   four-region fallback **today**.
 3. **Verify the five balancer settings individually.** Four of
    `kv.allocator.load_based_rebalancing`, `kv.replicate_queue.enabled`,
    `kv.lease_queue.enabled`, `kv.split_queue.enabled` and
@@ -117,6 +130,12 @@ Six days, and the ordering matters because each item de-risks the next.
 6. **Set replication factor to 3** and re-run the two headline measurements to
    confirm they survive at fixed RF. If the 94-against-157 gap moves materially,
    that is a finding and the paper's numbers change.
+6b. **Normalize migration cost to a fraction of dataset size**, in `shardmind.cost`
+   and the harness together. The simulator holds 60 GB and the cluster will hold
+   one or two, so a bytes-denominated reward term puts the two environments on
+   different scales and makes every pre-trained Q-value wrong by a constant.
+   **This must land before pre-training starts**, because the weights depend on
+   it. [Debt item 2](tech-debt.md).
 7. **Tabular Q-learning on a reduced state space.** Three regions, three
    fragments, allocation only. One question: can *any* learning agent beat static
    hashing here? If not, the reward function is wrong, and half a day in block 1
@@ -135,6 +154,20 @@ Six days, and the ordering matters because each item de-risks the next.
 - `tests/test_policies.py`, `tests/test_simulator.py`, `tests/test_observation.py`
   are absent. The coverage gap is real but it is behind the paper in priority
 - `paper/`, block 5
+
+## Working in short sessions
+
+The laptop cannot stay on, so the plan assumes it will not.
+[ADR-0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md) makes the
+cluster disposable and the run checkpointed: `cluster-up`, `resume`, run one or
+more episodes, `cluster-down`. An episode is 200 windows, which at 2 to 6 s per
+step is **7 to 20 minutes**, so a single episode fits between classes and closing
+the laptop costs at most the episode in progress.
+
+Two consequences for the schedule. Fine-tuning does not need an uninterrupted
+night, only a sequence of sessions, which is what makes block 4 realistic.
+And every run reports how many steps were discarded to suspends, so an
+interrupted run is auditable rather than quietly degraded.
 
 ## The schedule's honest risk
 

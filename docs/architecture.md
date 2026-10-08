@@ -82,6 +82,7 @@ Recorded as ADRs in `docs/adr/`:
 | [0007](adr/ADR-0007-real-database-validation.md) | Train in simulation, validate on CockroachDB | **Superseded by 0008.** Two central claims were wrong: a synchronous placement API does exist, and zone configs were the wrong primitive |
 | [0008](adr/ADR-0008-database-selection.md) | Citus as the real environment | **Superseded by 0009.** The twenty-one-system screen stands; its conclusion predated the pre-training approval |
 | [0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md) | CockroachDB, at fixed replication factor | The cost model and observation encoder transfer intact; `MERGE` is dropped and RF leaves the agent's control |
+| [0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md) | Disposable cluster, checkpointed runs | Interruption costs one episode instead of a run; migration cost becomes a dataset fraction so the reward transfers |
 
 ## Module reference
 

@@ -130,3 +130,98 @@ pytest --durations=5         # find anything that has got slow
   plus a seed reproduces a recorded episode's summary statistics to within
   floating-point tolerance. This is the claim Objective 2 makes, and it should
   be enforced rather than asserted in prose.
+
+## Testing the real-cluster harness
+
+Added 7 October, for the work specified in
+[`harness-architecture.md`](harness-architecture.md).
+
+The pyramid inverts here, and pretending otherwise would produce a suite that
+tests nothing. Most of what the harness does is *talk to a six-node database*,
+which cannot be unit tested. The discipline is therefore to **push as much logic
+as possible out of the layer that needs a cluster**, and then test that layer
+properly.
+
+### Three tiers
+
+| Tier | Needs a cluster | Runs in | What lives here |
+|---|---|---|---|
+| **Logic** | no | under a second | action decoding, SQL generation, placement diffing, checkpoint round-trip, suspend detection, throttle detection |
+| **Contract** | no, uses a stub | seconds | space parity, the Gymnasium API, episode termination |
+| **Integration** | yes, marked `@pytest.mark.cluster` | minutes | that the statements actually do what the documentation says |
+
+Only the third tier needs Docker, and it is skipped by default so the everyday
+suite stays under a second.
+
+### The test that matters most
+
+**Space parity.** One test, and it protects the entire sim-to-real premise:
+
+```python
+def test_a_simulator_trained_model_loads_against_the_harness(tmp_path, stub_cluster):
+    model = DQN("MlpPolicy", make_simulator_env()); model.save(tmp_path / "m")
+    DQN.load(tmp_path / "m", env=HarnessEnv(stub_cluster))   # raises on mismatch
+```
+
+Stable-Baselines3 validates `observation_space` and `action_space` on load and
+refuses a mismatch, so this is a one-line assertion that the two halves of the
+pipeline agree. It needs no real cluster, because a stub satisfying the placement
+interface is enough to construct the env. If someone changes the region count,
+the replication factor or the action encoding on one side only, this fails
+immediately rather than in week 4 with a cryptic shape error.
+
+### Logic tier, in priority order
+
+1. **Checkpoint round-trip.** Save, mutate everything in memory, restore, assert
+   byte equality of agent state and exact equality of placement, workload index
+   and RNG state. Every session begins with a resume, so a broken checkpoint is a
+   broken project.
+2. **Suspend detection.** Inject a fake clock whose wall-clock jumps forward
+   while monotonic does not. Assert the step is discarded, the transition is not
+   added to the replay buffer, and the episode is flagged. Assert the symmetric
+   case too: a slow-but-genuine step is **not** discarded. A detector that
+   silently throws away real data is worse than none.
+3. **Action to SQL.** Golden-string tests for the three statements. Cheap,
+   and it catches a swapped `FROM`/`TO` which would otherwise look like the agent
+   learning something strange.
+4. **Placement diffing.** Given an intent and a readback, classify `applied`,
+   `rejected`, `no-op` and `diverged` correctly. This is the function that
+   decides whether a reward is trustworthy.
+5. **Throttle detection.** Feed it a latency series that collapses the way a
+   five-transaction cap would. Assert it aborts the run rather than recording a
+   data point.
+6. **Reward parity.** Given the same placement change, the simulator and the
+   harness must compute the same migration-cost term. This is what keeps
+   [debt item 2](tech-debt.md) fixed once it is fixed.
+
+### Integration tier, marked and skipped by default
+
+Run with `pytest -m cluster` when a cluster is up. Six tests, no more:
+
+- `RELOCATE VOTERS` moves the replica, and `SHOW RANGES` reflects it the instant
+  the statement returns.
+- `RELOCATE LEASE` moves the leaseholder, same assertion.
+- `SPLIT AT` creates a range, and the range cache invalidates.
+- An unreachable target **raises** rather than hanging or silently succeeding.
+- The five balancer settings verify as applied, individually.
+- Placement is stable for sixty seconds with the agent idle. This is the real
+  test that the balancer is off, and nothing cheaper substitutes for it.
+
+### What is deliberately not tested
+
+- **That the agent learns.** Asserting on learning outcomes makes a suite flaky
+  and teaches nothing. TensorBoard curves are the diagnostic.
+- **Latency values.** They are measurements. A test that asserts a latency range
+  will fail on a busy laptop and tell you nothing about correctness.
+- **`N`, transactions per step.** Choosing it is a measurement procedure, not a
+  test: bootstrap the p95 standard error and pick the smallest `N` below a third
+  of the smallest effect to detect. The result is reported in the methods
+  section.
+
+### The gap being accepted
+
+Integration tests need a cluster, so they will be run by hand rather than
+continuously, and they will drift. The mitigation is that they are few, each one
+pins a documented behaviour rather than an implementation detail, and the
+behaviours they pin are exactly the ones whose failure would silently corrupt
+every reward in a run. That is the right six tests to maintain by hand.

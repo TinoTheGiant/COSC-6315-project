@@ -54,12 +54,14 @@ meaningful replica moves per fragment.
 
 | Component | Count | Memory settings |
 |---|---|---|
-| `cockroach` node | 6 | `--cache=256MiB --max-sql-memory=512MiB` |
+| `cockroach` node | 6 | `--cache=128MiB --max-sql-memory=256MiB` |
 | Toxiproxy | 1 | negligible |
 | Load generator | 6 processes, one per region | share one Python process pool |
 
-Six nodes at those settings is roughly 4.5 GB, leaving room for Toxiproxy, the
-load generators and PyTorch on a 16 GB machine. **If the pilot shows six nodes
+Six nodes at those settings is roughly **2.3 GB**, reduced from an earlier 4.5 GB
+by [ADR-0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md) because
+the machine also has to run an IDE, a browser and other coursework. The dataset
+on the cluster is small, so a large block cache buys nothing. **If the pilot shows six nodes
 will not fit, the fallback is four regions on both sides**, which means re-running
 the simulator sweeps at four regions before any weights are transferred. Decide
 this in the pilot, not in week 6.
@@ -81,6 +83,7 @@ src/shardmind/harness/
   executor.py     action -> SQL statement, error classification
   driver.py       concurrent per-region transaction load, client-side timing
   env.py          Gymnasium environment, spaces identical to shardmind.env
+  checkpoint.py   save and restore: agent state, placement, workload position
 ```
 
 Dependency rule, mirroring [ADR-0005](adr/ADR-0005-simulator-independent-of-gymnasium.md):
@@ -94,6 +97,57 @@ as a measured one.
 be. The cluster is the authority on what it *is*. `placement.py` reconciles them
 and that reconciliation is the harness's most important function, because a
 silent divergence is a corrupted reward.
+
+## 3a. The session model
+
+The laptop cannot stay on. It moves between buildings and is needed for other
+work, so **the cluster is disposable and the run is checkpointed**, per
+[ADR-0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md).
+
+```
+  make cluster-up      ~2 min   6 nodes, Toxiproxy, settings, licence key
+  make resume          ~10 s    restore placement + agent state from checkpoint
+  <one or more episodes>        200 windows each, 7 to 20 min
+                                checkpoint written at every episode boundary
+  make cluster-down    ~5 s     tear down completely
+```
+
+Three properties follow, and each is load-bearing.
+
+**The episode is the scheduling unit.** `windows_per_episode` is 200, which at 2
+to 6 s per step is 7 to 20 minutes. That fits between classes. It was chosen for
+other reasons and should not be changed without noticing it now also governs how
+long the laptop must stay open.
+
+**Resume uses the normal step path.** Placement is replayed onto a fresh cluster
+with the same `RELOCATE` statements the agent issues, so the resume path is
+exercised at the start of every session rather than being emergency code that
+rots. The checkpoint holds model weights and optimizer state, the replay buffer,
+NumPy and Torch RNG states, the workload window index and seed, the full
+placement, and the step counters.
+
+**A suspend must never become a data point.** Every step records both
+`time.monotonic()` and `time.time()` around its measurement window. If the
+wall-clock delta exceeds the monotonic delta beyond a small tolerance, the host
+slept mid-measurement: the latency sample is **discarded, not clamped**, the
+transition is not added to the replay buffer, and the episode is flagged. A
+clamped sample is a fabricated measurement, and the count of discarded steps is
+reported with every run.
+
+Two things that do **not** need engineering around, recorded so nobody spends a
+day on them. CockroachDB nodes self-terminate when out of sync with half the
+cluster by 80 percent of `--max-offset`, but all six nodes share one host clock,
+sleep together and wake together, so they never drift relative to each other.
+`--max-offset` stays at its 500 ms default. And the licence throttle, five
+concurrent transactions after seven days without telemetry, is structurally
+unreachable when the cluster is rebuilt each session, though the free key should
+still be obtained because multi-node operation without one is outside the
+licence grant.
+
+**Toxiproxy latency is reapplied on every `cluster-up`** and asserted
+afterwards. It lives in a container that is torn down with everything else, and a
+silently zero-latency cluster produces numbers that look plausible and mean
+nothing.
 
 ## 4. The step protocol
 
@@ -123,9 +177,11 @@ Each `step(a)` runs this sequence. The ordering is load-bearing.
    `statement_statistics` aggregates by fingerprint and cannot attribute one
    transaction to one placement, so it is corroboration only.
 8. **Compute reward** in the same units the simulator uses: negative weighted
-   latency percentile, minus the migration cost of the executed action, where
-   migration cost is bytes moved as `catalog` reports it. Identical formula,
-   different latency source.
+   latency percentile, minus the migration cost of the executed action. Migration
+   cost is **a fraction of total dataset size, never raw bytes**: the simulator
+   holds 60 GB and the cluster one or two, so a bytes-denominated term would put
+   the two environments on different scales and make every pre-trained Q-value
+   wrong by a constant. Identical formula, different latency source.
 9. **Encode observation** with the unchanged `ObservationEncoder`, from the
    reconciled catalog and the window's workload estimate.
 10. **Return** `(obs, reward, terminated, truncated, info)`, with `info`
@@ -197,8 +253,10 @@ Out of scope, and each needs one sentence in the paper's limitations:
 
 Each step de-risks the next. Do not reorder.
 
-1. `cluster.py`: six nodes up, Toxiproxy in place, settings applied **and
-   verified individually**, licence key installed.
+1. `cluster.py`: `up` / `down` / `status` / `verify` **written as scripts on day
+   one**, before a hand-tuned cluster exists to become precious. Six nodes,
+   Toxiproxy in place and asserted, the five settings applied and verified
+   individually on every start, licence key installed.
 2. **The falsification test.** Single-region against cross-region transaction
    latency, by hand, no agent. If the gap is not clearly larger than run-to-run
    noise there is no reward signal and the approach fails here, cheaply.
