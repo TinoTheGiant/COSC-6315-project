@@ -11,6 +11,22 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=upstream /cockroach/cockroach /usr/local/bin/cockroach
 COPY --from=upstream /usr/local/lib/cockroach/ /usr/local/lib/cockroach/
+
+# Fail the BUILD, loudly, if the binary cannot run on this base image.
+#
+# The upstream image is Red Hat UBI and this one is Debian, so the binary is
+# being moved across glibc versions. It should work (UBI9 ships 2.34, bookworm
+# 2.36, and glibc is forward compatible) but if it does not, the failure without
+# this check is six containers crash-looping with an obscure loader error, which
+# is a confusing hour. With it, the build stops here and says so.
+#
+# If this line ever fails: install iproute2 INTO the upstream image instead of
+# copying the binary out, i.e. `FROM cockroachdb/cockroach:...` plus
+# `USER root` and `microdnf install -y iproute`.
+RUN /usr/local/bin/cockroach version \
+ && tc -V \
+ && echo "binary and tc both usable on this base"
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

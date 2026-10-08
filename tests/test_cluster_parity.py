@@ -8,6 +8,7 @@ decoupling the two.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -24,10 +25,11 @@ REPO = Path(__file__).resolve().parents[1]
 @pytest.fixture(scope="module")
 def compose(tmp_path_factory) -> dict:
     out = tmp_path_factory.mktemp("gen") / "compose.yml"
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(REPO / "src")
     subprocess.run(
         [sys.executable, str(REPO / "scripts" / "gen_cluster.py"), "-o", str(out)],
-        cwd=REPO, check=True,
-        env={"PYTHONPATH": str(REPO / "src"), "PATH": "/usr/bin:/bin"},
+        cwd=REPO, check=True, env=env,
     )
     return yaml.safe_load(out.read_text())
 

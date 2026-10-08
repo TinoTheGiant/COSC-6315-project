@@ -45,6 +45,37 @@ def sql(stmt: str, *, port: int = GATEWAY_PORT, fmt: str = "tsv") -> str:
     return out.stdout
 
 
+def region_to_store() -> dict[str, int]:
+    """Map region name -> store id, read from the cluster.
+
+    CockroachDB assigns node ids in join order, which is nondeterministic, so
+    `crdb-us-east-1` is NOT reliably node 1. Assuming it silently produces the
+    wrong placements and a confident, meaningless result. Resolve it.
+    """
+    out = sql("SELECT s.store_id, n.locality FROM crdb_internal.kv_store_status s "
+              "JOIN crdb_internal.kv_node_status n ON s.node_id = n.node_id;")
+    mapping: dict[str, int] = {}
+    for line in out.strip().splitlines()[1:]:
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+        store = int(parts[0])
+        # locality renders as "region=us-east-1"
+        for kv in parts[1].split(","):
+            if kv.strip().startswith("region="):
+                mapping[kv.split("=", 1)[1].strip()] = store
+    missing = [r for r in REGIONS if r not in mapping]
+    if missing:
+        raise RuntimeError(
+            f"could not resolve a store for {missing}. Found: {mapping}. "
+            f"Are all nodes live and did --locality=region=... get set?")
+    return mapping
+
+
+def store_to_region() -> dict[int, str]:
+    return {v: k for k, v in region_to_store().items()}
+
+
 def connect(port: int):
     import psycopg
     return psycopg.connect(
@@ -90,14 +121,14 @@ def place_leases(ids: list[int], stores: list[int]) -> int:
     return failed
 
 
-def observed_lease_regions() -> dict[int, str]:
+def observed_lease_regions(s2r: dict[int, str]) -> dict[int, str]:
     out = sql("SELECT range_id, lease_holder FROM "
               "[SHOW RANGES FROM TABLE shardtest WITH DETAILS];")
     seen = {}
     for line in out.strip().splitlines()[1:]:
         parts = line.split("\t")
         if len(parts) >= 2 and parts[1].strip().isdigit():
-            seen[int(parts[0])] = REGIONS[int(parts[1]) - 1]
+            seen[int(parts[0])] = s2r.get(int(parts[1]), f"store{parts[1]}")
     return seen
 
 
@@ -158,22 +189,34 @@ def main() -> int:
     print(f"simulator says us-east-1 <-> ap-southeast-1 is "
           f"{DEFAULT_RTT_MS[0][4]} ms\n")
 
+    r2s = region_to_store()
+    s2r = {v: k for k, v in r2s.items()}
+    print("  region -> store:", r2s, "\n")
+
     keys = build_table(args.ranges, args.rows_per_range)
     ids = range_ids()
     print(f"  ranges: {ids}\n")
 
-    # --- Case A: every leaseholder in region 0. Transactions commit locally.
+    # --- Case A: every leaseholder in one region. Transactions commit locally.
     print("case A: all leaseholders co-located in", REGIONS[0])
-    fa = place_leases(ids, [1] * len(ids))
+    fa = place_leases(ids, [r2s[REGIONS[0]]] * len(ids))
     time.sleep(3)
-    print("   observed:", sorted(set(observed_lease_regions().values())))
+    obs_a = sorted(set(observed_lease_regions(s2r).values()))
+    print("   observed:", obs_a)
+    if len(obs_a) != 1:
+        print("   WARNING: leases did not all land in one region. The two cases "
+              "are less distinct than intended, which weakens the test.")
     a = time_transactions(keys, args.transactions, args.touch)
 
     # --- Case B: leaseholders spread round-robin. Commits span regions.
     print("\ncase B: leaseholders spread across all", n_regions, "regions")
-    fb = place_leases(ids, [(i % n_regions) + 1 for i in range(len(ids))])
+    fb = place_leases(ids, [r2s[REGIONS[i % n_regions]] for i in range(len(ids))])
     time.sleep(3)
-    print("   observed:", sorted(set(observed_lease_regions().values())))
+    obs_b = sorted(set(observed_lease_regions(s2r).values()))
+    print("   observed:", obs_b)
+    if len(obs_b) < 2:
+        print("   WARNING: leases did not spread. Case B is not spread, so any "
+              "gap below is not measuring what it claims to.")
     b = time_transactions(keys, args.transactions, args.touch)
 
     lo, hi = bootstrap_gap(a, b)
@@ -182,6 +225,7 @@ def main() -> int:
         "transactions_per_case": args.transactions,
         "ranges_touched_per_txn": args.touch,
         "relocate_failures": {"co_located": fa, "spread": fb},
+        "observed_regions": {"co_located": obs_a, "spread": obs_b},
         "co_located": {"p50": pct(a, 50), "p95": pct(a, 95),
                        "mean": statistics.fmean(a), "stdev": statistics.pstdev(a)},
         "spread":     {"p50": pct(b, 50), "p95": pct(b, 95),
