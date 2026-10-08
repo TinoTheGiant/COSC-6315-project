@@ -13,6 +13,7 @@ Start here depending on what you need.
 | Know what is still wrong or unsettled | [open-questions.md](open-questions.md) |
 | Know what happens next | [roadmap.md](roadmap.md) |
 | Know what is rotting and what it costs | [tech-debt.md](tech-debt.md) |
+| See what actually happened on a real cluster | [results-log.md](results-log.md) |
 
 ## Architecture decision records
 

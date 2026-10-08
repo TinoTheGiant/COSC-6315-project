@@ -108,16 +108,64 @@ def range_ids() -> list[int]:
     return ids
 
 
-def place_leases(ids: list[int], stores: list[int]) -> int:
-    """Move each range's leaseholder to the given store. Returns failures."""
+def relocate(stmt: str) -> tuple[bool, str]:
+    """Run an ALTER RANGE ... RELOCATE and read the RESULT COLUMN.
+
+    This is the trap that made the first pilot run report zero failures whilst
+    relocations were failing: the statement reports 'ok' or the error text as a
+    column in its own result set, and `cockroach sql -e` exits 0 either way. A
+    returncode check alone sees success.
+    """
+    try:
+        out = sql(stmt)
+    except RuntimeError as exc:
+        return False, str(exc).splitlines()[-1][:120]
+    rows = [l for l in out.strip().splitlines()[1:] if l.strip()]
+    for line in rows:
+        result = line.split("\t")[-1].strip()
+        if result.lower() != "ok":
+            return False, result[:120]
+    return True, "ok"
+
+
+def voters(rid: int) -> list[int]:
+    """Store ids currently holding a voting replica of this range."""
+    out = sql("SELECT range_id, voting_replicas FROM "
+              "[SHOW RANGES FROM TABLE shardtest WITH DETAILS];")
+    for line in out.strip().splitlines()[1:]:
+        parts = line.split("\t")
+        if len(parts) >= 2 and parts[0].strip() == str(rid):
+            return [int(x) for x in parts[1].strip("{}[] ").split(",") if x.strip()]
+    return []
+
+
+def place(ids: list[int], targets: list[int], *, move_data: bool) -> int:
+    """Put each range's leaseholder on its target store. Returns failures.
+
+    `RELOCATE LEASE` can only target a store that ALREADY holds a voting
+    replica, which the first pilot run discovered the hard way: with
+    replication factor 3 across six nodes, only three of the six are eligible
+    per range, so a round-robin lease placement collapsed onto two regions.
+
+    With move_data=True the voter is moved first, which is what actually makes
+    the placement what it claims to be.
+    """
     failed = 0
-    for rid, store in zip(ids, stores):
-        try:
-            sql(f"ALTER RANGE {rid} RELOCATE LEASE TO {store};")
-        except RuntimeError as exc:
+    for rid, target in zip(ids, targets):
+        if move_data:
+            current = voters(rid)
+            if target not in current:
+                donor = next((v for v in current if v not in targets), None) or current[-1]
+                ok, msg = relocate(
+                    f"ALTER RANGE {rid} RELOCATE VOTERS FROM {donor} TO {target};")
+                if not ok:
+                    failed += 1
+                    print(f"    r{rid}: move voter {donor} -> {target} FAILED: {msg}")
+                    continue
+        ok, msg = relocate(f"ALTER RANGE {rid} RELOCATE LEASE TO {target};")
+        if not ok:
             failed += 1
-            print(f"    relocate r{rid} -> store {store} FAILED: "
-                  f"{str(exc).splitlines()[-1][:90]}")
+            print(f"    r{rid}: move lease -> store {target} FAILED: {msg}")
     return failed
 
 
@@ -199,7 +247,7 @@ def main() -> int:
 
     # --- Case A: every leaseholder in one region. Transactions commit locally.
     print("case A: all leaseholders co-located in", REGIONS[0])
-    fa = place_leases(ids, [r2s[REGIONS[0]]] * len(ids))
+    fa = place(ids, [r2s[REGIONS[0]]] * len(ids), move_data=True)
     time.sleep(3)
     obs_a = sorted(set(observed_lease_regions(s2r).values()))
     print("   observed:", obs_a)
@@ -210,7 +258,8 @@ def main() -> int:
 
     # --- Case B: leaseholders spread round-robin. Commits span regions.
     print("\ncase B: leaseholders spread across all", n_regions, "regions")
-    fb = place_leases(ids, [r2s[REGIONS[i % n_regions]] for i in range(len(ids))])
+    fb = place(ids, [r2s[REGIONS[i % n_regions]] for i in range(len(ids))],
+               move_data=True)
     time.sleep(3)
     obs_b = sorted(set(observed_lease_regions(s2r).values()))
     print("   observed:", obs_b)
@@ -226,6 +275,7 @@ def main() -> int:
         "ranges_touched_per_txn": args.touch,
         "relocate_failures": {"co_located": fa, "spread": fb},
         "observed_regions": {"co_located": obs_a, "spread": obs_b},
+        "distinct_regions": {"co_located": len(obs_a), "spread": len(obs_b)},
         "co_located": {"p50": pct(a, 50), "p95": pct(a, 95),
                        "mean": statistics.fmean(a), "stdev": statistics.pstdev(a)},
         "spread":     {"p50": pct(b, 50), "p95": pct(b, 95),

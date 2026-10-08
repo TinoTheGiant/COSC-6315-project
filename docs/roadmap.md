@@ -45,7 +45,24 @@ between them that decides whether the headline result is measured or modeled.
 | 4 | 27 Oct–02 Nov | Simulator results, sweeps, all figures | **Fine-tuning run**, overnight; cluster results |
 | 5 | 03–06 Nov | Full draft, revision, buffer | |
 
-## The gate, 12 October
+## The gate: CLEARED, 8 October
+
+**Cluster pilot #1 passed.** p95 gap 193.7 ms between co-located and spread
+leaseholders, bootstrap 95% CI [190.8, 195.5]. Placement measurably changes
+transaction latency on a real cluster, so the reward signal exists and agent work
+is unblocked four days early. The `netem` injection measured accurate to 0.2 ms
+across all five pairs.
+
+Two defects the run exposed, both fixed: `RELOCATE` reports failure in a result
+column rather than a non-zero exit, and `RELOCATE LEASE` only works to a store
+already holding a replica. The second means run 1 compared one region against
+two, not one against six, so **the gate must be re-run on the fixed script before
+any number from it is reported**. Full entry, including a finding worth putting
+in the paper, in [results-log.md](results-log.md).
+
+The original statement of the gate follows, since the re-run still has to pass it.
+
+## The gate, originally scheduled 12 October
 
 **Question:** on a six-node cluster under injected wide-area latency, is the
 single-region against cross-region transaction latency gap clearly larger than

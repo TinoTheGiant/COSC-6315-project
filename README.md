@@ -390,6 +390,7 @@ recovers.
 | The real-cluster half | [docs/harness-architecture.md](docs/harness-architecture.md) |
 | Why something is the way it is | [docs/adr/](docs/adr/) |
 | What happens next | [docs/roadmap.md](docs/roadmap.md) |
+| What actually happened on a real cluster | [docs/results-log.md](docs/results-log.md) |
 | What is rotting | [docs/tech-debt.md](docs/tech-debt.md) |
 | What is unsettled | [docs/open-questions.md](docs/open-questions.md) |
 | How to make a figure that matches | [docs/figure-design-system.md](docs/figure-design-system.md) |

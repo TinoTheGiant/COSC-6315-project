@@ -48,6 +48,25 @@ one-to-one onto CockroachDB's three synchronous statements:
 | `MOVE_REPLICA(f, from, to)` | `ALTER RANGE <id> RELOCATE VOTERS FROM <s> TO <s>` | yes, through snapshot apply |
 | `SPLIT(f)` | `ALTER TABLE ... SPLIT AT VALUES (k)` | yes, sub-second |
 
+**Amendment, 8 October, from Cluster pilot #1.** `RELOCATE LEASE` is valid only
+to a store that **already holds a voting replica** of that range. At replication
+factor 3 across six regions, that is three of the six, so `MOVE_LEASE(f, r)` is
+undefined for half the regions at any moment. The pilot found this by asking for
+leaseholders on six regions and getting two
+([results-log.md](../results-log.md), run 1).
+
+[ADR-0002](ADR-0002-flat-declarative-action-space.md) requires every action to be
+defined in every state, since DQN cannot mask, so the resolution is to keep
+`MOVE_LEASE(f, r)` declarative: it means *ensure the lease for `f` is in region
+`r`*, moving a replica there first when one is not already present. That is one
+or two statements rather than one, and the migration cost term must charge for
+the replica move when it happens. Settle this alongside Action Item 2.
+
+The same run measured why this matters: with leases co-located but replicas
+spread, the median transaction still cost 207 ms, because **writes pay a quorum
+round trip regardless of where the lease sits**. Moving leases alone does not
+localize writes.
+
 `NOOP` completes the space. `MERGE` is dropped: CockroachDB offers only
 `UNSPLIT`, which releases a range into the merge queue rather than commanding a
 merge, and [ADR-0008](ADR-0008-database-selection.md) already established that no
