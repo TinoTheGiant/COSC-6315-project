@@ -1,0 +1,18 @@
+{
+  "name": "RL Dynamic Data Fragmentation",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": { "cpus": 4, "memory": "16gb", "storage": "32gb" },
+  "postCreateCommand": "pip install --user -r requirements.txt && pip install --user torch --index-url https://download.pytorch.org/whl/cpu",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "ms-azuretools.vscode-docker"]
+    }
+  },
+  "remoteEnv": { "PYTHONPATH": "${containerWorkspaceFolder}/src" },
+  "portsAttributes": {
+    "8080": { "label": "CockroachDB admin UI (node 0)" }
+  }
+}

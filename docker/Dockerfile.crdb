@@ -1,0 +1,16 @@
+# CockroachDB plus iproute2, so each node can shape its own egress with netem.
+# The stock image ships no tc, which is why ADR-0007 and ADR-0009 reached for a
+# userspace proxy instead. ADR-0011 reverses that: a proxy cannot express a
+# per-pair latency matrix, and this is three lines.
+ARG CRDB_VERSION=v25.3.0
+FROM cockroachdb/cockroach:${CRDB_VERSION} AS upstream
+
+FROM debian:bookworm-slim
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends iproute2 ca-certificates tzdata iputils-ping \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=upstream /cockroach/cockroach /usr/local/bin/cockroach
+COPY --from=upstream /usr/local/lib/cockroach/ /usr/local/lib/cockroach/
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -28,6 +28,7 @@ Start here depending on what you need.
 | [0008](adr/ADR-0008-database-selection.md) | Citus over CockroachDB, with a twenty-one-system screen. **Superseded by 0009; the screen stands, the conclusion does not** |
 | [0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md) | Reverse to CockroachDB, because sim-to-real transfer requires cost-model parity |
 | [0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md) | A session-scoped cluster and episode-checkpointed runs, for a laptop that cannot stay on |
+| [0011](adr/ADR-0011-where-the-compute-runs.md) | Keep pre-training, use no GPU, run the cluster in Codespaces; `netem` over Toxiproxy |
 
 ## Reading order for someone new
 

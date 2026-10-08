@@ -38,7 +38,7 @@ between them that decides whether the headline result is measured or modeled.
 
 | Block | Dates | Track A, simulator | Track B, cluster |
 |---|---|---|---|
-| 0 | **today** | Push to private GitHub; pin dependencies | Obtain the free licence key |
+| 0 | **today** | Push to private GitHub; pin dependencies | Obtain the free licence key; open a Codespace |
 | 1 | 07–12 Oct | `MOVE_REPLICA` encoding; RF 3; **reward normalization**; tabular Q sanity check | `cluster-up`/`down` scripts; six nodes; verify five settings; **falsification test** |
 | 2 | 13–19 Oct | DQN wired; first runs on the reduced instance | Measurement protocol, fix `N`; `placement.py`; `executor.py` |
 | 3 | 20–26 Oct | Full pre-training; pre-training converged and saved | `driver.py`; `harness/env.py`; `DQN.load` parity check |
@@ -87,6 +87,16 @@ schedule.
 
 Six days, and the ordering matters because each item de-risks the next.
 
+**Where the work runs.** [ADR-0011](adr/ADR-0011-where-the-compute-runs.md)
+settles it with two measurements. The simulator runs at **0.356 ms/step**, so a
+50,000-step pre-training run is 18 seconds of environment time and single-digit
+minutes in total: pre-training is free and stays. A GPU would not help, because
+each cluster step is dominated by network wait rather than arithmetic, so Kaggle
+is the wrong tool and is rejected. The cluster runs on the laptop when it is
+available and in **GitHub Codespaces** when it is not, from the same Compose
+stack, with 30 free hours a month on a 4-core machine and state that survives
+stopping the codespace.
+
 **Block 0, today, 30 minutes total.** Three things that are pure risk reduction,
 itemized in [`tech-debt.md`](tech-debt.md): push the repository to a private
 GitHub repo so an off-machine copy exists, pin the dependencies, and obtain the
@@ -109,6 +119,13 @@ project.
    cluster is rebuilt at the start of every working session, so a manual startup
    performed twice a day will be got wrong. If six nodes will not fit, call the
    four-region fallback **today**.
+2b. **Generate and verify the cluster.** `python scripts/gen_cluster.py` emits
+   the Compose file and the `netem` rules from `DEFAULT_RTT_MS`, so the cluster's
+   geography is the simulator's by construction. Then `scripts/cluster.sh up`
+   and, before trusting a single measurement, `scripts/cluster.sh latency`.
+   **None of that configuration has ever been executed**, so treat the first run
+   as a debugging session and budget half a day for it.
+
 3. **Verify the five balancer settings individually.** Four of
    `kv.allocator.load_based_rebalancing`, `kv.replicate_queue.enabled`,
    `kv.lease_queue.enabled`, `kv.split_queue.enabled` and
