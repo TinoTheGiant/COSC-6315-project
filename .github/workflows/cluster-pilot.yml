@@ -1,0 +1,169 @@
+# The pilot, run on GitHub's hardware so it does not need the laptop.
+#
+# Dispatch it from the Actions tab (the phone app works). It brings up the
+# six-node cluster, proves the injected latency is real, verifies the balancer
+# is off, and runs the falsification test from docs/roadmap.md. Results land in
+# the job summary and as a downloadable artifact.
+#
+# Runner size depends on repository visibility: public gets 4 cores / 16 GB,
+# private gets 2 cores / 8 GB. The job reports which it got, because CPU
+# contention across six CockroachDB nodes shows up as latency noise in exactly
+# the signal this experiment measures.
+name: Cluster pilot
+
+on:
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: "Regions (must match the simulator; ADR-0009 parity)"
+        default: "6"
+      transactions:
+        description: "Transactions timed per placement case"
+        default: "200"
+      touch:
+        description: "Distinct ranges each transaction writes to"
+        default: "3"
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report the hardware we actually got
+        run: |
+          CORES=$(nproc); MEM=$(free -g | awk '/^Mem:/{print $2}')
+          echo "cores=$CORES mem=${MEM}GB"
+          {
+            echo "## Runner"
+            echo "| | |"
+            echo "|---|---|"
+            echo "| cores | $CORES |"
+            echo "| memory | ${MEM} GB |"
+            echo "| docker | $(docker --version) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$CORES" -lt 4 ]; then
+            echo "::warning::$CORES cores. Six CockroachDB nodes will contend, \
+          which adds scheduling noise to the latency being measured. A public \
+          repository gets a 4-core/16GB runner."
+          fi
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install "psycopg[binary]" pyyaml
+
+      - name: Fast test suite
+        run: PYTHONPATH=src pytest -q
+
+      - name: Generate the cluster from the simulator's RTT matrix
+        run: |
+          PYTHONPATH=src python scripts/gen_cluster.py --regions "${{ inputs.regions }}"
+          echo "### Generated topology" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -E "container_name|NETEM_RULES" docker/docker-compose.yml >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bring the cluster up
+        run: |
+          docker compose -f docker/docker-compose.yml up -d --build
+          echo "waiting for nodes"; sleep 20
+          docker compose -f docker/docker-compose.yml exec -T node0 \
+            cockroach init --insecure || echo "(already initialized)"
+          sleep 10
+          docker compose -f docker/docker-compose.yml ps
+
+      - name: Assert the injected latency is real
+        # A cluster with no shaping returns plausible numbers that mean nothing.
+        # This is the step that stops a silent zero-latency run reaching a paper.
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python - <<'PY' | tee latency.txt
+          import subprocess, sys
+          sys.path.insert(0, "src")
+          from shardmind.config import ShardMindConfig
+          from shardmind.topology import DEFAULT_RTT_MS
+          names = list(ShardMindConfig().topology.region_names)
+          src = f"crdb-{names[0]}"
+          bad = []
+          print(f"{'pair':<36}{'expected':>10}{'measured':>10}")
+          for j in range(1, len(names)):
+              ip = f"172.28.0.{11+j}"
+              out = subprocess.run(["docker","exec",src,"ping","-c","5","-q",ip],
+                                   capture_output=True, text=True, timeout=60).stdout
+              avg = float(out.split("=")[-1].split("/")[1])
+              exp = DEFAULT_RTT_MS[0][j]
+              print(f"{names[0]} -> {names[j]:<20}{exp:>10.1f}{avg:>10.1f}")
+              if abs(avg - exp) > max(8.0, 0.25 * exp):
+                  bad.append((names[j], exp, avg))
+          if bad:
+              print("\nFAIL: measured latency does not match the configured matrix.")
+              for n, e, a in bad:
+                  print(f"  {n}: expected {e} ms, measured {a:.1f} ms")
+              print("netem did not apply. Every latency number from this cluster "
+                    "would be meaningless. Check NET_ADMIN and the entrypoint.")
+              raise SystemExit(1)
+          print("\nOK: injected latency matches the simulator's matrix.")
+          PY
+          { echo "### Latency injection"; echo '```'; cat latency.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Disable the balancer, and verify each setting took
+        run: |
+          set -euo pipefail
+          CRDB="docker compose -f docker/docker-compose.yml exec -T node0 cockroach sql --insecure -e"
+          for s in "kv.allocator.load_based_rebalancing = 'off'" \
+                   "kv.replicate_queue.enabled = false" \
+                   "kv.lease_queue.enabled = false" \
+                   "kv.split_queue.enabled = false" \
+                   "kv.range_merge.queue.enabled = false"; do
+            if $CRDB "SET CLUSTER SETTING $s;" >/dev/null 2>&1; then
+              echo "  set   ${s%% *}"
+            else
+              echo "::warning::could not set ${s%% *} on this build"
+            fi
+          done
+          $CRDB "SELECT variable, value FROM [SHOW CLUSTER SETTINGS]
+                 WHERE variable LIKE 'kv.%queue%' OR variable LIKE 'kv.allocator%';"
+
+      - name: Falsification test (the gate)
+        id: gate
+        continue-on-error: true
+        run: |
+          PYTHONPATH=src python scripts/falsification_test.py \
+            --transactions "${{ inputs.transactions }}" \
+            --touch "${{ inputs.touch }}" \
+            --out results/falsification.json | tee gate.txt
+
+      - name: Verdict
+        run: |
+          { echo "### Falsification test"; echo '```'; tail -20 gate.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.gate.outcome }}" != "success" ]; then
+            echo "::error::The gate did not pass. Read the verdict above before \
+          doing any agent work."
+          fi
+
+      - name: Cluster logs on failure
+        if: failure()
+        run: docker compose -f docker/docker-compose.yml logs --tail=120
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pilot-results
+          path: |
+            results/
+            latency.txt
+            gate.txt
+            docker/docker-compose.yml
+          retention-days: 30
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v || true

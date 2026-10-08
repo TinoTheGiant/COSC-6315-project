@@ -62,6 +62,54 @@ environment, because both run the same Docker Compose stack.**
 | Fine-tuning, ~2000 steps | 1 to 3.5 hours | Codespaces, or laptop across several sessions |
 | Sweeps and figures | minutes, CPU | laptop |
 
+### Amendment, 8 October: GitHub Actions is the primary environment
+
+The repository is now on GitHub, which makes a third option available and it is
+a better answer to the actual constraint than either of the others.
+
+**The constraint was never "no machine". It was "no machine I can babysit".**
+Codespaces still needs a browser tab open and attention. A GitHub Actions job
+needs neither: dispatch it from the Actions tab (the phone app works), it runs on
+GitHub's hardware for up to **6 hours**, and the results arrive as a job summary
+and a downloadable artifact. The laptop is irrelevant to the run, not merely
+freed by it.
+
+`.github/workflows/cluster-pilot.yml` does the whole pilot unattended: brings up
+the generated six-node cluster, **asserts the injected latency matches
+`DEFAULT_RTT_MS` and fails the job if it does not**, disables the balancer and
+verifies each setting individually, then runs `scripts/falsification_test.py`,
+which is the gate from [`roadmap.md`](../roadmap.md).
+
+**One decision attaches to this, and it affects measurement quality.** Runner
+size depends on repository visibility:
+
+| | Public repository | Private repository |
+|---|---|---|
+| Runner | **4 cores, 16 GB** | 2 cores, 8 GB |
+| Minutes | free, unlimited | 2,000/month on GitHub Free, about 33 hours |
+| Artifact storage | 500 MB on Free | 500 MB on Free |
+
+Six CockroachDB nodes on two cores will contend for CPU, and that contention
+appears as scheduling jitter in exactly the quantity the experiment measures.
+Whether it is large enough to matter is **measurable rather than arguable**: the
+workflow prints the core count it received and warns below four, and the
+falsification test reports the standard deviation of each placement case. If the
+noise swamps the gap on a 2-core runner, the options are to make the repository
+public, or to drop to four regions on **both** sides to preserve
+[ADR-0009](ADR-0009-cockroachdb-for-sim-to-real-parity.md) parity.
+
+Making it public is the recommendation absent a reason not to. The paper will
+need a reproducible artifact anyway, and it doubles the hardware whilst removing
+the minutes budget entirely.
+
+**The three environments now divide cleanly:**
+
+| Environment | Use it for | Attention needed |
+|---|---|---|
+| **Actions** | the pilot, the gate, long fine-tuning runs | none, dispatch and walk away |
+| **Codespaces** | interactive debugging when a run fails | a browser tab |
+| **Laptop** | pre-training, sweeps, figures, writing | it is already there |
+
 ### Why Codespaces
 
 - **Docker works**, so the Compose stack is byte-identical to the laptop's.
@@ -139,7 +187,8 @@ citing a public latency dataset for the chosen values and recording the date.
 
 | Option | Docker | State survives | Cost | True RTT matrix | Verdict |
 |---|---|---|---|---|---|
-| Laptop, session-scoped | yes | rebuilt each session | free | yes | **kept**, the default |
+| **GitHub Actions** | yes | artifacts only | free | yes | **chosen** for unattended runs |
+| Laptop, session-scoped | yes | rebuilt each session | free | yes | kept, for CPU-only work |
 | **GitHub Codespaces** | yes | **yes** | free to 30 h/month at 4 cores | yes | **chosen** for off-laptop work |
 | Kaggle notebooks | no | output files only | free | **no, star metric only** | rejected |
 | Google Colab | no | no | free tier | no | rejected, same reason, less RAM |
@@ -169,8 +218,11 @@ citing a public latency dataset for the chosen values and recording the date.
 
 ## Action Items
 
-1. [ ] Push the repository to GitHub. Codespaces needs it there, and it is also
-   the off-machine backup that [`tech-debt.md`](../tech-debt.md) ranks first.
+1. [x] Push the repository to GitHub. **Done 8 October**,
+   `TinoTheGiant/COSC-6315-project`.
+1b. [ ] **Dispatch `Cluster pilot` from the Actions tab.** This is now the
+   fastest route to the gate and needs no local machine. Expect the first run to
+   fail: none of the Docker or `netem` configuration has ever been executed.
 2. [ ] Open a Codespace on a 4-core machine and run `scripts/cluster.sh up`.
    **Expect it to fail the first time**, and fix it. This replaces the earlier
    plan's assumption that the Compose stack would work as written.
@@ -185,4 +237,7 @@ citing a public latency dataset for the chosen values and recording the date.
 ## Sources
 
 - [GitHub Codespaces billing](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces), for the 120 compute hours, 15 GB-month storage, and the 4x multiplier on a 4-core machine
+- [GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), for 4 cores/16 GB public against 2 cores/8 GB private, and passwordless sudo
+- [Actions limits](https://docs.github.com/en/actions/reference/limits), for the 6-hour job ceiling
+- [Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): "GitHub Actions usage is free ... for public repositories that use standard GitHub-hosted runners"; 2,000 minutes a month on Free for private repositories
 - Simulator throughput measured in-repo on 8 October 2026: 3,000 steps in 1.07 s

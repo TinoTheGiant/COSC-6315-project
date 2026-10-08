@@ -51,7 +51,13 @@ between them that decides whether the headline result is measured or modeled.
 single-region against cross-region transaction latency gap clearly larger than
 run-to-run noise?
 
-**How it is answered:** by hand, with no agent and no learning. Place a table's
+**How it is answered:** `scripts/falsification_test.py`, with no agent and no
+learning, run either locally or by dispatching the **`Cluster pilot`** workflow
+from the Actions tab. The workflow route needs no local machine at all and is the
+fastest path: it brings up the cluster, proves the latency injection is real,
+disables the balancer, runs the test and reports the verdict in the job summary.
+
+The by-hand description below is what the script does. Place a table's
 ranges so that a transaction's participants sit in one region, measure. Move them
 so the participants span three regions, measure. Compare the gap against the
 spread of repeated measurements at fixed placement.
