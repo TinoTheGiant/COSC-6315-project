@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shardmind"
+version = "0.1.0"
+description = "A Deep Q-Network agent for continuous re-fragmentation and re-allocation of database shards under geographically migrating workloads"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Tinotenda Kaseke" }]
+dependencies = [
+    "numpy>=1.26",
+    "gymnasium>=0.29",
+]
+
+[project.optional-dependencies]
+agent = ["torch>=2.2", "stable-baselines3>=2.3", "tensorboard>=2.16"]
+analysis = ["pandas>=2.0", "matplotlib>=3.8", "networkx>=3.2"]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["slow: takes more than a second"]

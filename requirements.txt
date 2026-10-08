@@ -1,0 +1,13 @@
+# Phase 1-2: simulator, baselines, tests
+numpy>=1.26
+gymnasium>=0.29
+pandas>=2.0
+matplotlib>=3.8
+networkx>=3.2
+pytest>=8.0
+
+# Phase 3: the agent. CPU-only torch build.
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
+stable-baselines3>=2.3
+tensorboard>=2.16

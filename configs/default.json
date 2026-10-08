@@ -1,0 +1,70 @@
+{
+  "topology": {
+    "region_names": [
+      "us-east-1",
+      "us-west-2",
+      "eu-west-1",
+      "eu-central-1",
+      "ap-southeast-1",
+      "ap-northeast-1"
+    ],
+    "region_longitudes_deg": [
+      -77.5,
+      -122.7,
+      -6.3,
+      8.7,
+      103.8,
+      139.7
+    ],
+    "intra_region_rtt_ms": 1.0,
+    "rtt_matrix_ms": null,
+    "storage_capacity_factor": 3.0
+  },
+  "workload": {
+    "n_cells": 256,
+    "ops_per_window": 10000.0,
+    "read_fraction": 0.8,
+    "txn_fraction": 0.2,
+    "txn_arity": 3,
+    "n_txn_templates": 64,
+    "txn_locality_cells": 16,
+    "zipf_s": 0.9,
+    "origin_concentration": 2.5,
+    "diurnal_period_windows": 96,
+    "drift_laps_per_period": 1.0,
+    "cell_angle_walk_sigma": 0.3,
+    "spike_probability": 0.03,
+    "spike_magnitude": 5.0,
+    "spike_duration_windows": 6,
+    "volatility": 1.0,
+    "stochastic_counts": false
+  },
+  "catalog": {
+    "initial_fragments": 6,
+    "max_fragments": 20,
+    "min_replicas": 2,
+    "max_replicas": 4,
+    "dataset_bytes": 60000000000.0,
+    "initial_placement": "hash"
+  },
+  "cost": {
+    "read_consistency": "nearest_replica",
+    "write_ack": "majority",
+    "two_phase_commit": true,
+    "tail_percentile": 95.0
+  },
+  "reward": {
+    "w_latency": 1.0,
+    "w_migration": 0.3,
+    "w_imbalance": 0.1,
+    "latency_scale_ms": 100.0,
+    "migration_scale_bytes": 10000000000.0,
+    "inapplicable_action_cost": 0.02
+  },
+  "episode": {
+    "windows_per_episode": 200,
+    "warmup_windows": 4,
+    "churn_history_windows": 8
+  },
+  "seed": 0
+}

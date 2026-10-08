@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environments -- never let OneDrive sync a virtualenv
+.venv/
+venv/
+env/
+
+# Experiment output
+runs/
+results/*
+!results/.gitkeep
+checkpoints/
+*.zip
+*.pt
+*.pth
+tensorboard/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
