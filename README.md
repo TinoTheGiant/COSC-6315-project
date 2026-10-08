@@ -262,3 +262,4 @@ that turns out to be structural rather than a bug.
 The gap this project occupies: a learned policy jointly controlling
 fragmentation and geographic allocation, optimizing transaction latency net of
 migration cost under continuously drifting workloads.
+# COSC-6315-project
