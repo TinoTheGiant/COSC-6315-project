@@ -35,3 +35,10 @@ htmlcov/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# graphify: the report is worth committing, the 880 KB graph + HTML regenerate
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+
+# staged for manual deletion (this session lacks delete permission here)
+_to_delete/
