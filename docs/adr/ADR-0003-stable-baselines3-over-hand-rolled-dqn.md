@@ -9,7 +9,7 @@
 This is a solo project, on an eight-week clock, by an author with no prior
 reinforcement learning implementation experience. Phases 4 and 5 allocate two
 weeks to getting a DQN to converge on a non-stationary environment with a
-401-action space and a delayed reward.
+261-action space and a delayed reward.
 
 DQN has a well-known set of implementation details that decide whether it works
 at all: target-network update cadence, replay buffer warm-up, epsilon annealing

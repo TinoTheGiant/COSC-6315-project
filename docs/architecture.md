@@ -91,9 +91,9 @@ Recorded as ADRs in `docs/adr/`:
 | `config` | Every tunable, in frozen dataclasses; JSON round-trip | nothing |
 | `topology` | Regions, RTT matrix, the geographic circle | `config` |
 | `workload` | Drifting demand over cells; transaction templates; spikes | `config`, `topology` |
-| `catalog` | Fragment boundaries, placement, the five declarative mutators | `config` |
+| `catalog` | Fragment boundaries, placement, the declarative mutators | `config` |
 | `cost` | Analytic latency, exact tail, load and storage accounting | `config`, `catalog`, `topology`, `workload` |
-| `actions` | The 401-action flat space; encode, decode, apply | `catalog` |
+| `actions` | The 261-action flat space; encode, decode, apply | `catalog` |
 | `observation` | State to unit-box vector, with a published layout | all of the above |
 | `simulator` | Clock, transition, episode, snapshots | all of the above |
 | `env` | Gymnasium adapter: observation, action, reward | `simulator`, `observation` |
@@ -105,7 +105,7 @@ Recorded as ADRs in `docs/adr/`:
   `gymnasium.utils.env_checker.check_env`. Episodes truncate, never terminate;
   the distinction matters for value bootstrapping.
 - **Stable-Baselines3.** Not yet wired. `MlpPolicy` over a 703-element `Box`
-  and a `Discrete(401)`. Phase 3.
+  and a `Discrete(261)`. Phase 3.
 - **`shardmind/harness/`, the CockroachDB environment.** Not yet built, and on
   the critical path. Six nodes, one per region, replication factor 3, Toxiproxy
   supplying wide-area latency. Placement driven by three synchronous statements:

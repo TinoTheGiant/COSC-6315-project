@@ -200,6 +200,61 @@ class FragmentCatalog:
         self.replicas[fragment, region] = False
         return MutationResult(True, 0.0, "")
 
+    def move_lease(self, fragment: int, region: int) -> MutationResult:
+        """Make ``region`` the primary of ``fragment``, without moving data.
+
+        Refused when ``region`` holds no replica. That restriction is not
+        fastidiousness: it is what CockroachDB enforces. ``ALTER RANGE ...
+        RELOCATE LEASE TO <store>`` only works to a store that already holds a
+        voting replica, which Cluster pilot #1 discovered by asking for
+        leaseholders in six regions and getting two (`docs/results-log.md`).
+
+        Keeping the restriction here is what preserves the two-tier cost
+        structure: a lease move costs one round trip and no bytes, a replica
+        move costs a fragment. Fusing them, as :meth:`set_primary` does, buys
+        action-space density at the price of the distinction ADR-0009 chose
+        CockroachDB to obtain.
+        """
+        self._check(fragment, region)
+        if not self.replicas[fragment, region]:
+            return MutationResult(False, 0.0, "no replica in that region")
+        if self.primary[fragment] == region:
+            return MutationResult(False, 0.0, "already primary")
+        self.primary[fragment] = region
+        return MutationResult(True, 0.0, "")
+
+    def move_replica_to(self, fragment: int, region: int, rtt: np.ndarray) -> MutationResult:
+        """Ensure ``fragment`` has a replica in ``region``, at constant count.
+
+        The replication factor is fixed (ADR-0009), so acquiring a replica
+        means releasing one. The released replica is **the non-primary replica
+        whose region is farthest from** ``region`` by round-trip time. That
+        tie-break is part of the action's semantics, not an implementation
+        detail, and the paper must state it: the agent names only a
+        destination, so the source is chosen for it.
+
+        Naming both ends instead would need ``F * R * R`` actions, 720 at the
+        default shape against 120 here, and measured 16.8% applicable against
+        33.6%. Breadth-first search over the replica-set state space confirms
+        the tie-break costs no reachability: every placement remains reachable,
+        with a worst-case path of 5 actions against 3 when both ends are named.
+        """
+        self._check(fragment, region)
+        if self.replicas[fragment, region]:
+            return MutationResult(False, 0.0, "replica already present")
+
+        held = [r for r in range(self.n_regions)
+                if self.replicas[fragment, r] and r != self.primary[fragment]]
+        if not held:                      # degenerate: RF 1, the primary alone
+            held = [int(self.primary[fragment])]
+        donor = max(held, key=lambda r: float(rtt[r, region]))
+
+        self.replicas[fragment, donor] = False
+        self.replicas[fragment, region] = True
+        if self.primary[fragment] == donor:
+            self.primary[fragment] = region
+        return MutationResult(True, float(self.sizes_bytes[fragment]), "")
+
     def split(self, fragment: int) -> MutationResult:
         """Cut ``fragment`` in half at its midpoint cell.
 

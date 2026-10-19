@@ -118,22 +118,36 @@ eight-week scope. It should be named in the paper, because Lion's reported
 
 ### 2.4 Action space `A`
 
-A single flat discrete space of `3 * F_max * R + 2 * F_max + 1 = 401` actions,
-every one of which is a **desired end state** rather than an operation
-(ADR-0002):
+A single flat discrete space of `2 * F_max * R + F_max + 1 = 261` actions, every
+one of which is a **desired end state** rather than an operation (ADR-0002, as
+amended 19 October):
 
-| Action | Effect | Bytes moved |
-|--------|--------|-------------|
-| `SET_PRIMARY(f, r)` | region `r` becomes primary of `f` | fragment size if `r` held no replica, else 0 |
-| `ENSURE_REPLICA(f, r)` | `f` has a replica in `r` | fragment size if newly added, else 0 |
-| `DROP_REPLICA(f, r)` | `f` has no replica in `r` | 0 |
-| `SPLIT(f)` | `f` is cut at its midpoint cell | 0 |
-| `MERGE(f)` | `f+1` is absorbed into `f` | right half's size per region newly covering it |
-| `NOOP` | nothing | 0 |
+| Action | Effect | Bytes moved | Cluster statement |
+|--------|--------|-------------|-------------------|
+| `MOVE_LEASE(f, r)` | region `r` becomes primary of `f` | **0 always** | `ALTER RANGE <id> RELOCATE LEASE TO <store>` |
+| `MOVE_REPLICA_TO(f, r)` | `f` has a replica in `r`; the non-primary replica farthest from `r` is released | fragment size | `ALTER RANGE <id> RELOCATE VOTERS FROM <s> TO <s>` |
+| `SPLIT(f)` | `f` is cut at its midpoint cell | 0 | `ALTER TABLE ... SPLIT AT VALUES (k)` |
+| `NOOP` | nothing | 0 | none |
 
-Constraints refuse rather than raise: `min_replicas <= replicas <= max_replicas`,
-`F_t <= F_max`, the primary is always a replica, a single-cell fragment cannot
-split. A refused action changes nothing and is charged
+The replication factor is **fixed** (ADR-0009), which is why `ENSURE_REPLICA`
+and `DROP_REPLICA` are gone: at fixed RF they were measured 0.0% applicable in
+every state. `MERGE` is gone because CockroachDB has no synchronous counterpart,
+so `F_t` is monotone within an episode.
+
+`MOVE_LEASE` is refused when `r` holds no replica, mirroring the database. The
+two placement blocks therefore partition: for any `(f, r)` at most one is live.
+This is what keeps the cheap tier (a lease move, one round trip, no bytes)
+distinct from the expensive one (a replica move, one fragment), which the
+reward's migration term depends on.
+
+`MOVE_REPLICA_TO` names only a destination; the released replica is chosen for
+the agent by RTT distance. That tie-break is part of the action's semantics.
+Breadth-first search over the replica-set state space confirms it costs no
+reachability, at a worst-case cost of two extra actions.
+
+Constraints refuse rather than raise: `F_t <= F_max`, the primary is always a
+replica, a single-cell fragment cannot split, a lease needs a replica at its
+target. A refused action changes nothing and is charged
 `inapplicable_action_cost`.
 
 **This is where the joint claim lives.** Lion moves replicas of a partition and
@@ -257,7 +271,7 @@ the formulation above:
   A policy optimal for window 10 is wrong by window 40.
 - **Delayed reward.** Migration cost is immediate, latency benefit is spread
   over subsequent windows. A greedy one-step optimizer overpays for migration.
-- **Large discrete action space.** 401 actions, beyond enumeration at every
+- **Large discrete action space.** 261 actions, beyond enumeration at every
   step of a planning horizon.
 - **No available supervision.** There is no labelled optimal placement per
   window to imitate. Even computing one per window is a combinatorial problem;

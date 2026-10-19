@@ -107,7 +107,7 @@ def test_migration_weight_penalizes_moving_data(tiny_config) -> None:
     env.reset(seed=0)
     space = env.sim.action_space
     target = int(np.flatnonzero(~env.sim.catalog.replicas[0])[0])
-    _, reward, _, _, info = env.step(space.encode(ActionKind.ENSURE_REPLICA, 0, target))
+    _, reward, _, _, info = env.step(space.encode(ActionKind.MOVE_REPLICA_TO, 0, target))
     assert info["action_applied"]
     assert reward == pytest.approx(-info["bytes_moved"] / 1.0e10)
 

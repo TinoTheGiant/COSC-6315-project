@@ -63,12 +63,22 @@ class GreedyPrimaryPolicy:
     """Move the most misplaced fragment's primary to where its traffic is.
 
     Each window it scores every fragment by the latency its current primary
-    costs relative to the best available region, and issues a single
-    ``SET_PRIMARY`` for the worst offender. It is myopic by construction: it
-    weighs no migration cost and anticipates no drift, so it churns under
-    volatility. Its purpose here is to demonstrate that the reward signal points
-    somewhere -- a policy that follows the traffic should beat one that does not
-    -- not to serve as a serious opponent.
+    costs relative to the best available region, and issues a single action for
+    the worst offender. It is myopic by construction: it weighs no migration
+    cost and anticipates no drift, so it churns under volatility. Its purpose
+    here is to demonstrate that the reward signal points somewhere -- a policy
+    that follows the traffic should beat one that does not -- not to serve as a
+    serious opponent.
+
+    **It takes two windows to do what it used to do in one.** Under the action
+    space of ADR-0002 as amended, a lease can only move to a region that
+    already holds a replica, because that is what CockroachDB enforces. So when
+    the best region holds no replica this policy must first issue
+    ``MOVE_REPLICA_TO`` and only then, next window, ``MOVE_LEASE``. The earlier
+    ``SET_PRIMARY`` fused both into one step, which no single cluster statement
+    can do. The baseline is slower as a result, and that is the honest
+    comparison: the baseline and the agent must share an action space or the
+    contest is rigged.
     """
 
     def __init__(self, action_space: ActionSpace) -> None:
@@ -88,9 +98,15 @@ class GreedyPrimaryPolicy:
         if not np.any(gain > 0.0):
             return self.action_space.noop_index
         fragment = int(gain.argmax())
+        target = int(best_region[fragment])
+
+        # A lease only moves to a region already holding a replica. If the best
+        # region holds none, put one there first and take the lease next window.
+        if catalog.replicas[fragment, target]:
+            return self.action_space.encode(
+                ActionKind.MOVE_LEASE, fragment=fragment, region=target)
         return self.action_space.encode(
-            ActionKind.SET_PRIMARY, fragment=fragment, region=int(best_region[fragment])
-        )
+            ActionKind.MOVE_REPLICA_TO, fragment=fragment, region=target)
 
     def reset(self) -> None:
         return None

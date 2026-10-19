@@ -186,8 +186,13 @@ those five fail elsewhere: ScyllaDB and HBase have no cross-shard transactions
 for the reward to measure, and MongoDB is SSPL with an eleven-to-thirteen-process
 footprint. The cost of choosing Citus is that the action space narrows to move and
 split, which ADR-0008 argues is both consistent with the project's title and a
-better-conditioned learning problem than the current 401 actions at 54 percent
-applicability.
+better-conditioned learning problem than the 401 actions this project started
+with. **Settled on 19 October**, though not in Citus's favor: the action space is
+now 261 actions over `MOVE_LEASE`, `MOVE_REPLICA_TO` and `SPLIT`, measured 29.2
+percent applicable against 22.1 percent for the old five-kind space at fixed
+replication factor. The amendment to
+[ADR-0002](adr/ADR-0002-flat-declarative-action-space.md) records the
+measurement.
 
 **The question that blocks everything else.** "Should have a real database" has
 three readings, and they differ by weeks:

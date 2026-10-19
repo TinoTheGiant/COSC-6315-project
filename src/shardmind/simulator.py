@@ -92,7 +92,7 @@ class ClusterSimulator:
         if self._last is not None and self._last.done:
             raise RuntimeError("episode is finished; call reset()")
 
-        mutation = self.action_space.apply(self.catalog, action_index)
+        mutation = self.action_space.apply(self.catalog, action_index, self.topology.rtt)
         self.catalog.validate()
 
         self._t += 1

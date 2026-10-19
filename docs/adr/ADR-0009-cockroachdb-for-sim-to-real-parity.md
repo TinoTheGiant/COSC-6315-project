@@ -161,6 +161,10 @@ replicas to move and regions to move them to.
   Both existing mutators stay in the module, because `move_replica` is composed
   from them and the tests for them are still worth having.
 - **The action space shrinks and its shape changes.** From
+  **Settled 19 October**, see the amendment to
+  [ADR-0002](ADR-0002-flat-declarative-action-space.md): destination-only, 261
+  actions, 29.2% applicable, fully reachable. The prediction below was right that
+  the naive form is worse. From
   `3 x 20 x 6 + 2 x 20 + 1 = 401` to `MOVE_LEASE(20 x 6) + MOVE_REPLICA(20 x 6 x 6)
   + SPLIT(20) + NOOP`. The naive `MOVE_REPLICA` encoding is 720 actions, which is
   worse, not better. **Action Item 2 owns this**: the likely answer is a

@@ -206,18 +206,26 @@ should not.
 
 ```
 volatility=1.0  windows=200  episodes=1
-401 actions over 6 regions, fragment cap 20
+261 actions over 6 regions, fragment cap 20
 policy                   mean ms    p95 ms   GB moved  xregion  frags
 ---------------------------------------------------------------------
 no-op (static hash)       156.93    554.60        0.0    43.1%    6.0
-random                    126.71    484.84      220.1    21.6%    4.0
-greedy primary             94.19    400.35      450.7    34.1%    6.0
+random                    157.42    573.99      185.6    45.3%   20.0
+greedy primary            110.54    474.84      759.8    32.9%    6.0
 ```
 
 **Reading that.** "Do nothing", which is what a normal database does, averages
-157 ms. A simple policy that just follows the traffic gets to 94 ms, a 40%
-improvement, but pays by shifting 451 GB over the episode. Closing that gap at a
+157 ms. A simple policy that just follows the traffic gets to 110 ms, a 30%
+improvement, but pays by shifting 760 GB over the episode. Closing that gap at a
 fraction of the churn is what the agent is for.
+
+The greedy policy is deliberately handicapped in a way that matters: a lease can
+only move to a region that already holds a replica, which is what CockroachDB
+enforces, so relocating one takes two windows. A myopic policy therefore tracks
+drifting traffic a window behind. An agent that anticipates drift should beat it
+by more than it could have beaten the older, unrealistic one-step baseline. The
+amendment to [ADR-0002](docs/adr/ADR-0002-flat-declarative-action-space.md)
+records the measurement.
 
 ### Track 2: the real cluster
 
@@ -311,7 +319,7 @@ src/shardmind/
   workload.py     drifting demand over the keyspace; spikes; transactions
   catalog.py      shard boundaries, placement, the declarative mutators
   cost.py         analytic latency, exact tail percentiles, load accounting
-  actions.py      the flat action space
+  actions.py      the flat 261-action space
   observation.py  cluster state -> a 703-element vector
   simulator.py    clock, transition, episode
   env.py          the Gymnasium adapter

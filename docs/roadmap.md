@@ -159,14 +159,16 @@ project.
 
 **Track A, which can proceed whilst containers download.**
 
-5. **Fix the `MOVE_REPLICA` encoding.** The naive `(fragment, from, to)` form is
-   `20 x 6 x 6 = 720` actions, which is worse than the 401 it replaces. The
-   working proposal is destination-only, `MOVE_REPLICA_TO(f, r)`, with the source
-   chosen as the replica whose region is farthest from `r`, giving
-   `20 x 6 x 2 + 20 + 1 = 261`. **Measure applicability under it before
-   committing**, and record the tie-break as part of the action semantics in an
-   amendment to [ADR-0002](adr/ADR-0002-flat-declarative-action-space.md), not as
-   an implementation detail.
+5. [x] **`MOVE_REPLICA` encoding: DONE, 19 October.** Destination-only,
+   `2 x 20 x 6 + 20 + 1 = 261` actions, measured 29.2% applicable against 22.1%
+   for the old space and 22.9% for the naive 861-action form. The farthest-donor
+   tie-break costs no reachability (0 unreachable pairs of 3,600, diameter 5
+   against 3). `MOVE_LEASE` is restricted to regions already holding a replica,
+   which declines 44.7% applicability to keep the cheap and expensive cost tiers
+   distinct. Recorded in the amendment to
+   [ADR-0002](adr/ADR-0002-flat-declarative-action-space.md). **The greedy
+   baseline moved from 94.19 ms to 110.54 ms as a direct consequence**, which is
+   the honest comparison: the baseline now lives in the agent's action space.
 6. **Set replication factor to 3** and re-run the two headline measurements to
    confirm they survive at fixed RF. If the 94-against-157 gap moves materially,
    that is a finding and the paper's numbers change.
