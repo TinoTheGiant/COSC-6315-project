@@ -80,7 +80,7 @@ def traffic_heatmap(data: dict, out: Path) -> None:
 def latency_over_time(data: dict, out: Path) -> None:
     """The headline comparison."""
     fig, ax = plt.subplots(figsize=(10, 4))
-    order = ["static", "greedy", "best"]
+    order = ["static", "follow", "best"]
     for slot, key in enumerate(order):
         p = data["policies"][key]
         y = np.array(p["latency"])
@@ -103,7 +103,7 @@ def latency_over_time(data: dict, out: Path) -> None:
 def cumulative_migration(data: dict, out: Path) -> None:
     """What chasing the traffic costs in bandwidth."""
     fig, ax = plt.subplots(figsize=(10, 3.4))
-    for slot, key in enumerate(["static", "greedy"]):
+    for slot, key in enumerate(["static", "follow"]):
         p = data["policies"][key]
         y = np.cumsum(p["gbMoved"])
         ax.plot(y, color=SERIES[slot], label=p["label"])
@@ -125,7 +125,7 @@ def cumulative_migration(data: dict, out: Path) -> None:
 def chunk_homes(data: dict, out: Path) -> None:
     """Which region each chunk lived in, turn by turn, under each strategy."""
     regions = data["meta"]["regions"]
-    keys = ["static", "greedy", "best"]
+    keys = ["static", "follow", "best"]
 
     fig, axes = plt.subplots(len(keys), 1, figsize=(10, 6.2), sharex=True)
     for ax, key in zip(axes, keys):

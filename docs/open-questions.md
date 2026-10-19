@@ -14,7 +14,7 @@ proposed resolution, not a vague worry.
 Six regions, twenty fragment cap, 100-window episodes, three seeds,
 reproduced by `python scripts/volatility_probe.py`:
 
-| volatility | static (ms) | greedy (ms) | inst. best (ms) | tracking gap (ms) | GB moved / episode |
+| volatility | static (ms) | follow (ms) | inst. best (ms) | tracking gap (ms) | GB moved / episode |
 |-----------:|------------:|------------:|----------------:|------------------:|-------------------:|
 | 0.0 | 174.98 | 85.08 | 82.82 | **+2.26** | 53.4 |
 | 0.5 | 156.44 | 92.60 | 95.28 | -2.68 | 153.5 |
@@ -26,7 +26,7 @@ reproduced by `python scripts/volatility_probe.py`:
 "Inst. best" re-optimizes every primary every window for free, allocation only
 (see the docstring in `scripts/volatility_probe.py`; it is a moving reference,
 not an upper bound, which is why the tracking gap goes slightly negative where
-the greedy policy's replica placement happens to beat it).
+the follow-traffic policy's replica placement happens to beat it).
 
 **Why it happens, and why it is not a bug.** Volatility rotates the angular
 demand field faster. A hash placement is roughly uniform across regions, and
@@ -43,7 +43,7 @@ an odd bump at the origin, which is not a result.
 
 **What does respond.** Two things, both strongly:
 
-- **Tracking gap.** The greedy tracker sits within 3 ms of the instantaneous
+- **Tracking gap.** The follow-traffic policy sits within 3 ms of the instantaneous
   best up to volatility 2, then falls behind: +9 ms at 4, +25 ms at 8. This is
   the quantity the research question is actually about.
 - **Migration volume.** 53 GB per episode at v = 0, rising to 387 GB by v = 4,

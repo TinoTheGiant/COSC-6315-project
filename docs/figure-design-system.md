@@ -20,8 +20,8 @@ monochrome print.
 
 | Pair | Grayscale contrast | Verdict |
 |---|---|---|
-| static vs greedy | 1.38:1 | **fails** |
-| greedy vs best | 1.14:1 | **fails** |
+| static vs follow | 1.38:1 | **fails** |
+| follow vs best | 1.14:1 | **fails** |
 | static vs best | 1.57:1 | marginal |
 
 At 1.14:1 two lines are the same gray. A reviewer reading a printout, or a
@@ -54,9 +54,9 @@ The project's one load-bearing palette decision. Not categorical.
 | Role | Color | Lightness | Dash | Weight | Label |
 |---|---|---|---|---|---|
 | `agent` | `#184f95` | 0.080 | solid | 2.0 | Learned policy |
-| `static` | `#898781` | 0.242 | long dash | 1.6 | Do nothing |
-| `greedy` | `#b0aea3` | 0.421 | dotted | 1.6 | Chase the traffic |
-| `best` | `#52514e` | 0.084 | dash-dot | 1.1 | Best possible each turn |
+| `static` | `#898781` | 0.242 | long dash | 1.6 | Static hash |
+| `follow` | `#b0aea3` | 0.421 | dotted | 1.6 | Follow traffic |
+| `best` | `#52514e` | 0.084 | dash-dot | 1.1 | Best per window |
 
 Grayscale separation between the three series: 2.26:1, 2.00:1 and 4.52:1, all
 clear of the 1.5:1 floor.
@@ -185,7 +185,7 @@ Two forms to avoid, for reasons specific to this project:
    reason `policy_kwargs` exists.
 2. **Three series maximum on a light surface.** The fourth quantity becomes a
    reference rule, a facet, or a table row.
-3. **Direct-label anything below 3:1 against the surface.** `greedy` at 2.15:1
+3. **Direct-label anything below 3:1 against the surface.** `follow` at 2.15:1
    is below the comfortable band by design, and its dash plus a direct label is
    the mitigation.
 4. **The agent is always darkest, solid and heaviest.** Emphasis form, applied

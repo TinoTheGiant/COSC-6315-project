@@ -228,3 +228,16 @@ win against 110.54 than it had against 94.19.
 `MERGE` is gone, so shard count is monotone within an episode. The random policy
 consequently splits to the cap, reaching 20 fragments where it previously
 settled near 4. Report the cap as a parameter rather than a result.
+
+
+---
+
+## Naming note, 19 October 2026
+
+The reference policies were renamed after this record was written. `NoOpPolicy`
+is now `StaticHashPolicy`, `GreedyPrimaryPolicy` is now `FollowTrafficPolicy`,
+and the dashboard's `BestEachTurn` is now `BestPerWindow`. The figure keys moved
+with them: `greedy` is now `follow`. Nothing about the decision changed; the old
+names described the implementation rather than the behaviour being measured, and
+a reader of the paper should not have to learn that "greedy" meant "follows the
+traffic one fragment at a time". The measurements in the table above stand.

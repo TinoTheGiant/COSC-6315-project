@@ -110,7 +110,7 @@ const DATA = __DATA__;
 const SERIES = __SERIES__;
 const M = DATA.meta, N = M.windows;
 const PLACES = M.regionMeta;
-const KEYS = ["static", "greedy", "best"];
+const KEYS = ["static", "follow", "best"];
 const FADE = 8;
 
 const hue = i => SERIES[i % SERIES.length];
@@ -123,7 +123,7 @@ L.tileLayer("__TILES__", {
 }).addTo(map);
 L.control.scale({ imperial: false }).addTo(map);
 
-const state = { t: 0, policy: "greedy", playing: false, timer: null };
+const state = { t: 0, policy: "follow", playing: false, timer: null };
 
 // One circle and one label per data centre. Leaflet keeps them on the map and
 // we only resize them as the episode runs, which is much cheaper than redrawing.
@@ -266,9 +266,9 @@ def main() -> None:
         raise SystemExit("episode.json predates the map support. Re-run export_episode.py")
 
     options = "".join(
-        f'<option value="{k}"{" selected" if k == "greedy" else ""}>'
+        f'<option value="{k}"{" selected" if k == "follow" else ""}>'
         f'{data["policies"][k]["label"]}</option>'
-        for k in ("static", "greedy", "best")
+        for k in ("static", "follow", "best")
     )
     summary = (f'{len(meta["regions"])} regions · {meta["windows"]} turns · '
                f'volatility {meta["volatility"]:g} · seed {meta["seed"]}')

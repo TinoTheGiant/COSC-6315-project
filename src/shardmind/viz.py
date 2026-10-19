@@ -38,14 +38,14 @@ POLICY = {
     "agent":  {"color": "#184f95", "dash": (0, ()),        "lw": 2.0, "z": 5,
                "label": "Learned policy"},
     "static": {"color": "#898781", "dash": (0, (6, 2.5)),  "lw": 1.6, "z": 3,
-               "label": "Do nothing"},
-    "greedy": {"color": "#b0aea3", "dash": (0, (1.5, 2)),  "lw": 1.6, "z": 2,
-               "label": "Chase the traffic"},
+               "label": "Static hash"},
+    "follow": {"color": "#b0aea3", "dash": (0, (1.5, 2)),  "lw": 1.6, "z": 2,
+               "label": "Follow traffic"},
     # The oracle is an upper bound, not a policy. Drawn as a reference rule
     # rather than a fourth series, which keeps every figure inside the
     # three-series grayscale budget. See policy_reference().
     "best":   {"color": "#52514e", "dash": (0, (4, 2, 1, 2)), "lw": 1.1, "z": 4,
-               "label": "Best possible each turn"},
+               "label": "Best per window"},
 }
 
 #: The grayscale budget, made explicit so it cannot drift.
@@ -55,7 +55,7 @@ POLICY = {
 #: is discarded, and no reordering fixes that. Anything beyond three is drawn as
 #: a labeled reference rule (policy_reference) or faceted into small multiples.
 #: Enforced by tests/test_viz_print_safety.py.
-SERIES_POLICIES = ("agent", "static", "greedy")
+SERIES_POLICIES = ("agent", "static", "follow")
 REFERENCE_POLICIES = ("best",)
 
 #: Minimum contrast ratio between two series once color is discarded. Below

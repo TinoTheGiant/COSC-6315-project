@@ -2,9 +2,9 @@
 
 These are NOT the Phase 2 baselines. They exist so the environment can be
 driven without an agent and so the tests have something whose behaviour is
-predictable. The characterized baselines -- consistent hashing, greedy
-nearest-region, threshold rebalancing and a Lion-style cost-model rebalancer --
-belong in ``shardmind/baselines/`` and are scheduled for week 3.
+predictable. The characterized baselines -- consistent hashing, nearest-region,
+threshold rebalancing and a Lion-style cost-model rebalancer -- belong in
+``shardmind/baselines/`` and are scheduled for week 3.
 """
 
 from __future__ import annotations
@@ -25,13 +25,16 @@ class Policy(Protocol):
     def reset(self) -> None: ...
 
 
-class NoOpPolicy:
-    """Never acts. Equivalent to the static hash partitioner it started with.
+class StaticHashPolicy:
+    """Never acts. This is what a production database does today.
 
-    This is the floor every learned policy must clear, and the cleanest
-    statement of the problem: the initial placement is what a consistent-hash
-    partitioner would produce, and doing nothing is what such a system does as
-    the workload migrates away from it.
+    Named for what it *is*, not for what it omits: the initial placement is
+    what a consistent-hash partitioner produces, and the policy holds that
+    placement for the whole episode. Every other policy is measured against it.
+
+    It is the floor every learned policy must clear, and the cleanest
+    statement of the problem: a fixed schema does not notice that the workload
+    has migrated away from it.
     """
 
     def __init__(self, action_space: ActionSpace) -> None:
@@ -59,8 +62,12 @@ class RandomPolicy:
         self._rng = np.random.default_rng(self._seed)
 
 
-class GreedyPrimaryPolicy:
-    """Move the most misplaced fragment's primary to where its traffic is.
+class FollowTrafficPolicy:
+    """Move the worst-placed fragment's primary towards its traffic.
+
+    The name states the rule: each window it follows the traffic for one
+    fragment and nothing else. It is the simple reactive heuristic an operator
+    would write by hand, and the first thing a learned policy has to beat.
 
     Each window it scores every fragment by the latency its current primary
     costs relative to the best available region, and issues a single action for

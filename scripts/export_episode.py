@@ -22,7 +22,7 @@ import numpy as np
 from shardmind.config import ShardMindConfig
 from shardmind.topologies import region_meta
 from shardmind.cost import evaluate
-from shardmind.policies import GreedyPrimaryPolicy, NoOpPolicy
+from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy
 from shardmind.simulator import ClusterSimulator
 
 
@@ -113,12 +113,12 @@ def main() -> None:
             "static": {
                 "label": "Do nothing",
                 "note": "What a normal sharded database does: the layout never changes.",
-                **run(sim, NoOpPolicy(space), args.seed),
+                **run(sim, StaticHashPolicy(space), args.seed),
             },
-            "greedy": {
+            "follow": {
                 "label": "Chase the traffic",
                 "note": "Every turn, move the single worst-placed chunk to where its traffic is.",
-                **run(sim, GreedyPrimaryPolicy(space), args.seed),
+                **run(sim, FollowTrafficPolicy(space), args.seed),
             },
             "best": {
                 "label": "Best possible each turn",

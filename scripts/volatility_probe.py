@@ -19,7 +19,7 @@ import numpy as np
 
 from shardmind.config import ShardMindConfig
 from shardmind.cost import evaluate
-from shardmind.policies import GreedyPrimaryPolicy, NoOpPolicy, rollout
+from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy, rollout
 from shardmind.simulator import ClusterSimulator
 
 VOLATILITIES = (0.0, 0.5, 1.0, 2.0, 4.0, 8.0)
@@ -65,7 +65,7 @@ def main() -> None:
 
     base = ShardMindConfig()
     header = (
-        f"{'vol':>5}{'static':>10}{'greedy':>10}{'inst.best':>11}"
+        f"{'vol':>5}{'static':>10}{'follow':>10}{'inst.best':>11}"
         f"{'track gap':>11}{'GB/episode':>12}"
     )
     print(header)
@@ -79,18 +79,18 @@ def main() -> None:
         sim = ClusterSimulator(cfg)
         space = sim.action_space
 
-        static, greedy, moved, best = [], [], [], []
+        static, follow, moved, best = [], [], [], []
         for seed in range(args.seeds):
-            s = rollout(sim, NoOpPolicy(space), seed=seed)
-            g = rollout(sim, GreedyPrimaryPolicy(space), seed=seed)
+            s = rollout(sim, StaticHashPolicy(space), seed=seed)
+            g = rollout(sim, FollowTrafficPolicy(space), seed=seed)
             static.append(np.mean([r["mean_latency_ms"] for r in s]))
-            greedy.append(np.mean([r["mean_latency_ms"] for r in g]))
+            follow.append(np.mean([r["mean_latency_ms"] for r in g]))
             moved.append(sum(r["bytes_moved"] for r in g) / 1e9)
             best.append(instantaneous_best(sim, cfg, seed))
 
         print(
-            f"{volatility:>5.1f}{np.mean(static):>10.2f}{np.mean(greedy):>10.2f}"
-            f"{np.mean(best):>11.2f}{np.mean(greedy) - np.mean(best):>11.2f}"
+            f"{volatility:>5.1f}{np.mean(static):>10.2f}{np.mean(follow):>10.2f}"
+            f"{np.mean(best):>11.2f}{np.mean(follow) - np.mean(best):>11.2f}"
             f"{np.mean(moved):>12.1f}"
         )
 

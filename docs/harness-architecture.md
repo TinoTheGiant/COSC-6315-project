@@ -202,7 +202,7 @@ finish. `N` must be chosen by measurement, not by guess:
    subsample size.
 3. Choose the smallest `N` whose p95 standard error is below one third of the
    smallest effect the paper needs to detect. The sensible target is the
-   simulator's static-to-greedy gap, which measured 157 ms against 94 ms.
+   simulator's static-to-follow gap, which measured 157 ms against 94 ms.
 4. Report `N` and that standard error in the methods section. It is a result,
    not an implementation detail.
 

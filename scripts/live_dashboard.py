@@ -43,13 +43,13 @@ from shardmind import topologies, viz
 from shardmind.actions import ActionSpace
 from shardmind.config import ShardMindConfig
 from shardmind.cost import evaluate
-from shardmind.policies import GreedyPrimaryPolicy, NoOpPolicy
+from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy
 from shardmind.simulator import ClusterSimulator
 
 TITLE = "Reinforcement Learning for Dynamic Data Fragmentation and Allocation"
 
 FADE_WINDOWS = 8
-POLICY_ORDER = ("static", "greedy", "best")
+POLICY_ORDER = ("static", "follow", "best")
 
 
 def build_config(volatility: float, windows: int, regions: int,
@@ -71,7 +71,7 @@ def build_config(volatility: float, windows: int, regions: int,
     )
 
 
-class BestEachTurn:
+class BestPerWindow:
     """Re-home every chunk optimally each turn, with migration made free.
 
     A moving target rather than an upper bound: it ignores migration cost,
@@ -128,9 +128,9 @@ class Dashboard:
         self.space = space
         self.sims = {k: ClusterSimulator(cfg) for k in POLICY_ORDER}
         self.policies = {
-            "static": NoOpPolicy(space),
-            "greedy": GreedyPrimaryPolicy(space),
-            "best": BestEachTurn(space),
+            "static": StaticHashPolicy(space),
+            "follow": FollowTrafficPolicy(space),
+            "best": BestPerWindow(space),
         }
         for sim in self.sims.values():
             sim.reset(seed=cfg.seed)
@@ -152,7 +152,7 @@ class Dashboard:
         if self.t >= self.n_windows:
             return
 
-        best_latency, best_target = BestEachTurn.evaluate(self.sims["best"], self.cfg)
+        best_latency, best_target = BestPerWindow.evaluate(self.sims["best"], self.cfg)
         for key, sim in self.sims.items():
             sim.step(self.policies[key].act(sim))
             self.cum_gb[key] += sim.last.bytes_moved
@@ -210,7 +210,7 @@ class Dashboard:
         self.ax_lat.set_axisbelow(True)
         self.lat_lines = {
             k: self.ax_lat.plot([], [], color=viz.POLICY_COLOR[k], label=viz.POLICY_LABEL[k])[0]
-            for k in ("static", "best", "greedy")
+            for k in ("static", "best", "follow")
         }
         self.lat_dots = {
             k: self.ax_lat.plot([], [], "o", ms=5, color=viz.POLICY_COLOR[k],
@@ -517,7 +517,7 @@ class Dashboard:
             return
         self.status.set_text(
             f"{self.space.n} actions · "
-            f"{self.moves['greedy']} chunk moves · "
+            f"{self.moves['follow']} chunk moves · "
             f"regions {cfg.n_regions}/{topologies.MAX_REGIONS}")
         self.hint.set_text("settings changed — press Apply and restart" if self._pending() else "")
 
@@ -525,7 +525,7 @@ class Dashboard:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--policy", choices=list(POLICY_ORDER), default="greedy",
+    parser.add_argument("--policy", choices=list(POLICY_ORDER), default="follow",
                         help="which strategy the map follows at startup")
     parser.add_argument("--config", type=Path, default=None,
                         help="a saved ShardMindConfig JSON to start from (see configs/)")

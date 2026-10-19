@@ -129,8 +129,8 @@ it. Owned by ADR-0009 Action Item 2, scheduled for block 1.
 
 ## 6. Baselines have no tests — score 18
 
-**Found:** `policies.py` holds `NoOpPolicy`, `RandomPolicy` and
-`GreedyPrimaryPolicy`. There is no `tests/test_policies.py`. Also absent:
+**Found:** `policies.py` holds `StaticHashPolicy`, `RandomPolicy` and
+`FollowTrafficPolicy`. There is no `tests/test_policies.py`. Also absent:
 `test_simulator.py` and `test_observation.py`.
 
 **Why the baselines specifically:** the headline claim is a *comparison*. "The

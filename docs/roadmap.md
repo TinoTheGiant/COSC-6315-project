@@ -10,7 +10,7 @@ for one.
 | | State |
 |---|---|
 | Simulator, workload, cost model, action space, observation | **done**, 122 tests passing |
-| Baselines | **partial.** `NoOpPolicy`, `RandomPolicy`, `GreedyPrimaryPolicy` built. No characterization tests. Threshold and Lion-style rebalancers not built |
+| Baselines | **partial.** `StaticHashPolicy`, `RandomPolicy`, `FollowTrafficPolicy` built. No characterization tests. Threshold and Lion-style rebalancers not built |
 | Visualization, dashboards, GIS map, figure design system | **done** |
 | Tabular Q-learning sanity check | **not started** |
 | DQN wiring | **not started**. No `shardmind/agent/`, no `scripts/train.py` |
@@ -166,7 +166,7 @@ project.
    against 3). `MOVE_LEASE` is restricted to regions already holding a replica,
    which declines 44.7% applicability to keep the cheap and expensive cost tiers
    distinct. Recorded in the amendment to
-   [ADR-0002](adr/ADR-0002-flat-declarative-action-space.md). **The greedy
+   [ADR-0002](adr/ADR-0002-flat-declarative-action-space.md). **The follow-traffic
    baseline moved from 94.19 ms to 110.54 ms as a direct consequence**, which is
    the honest comparison: the baseline now lives in the agent's action space.
 6. **Set replication factor to 3** and re-run the two headline measurements to

@@ -1,0 +1,129 @@
+# Simulator experiments, run on GitHub's hardware so they do not need the laptop.
+#
+# Dispatch from the Actions tab (the phone app works). Pick the seeds, the
+# episode length and the volatility, press the button, come back to a job
+# summary with the table and an artifact holding every number behind it.
+#
+# The contract this workflow exists to enforce: no result leaves this project
+# without the configuration and the seeds that produced it. scripts/run_experiment.py
+# writes manifest.json alongside every CSV, carrying the commit, the resolved
+# config, the seed list and the package versions. A number in the paper can
+# therefore always be traced back to one directory, and that directory can be
+# re-run by one command printed inside it.
+name: Experiments
+
+on:
+  workflow_dispatch:
+    inputs:
+      seeds:
+        description: "How many seeds (more seeds, tighter confidence interval)"
+        default: "8"
+      seed_start:
+        description: "First seed. Change it to get a fresh, non-overlapping set"
+        default: "0"
+      windows:
+        description: "Decision windows per episode"
+        default: "200"
+      volatility:
+        description: "Workload volatility. 1.0 is the default environment"
+        default: "1.0"
+      policies:
+        description: "Space-separated: static random follow best"
+        default: "static random follow best"
+      label:
+        description: "Short tag folded into the run id, e.g. baseline or sweep"
+        default: "baseline"
+
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report the hardware we actually got
+        run: |
+          {
+            echo "## Runner"
+            echo "| | |"
+            echo "|---|---|"
+            echo "| cores | $(nproc) |"
+            echo "| memory | $(free -g | awk '/^Mem:/{print $2}') GB |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install numpy pandas matplotlib gymnasium pytest
+
+      # The experiment is only worth running if the code under it still passes.
+      # A green suite here is what lets the artifact be cited without a caveat.
+      - name: Test suite
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m pytest tests -q
+
+      - name: Run the experiment
+        id: run
+        env:
+          PYTHONPATH: src
+          MPLBACKEND: Agg
+          # Through the environment, not interpolated into the script, so a
+          # dispatch input cannot become a shell command.
+          SEEDS: ${{ inputs.seeds }}
+          SEED_START: ${{ inputs.seed_start }}
+          WINDOWS: ${{ inputs.windows }}
+          VOLATILITY: ${{ inputs.volatility }}
+          POLICIES: ${{ inputs.policies }}
+          LABEL: ${{ inputs.label }}
+        run: |
+          read -r -a POLICY_LIST <<< "$POLICIES"
+          python scripts/run_experiment.py \
+            --seeds "$SEEDS" \
+            --seed-start "$SEED_START" \
+            --windows "$WINDOWS" \
+            --volatility "$VOLATILITY" \
+            --policies "${POLICY_LIST[@]}" \
+            --label "$LABEL" \
+            --figures
+          RUN_DIR=$(ls -d results/runs/*/ | sort | tail -1)
+          echo "run_dir=${RUN_DIR%/}" >> "$GITHUB_OUTPUT"
+          echo "run_id=$(basename "${RUN_DIR%/}")" >> "$GITHUB_OUTPUT"
+
+      - name: Put the report in the job summary
+        run: |
+          cat "${{ steps.run.outputs.run_dir }}/report.md" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo ""
+            echo "### Files in the artifact"
+            echo ""
+            echo '```'
+            find "${{ steps.run.outputs.run_dir }}" -type f -printf '%-44p %8s bytes\n' | sort
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Everything, including steps.csv. The artifact is the raw record; the
+      # repository keeps only what is small and not regenerable.
+      - name: Upload the run
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-${{ steps.run.outputs.run_id }}
+          path: ${{ steps.run.outputs.run_dir }}
+          retention-days: 90
+          if-no-files-found: error
+
+      # Figures on their own, so they can be dropped straight into the paper
+      # without unpacking the whole run.
+      - name: Upload the figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: figures-${{ steps.run.outputs.run_id }}
+          path: ${{ steps.run.outputs.run_dir }}/figures
+          retention-days: 90
+          if-no-files-found: warn

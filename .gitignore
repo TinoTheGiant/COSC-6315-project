@@ -11,10 +11,28 @@ dist/
 venv/
 env/
 
-# Experiment output
+# Experiment output.
+#
+# A run's raw per-window record (steps.csv) stays out: it is large and it is
+# regenerable, because determinism is a tested property and manifest.json
+# carries the commit, the config and the seeds. What is small and worth having
+# in the history -- the manifest, the aggregate, the config and the figures --
+# is allowed through, so a run cited in the paper lives in the repository
+# rather than only in an Actions artifact that expires.
 runs/
 results/*
 !results/.gitkeep
+!results/runs/
+results/runs/*
+!results/runs/*/
+results/runs/*/*
+!results/runs/*/manifest.json
+!results/runs/*/config.json
+!results/runs/*/summary.csv
+!results/runs/*/report.md
+!results/runs/*/figures/
+results/runs/*/figures/*
+!results/runs/*/figures/*.png
 checkpoints/
 *.zip
 *.pt

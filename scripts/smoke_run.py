@@ -16,7 +16,7 @@ from dataclasses import replace
 
 from shardmind.actions import ActionSpace
 from shardmind.config import ShardMindConfig
-from shardmind.policies import GreedyPrimaryPolicy, NoOpPolicy, RandomPolicy, rollout
+from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy, RandomPolicy, rollout
 from shardmind.simulator import ClusterSimulator
 
 
@@ -39,9 +39,9 @@ def main() -> None:
     space = ActionSpace(cfg.catalog.max_fragments, cfg.n_regions)
 
     policies = {
-        "no-op (static hash)": NoOpPolicy(space),
+        "static hash": StaticHashPolicy(space),
         "random": RandomPolicy(space, seed=args.seed),
-        "greedy primary": GreedyPrimaryPolicy(space),
+        "follow traffic": FollowTrafficPolicy(space),
     }
 
     print(f"volatility={args.volatility}  windows={args.windows}  episodes={args.episodes}")

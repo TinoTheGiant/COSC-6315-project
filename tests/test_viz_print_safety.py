@@ -105,7 +105,7 @@ def test_legacy_views_cover_every_policy() -> None:
 
 def test_the_three_dashboard_policies_still_resolve() -> None:
     """`scripts/analysis_dashboard.py` indexes these by name."""
-    for key in ("static", "greedy", "best"):
+    for key in ("static", "follow", "best"):
         assert key in viz.POLICY_COLOR
         assert key in viz.POLICY_LABEL
 

@@ -119,15 +119,15 @@ def test_a_policy_that_follows_the_traffic_beats_one_that_does_not(default_confi
     the fault is in the reward rather than in the agent. This is the check the
     week 3 tabular sanity harness generalizes.
     """
-    from shardmind.policies import GreedyPrimaryPolicy, NoOpPolicy, rollout
+    from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy, rollout
     from shardmind.simulator import ClusterSimulator
 
     cfg = replace(default_config, episode=replace(default_config.episode, windows_per_episode=60))
     sim = ClusterSimulator(cfg)
     space = sim.action_space
 
-    static = rollout(sim, NoOpPolicy(space), seed=0)
-    tracking = rollout(sim, GreedyPrimaryPolicy(space), seed=0)
+    static = rollout(sim, StaticHashPolicy(space), seed=0)
+    tracking = rollout(sim, FollowTrafficPolicy(space), seed=0)
 
     static_latency = float(np.mean([r["mean_latency_ms"] for r in static]))
     tracking_latency = float(np.mean([r["mean_latency_ms"] for r in tracking]))

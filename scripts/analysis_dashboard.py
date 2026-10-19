@@ -35,12 +35,12 @@ from shardmind import viz
 from shardmind.actions import ActionSpace
 from shardmind.config import ShardMindConfig
 from shardmind.cost import evaluate
-from shardmind.policies import GreedyPrimaryPolicy, NoOpPolicy
+from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy
 from shardmind.simulator import ClusterSimulator
 
 TITLE = "Reinforcement Learning for Dynamic Data Fragmentation and Allocation"
 
-POLICIES = ["static", "greedy", "best"]
+POLICIES = ["static", "follow", "best"]
 
 
 # ------------------------------------------------------------------ data
@@ -53,7 +53,7 @@ def episode_frame(cfg: ShardMindConfig, seed: int) -> pd.DataFrame:
     for key in POLICIES:
         sim = ClusterSimulator(cfg)
         sim.reset(seed=seed)
-        policy = {"static": NoOpPolicy(space), "greedy": GreedyPrimaryPolicy(space)}.get(key)
+        policy = {"static": StaticHashPolicy(space), "follow": FollowTrafficPolicy(space)}.get(key)
         prev_homes = list(sim.catalog.primary)
         cumulative = 0.0
 
@@ -122,7 +122,7 @@ def residence_times(frame: pd.DataFrame, cfg: ShardMindConfig) -> dict[str, list
     for key in POLICIES:
         sim = ClusterSimulator(cfg)
         sim.reset(seed=int(frame["seed"].iloc[0]))
-        policy = {"static": NoOpPolicy(space), "greedy": GreedyPrimaryPolicy(space)}.get(key)
+        policy = {"static": StaticHashPolicy(space), "follow": FollowTrafficPolicy(space)}.get(key)
         n = sim.catalog.n_fragments
         since = [0] * n
         prev = list(sim.catalog.primary)
@@ -217,9 +217,9 @@ def panel_tradeoff(ax, sweep: pd.DataFrame) -> None:
     ax.set_title("4. What does a millisecond cost in bandwidth?")
     grouped = sweep.groupby(["policy", "volatility"]).mean(numeric_only=True).reset_index()
 
-    chase = grouped[grouped.policy == "greedy"].sort_values("volatility")
+    chase = grouped[grouped.policy == "follow"].sort_values("volatility")
     ax.plot(chase["gb"], chase["latency"], "-o", ms=6.5,
-            color=viz.POLICY_COLOR["greedy"], mec=viz.SURFACE, mew=1.3, zorder=3)
+            color=viz.POLICY_COLOR["follow"], mec=viz.SURFACE, mew=1.3, zorder=3)
     for _, row in chase.iterrows():
         ax.annotate(f"volatility {row.volatility:g}", (row.gb, row.latency),
                     xytext=(7, 7), textcoords="offset points",
@@ -289,7 +289,7 @@ def panel_origins(ax, frame: pd.DataFrame, regions: list[str]) -> None:
 def panel_residence(ax, spans: dict[str, list[int]]) -> None:
     ax.set_title("7. How long does a chunk stay put?")
     bins = np.arange(0, 42, 3)
-    for key in ("greedy", "best"):
+    for key in ("follow", "best"):
         ax.hist(np.clip(spans[key], 0, 40), bins=bins, histtype="stepfilled",
                 color=viz.POLICY_COLOR[key], alpha=0.35, lw=0,
                 label=f"{viz.POLICY_LABEL[key]} (median {int(np.median(spans[key]))})")
@@ -326,7 +326,7 @@ def panel_balance(ax, frame: pd.DataFrame, regions: list[str]) -> None:
 def panel_tracking(ax, frame: pd.DataFrame) -> None:
     ax.set_title("9. How far behind the moving target?")
     best = frame[frame.policy == "best"].groupby("turn")["latency"].mean()
-    for key in ("static", "greedy"):
+    for key in ("static", "follow"):
         series = frame[frame.policy == key].groupby("turn")["latency"].mean() - best
         ax.plot(series.index, series.rolling(9, min_periods=1, center=True).mean(),
                 color=viz.POLICY_COLOR[key], label=viz.POLICY_LABEL[key])

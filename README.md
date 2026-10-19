@@ -126,10 +126,16 @@ rather than written by hand. They cannot drift apart.
 Stage 2 needs a machine running for hours. The laptop moves between buildings and
 is needed for other classes.
 
-So the cluster runs on **GitHub Actions** instead: press a button in the Actions
+So the work runs on **GitHub Actions** instead: press a button in the Actions
 tab (the phone app works), and GitHub provides a Linux machine that runs the
-whole experiment for up to six hours and hands back the results. The laptop is
-not involved at all.
+whole thing for up to six hours and hands back the results. The laptop is not
+involved at all. There are two workflows:
+
+- **Experiments** runs the simulator. Seeds, episode length and volatility are
+  fields in the form. It prints the result table into the run summary and
+  uploads the figures and the full record.
+- **Cluster pilot** brings up the six-node CockroachDB cluster, proves the
+  injected latency is real, and runs the gate below.
 
 ### The gate: checking the idea is real before building on it
 
@@ -209,23 +215,66 @@ volatility=1.0  windows=200  episodes=1
 261 actions over 6 regions, fragment cap 20
 policy                   mean ms    p95 ms   GB moved  xregion  frags
 ---------------------------------------------------------------------
-no-op (static hash)       156.93    554.60        0.0    43.1%    6.0
+static hash               156.93    554.60        0.0    43.1%    6.0
 random                    157.42    573.99      185.6    45.3%   20.0
-greedy primary            110.54    474.84      759.8    32.9%    6.0
+follow traffic            110.54    474.84      759.8    32.9%    6.0
 ```
 
-**Reading that.** "Do nothing", which is what a normal database does, averages
+**The three reference policies.**
+
+| Name | What it does | Why it is here |
+|---|---|---|
+| **Static hash** | Never moves anything. The placement a consistent-hash partitioner produced at setup, held for the whole episode. | This is what production databases do today. It is the thing to beat. |
+| **Random** | Picks a legal action uniformly at random. | A control. It proves any gain comes from choosing *where* to move data, not merely from moving it. |
+| **Follow traffic** | Each window, finds the single worst-placed fragment and moves its primary towards the region reading it. | The obvious hand-written heuristic. It looks only at the current window, so it reacts but never anticipates. |
+| **Best per window** | Not a policy. The lowest latency reachable in each window if migration were free and instant. | A ceiling drawn on the figures. No real policy can reach it, so the gap to it measures how much is left on the table. |
+
+**Reading that.** "Static hash", which is what a normal database does, averages
 157 ms. A simple policy that just follows the traffic gets to 110 ms, a 30%
 improvement, but pays by shifting 760 GB over the episode. Closing that gap at a
 fraction of the churn is what the agent is for.
 
-The greedy policy is deliberately handicapped in a way that matters: a lease can
+The follow-traffic policy is deliberately handicapped in a way that matters: a lease can
 only move to a region that already holds a replica, which is what CockroachDB
 enforces, so relocating one takes two windows. A myopic policy therefore tracks
 drifting traffic a window behind. An agent that anticipates drift should beat it
 by more than it could have beaten the older, unrealistic one-step baseline. The
 amendment to [ADR-0002](docs/adr/ADR-0002-flat-declarative-action-space.md)
 records the measurement.
+
+### Recording a result that the paper can cite
+
+Everything above is for looking at things. `scripts/run_experiment.py` is for
+producing numbers that will be quoted, and it is the only script that should
+ever do so.
+
+```bash
+python scripts/run_experiment.py --seeds 8 --windows 200 --figures
+```
+
+One invocation is one **run**, and a run writes one self-contained directory
+under `results/runs/`:
+
+| File | What it holds |
+|---|---|
+| `manifest.json` | The commit, whether the tree was dirty, the fully resolved configuration, the seed list, package versions, the machine, and how long it took |
+| `config.json` | The same configuration on its own, reloadable with `--config` to repeat the run exactly |
+| `steps.csv` | One row per policy, seed and decision window. The raw record |
+| `summary.csv` | One row per policy and seed. The unit of statistics |
+| `report.md` | The aggregated table with 95% bootstrap intervals, and the command that reproduces it |
+| `figures/` | Print-ready PNGs in the project's figure style |
+
+Every row in every CSV carries `run_id`, `policy` and `seed`, so two runs can be
+concatenated without ambiguity and no number is ever separated from the
+configuration that produced it. The methods section of the paper is then a
+transcription of `manifest.json` rather than an act of memory.
+
+**On GitHub, with no laptop.** Open the **Actions** tab, choose **Experiments**,
+and press *Run workflow*. Set the seeds, the episode length and the volatility
+in the form. The job runs the test suite first, then the experiment, prints the
+report into the run summary, and uploads two artifacts: the whole run, and the
+figures on their own so they can be dropped straight into the paper. More runs
+is a button press.
 
 ### Track 2: the real cluster
 
@@ -326,8 +375,17 @@ src/shardmind/
   policies.py     reference policies to compare the agent against
   viz.py          the shared plotting vocabulary and the print-safe palette
 docker/           Dockerfile and the generated six-node Compose file
-scripts/          dashboards, figures, cluster lifecycle, the falsification test
-.github/workflows/  cluster-pilot.yml, the whole stage-2 run, unattended
+scripts/
+  run_experiment.py  the only script whose output may be cited: one run,
+                     one directory, config and seeds recorded with every row
+  smoke_run.py       a quick look under each reference policy
+  live_dashboard.py  the animated world map
+  analysis_dashboard.py, plot_figures.py, make_atlas.py, export_episode.py
+  gen_cluster.py, cluster.sh, falsification_test.py   stage 2
+  measure_action_space.py  reproduces the figures in ADR-0002
+.github/workflows/
+  experiments.yml   simulator runs on GitHub's machines, figures uploaded
+  cluster-pilot.yml the whole stage-2 run, unattended
 tests/            ~150 tests
 docs/             specification, architecture, 11 ADRs, roadmap, debt audit
 ```
