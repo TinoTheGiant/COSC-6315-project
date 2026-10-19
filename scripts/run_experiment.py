@@ -59,8 +59,16 @@ POLICY_FACTORIES = {
     "random": lambda space, seed: RandomPolicy(space, seed=seed),
     "follow": lambda space, seed: FollowTrafficPolicy(space),
     "best": None,
+    # ``agent`` is filled in at startup from --model. It is listed here so the
+    # argument parser accepts it and so the trained policy is driven by exactly
+    # the same episode loop as the baselines. Two loops would mean any
+    # discrepancy between them showed up as, and was indistinguishable from,
+    # learning.
+    "agent": None,
 }
 DEFAULT_POLICIES = ("static", "random", "follow", "best")
+#: Reported, but not an achievable policy. Kept out of any "which won" claim.
+REFERENCE_POLICIES = ("best",)
 
 
 # ----------------------------------------------------------------- provenance
@@ -230,7 +238,8 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
         " GB moved | Cross-region txns |",
         "|---|---|---|---|---|---|",
     ]
-    order = [p for p in DEFAULT_POLICIES if p in set(summary["policy"])]
+    present = set(summary["policy"])
+    order = [p for p in ("agent", *DEFAULT_POLICIES) if p in present]
     label = {"static": "Static hash", "random": "Random", "follow": "Follow traffic",
              "best": "Best per window", "agent": "Learned policy"}
     tail_col = f"p{tail_percentile:g}_latency_ms"
@@ -267,7 +276,9 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
         "```",
         f"git checkout {manifest['git']['commit'][:10]}",
         f"python scripts/run_experiment.py --config results/runs/{manifest['run_id']}/config.json \\",
-        f"    --seeds {len(manifest['seeds'])} --seed-start {manifest['seeds'][0]}",
+        f"    --seeds {len(manifest['seeds'])} --seed-start {manifest['seeds'][0]}"
+        + (f" \\\n    --model {manifest['agent']['model_path']}"
+           if manifest.get("agent") else ""),
         "```",
         "",
     ]
@@ -289,11 +300,20 @@ def main() -> None:
                         help="override workload volatility")
     parser.add_argument("--policies", nargs="+", default=list(DEFAULT_POLICIES),
                         choices=list(POLICY_FACTORIES))
+    parser.add_argument("--model", type=Path, default=None,
+                        help="a trained model (.zip) to evaluate as the 'agent' policy")
+    parser.add_argument("--stochastic", action="store_true",
+                        help="sample from the learned policy instead of acting greedily")
     parser.add_argument("--label", default="", help="short tag folded into the run id")
     parser.add_argument("--outdir", type=Path, default=Path("results/runs"))
     parser.add_argument("--figures", action="store_true",
                         help="also render the analysis page into figures/")
     args = parser.parse_args()
+
+    if "agent" in args.policies and args.model is None:
+        parser.error("--policies agent requires --model")
+    if args.model is not None and "agent" not in args.policies:
+        args.policies = list(args.policies) + ["agent"]
 
     cfg = ShardMindConfig.load(args.config) if args.config else ShardMindConfig()
     if args.windows is not None:
@@ -310,6 +330,27 @@ def main() -> None:
     out = args.outdir / run_id
     out.mkdir(parents=True, exist_ok=True)
 
+    agent_record: dict | None = None
+    if args.model is not None:
+        from shardmind.agent.policy import LearnedPolicy
+
+        learned = LearnedPolicy(args.model, cfg, deterministic=not args.stochastic)
+        POLICY_FACTORIES["agent"] = lambda space, seed: learned
+        model_dir = Path(args.model).resolve().parent
+        train_manifest = model_dir / "manifest.json"
+        agent_record = {
+            "model_path": str(Path(args.model).resolve()),
+            "model_sha256": hashlib.sha256(
+                Path(args.model).read_bytes()).hexdigest()[:16],
+            **learned.metadata,
+            # The environment the weights were trained against, so a reader can
+            # see whether the agent is being evaluated on the environment it
+            # learned or transferred to a different one.
+            "training_manifest": (
+                json.loads(train_manifest.read_text(encoding="utf-8"))
+                if train_manifest.exists() else None),
+        }
+
     manifest = {
         "run_id": run_id,
         "started_utc": started.isoformat(),
@@ -321,6 +362,7 @@ def main() -> None:
         "policies": list(args.policies),
         "windows_per_episode": cfg.episode.windows_per_episode,
         "volatility": cfg.workload.volatility,
+        "agent": agent_record,
         "packages": package_versions(),
         "machine": {
             "platform": platform.platform(),

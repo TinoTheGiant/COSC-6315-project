@@ -101,7 +101,7 @@ def test_migration_weight_penalizes_moving_data(tiny_config) -> None:
     cfg = replace(
         tiny_config,
         reward=RewardConfig(w_latency=0.0, w_migration=1.0, w_imbalance=0.0,
-                            inapplicable_action_cost=0.0, migration_scale_bytes=1.0e10),
+                            inapplicable_action_cost=0.0, migration_scale_fraction=1.0 / 6.0),
     )
     env = ShardMindEnv(cfg)
     env.reset(seed=0)
@@ -109,7 +109,37 @@ def test_migration_weight_penalizes_moving_data(tiny_config) -> None:
     target = int(np.flatnonzero(~env.sim.catalog.replicas[0])[0])
     _, reward, _, _, info = env.step(space.encode(ActionKind.MOVE_REPLICA_TO, 0, target))
     assert info["action_applied"]
-    assert reward == pytest.approx(-info["bytes_moved"] / 1.0e10)
+    unit = cfg.catalog.dataset_bytes / 6.0
+    assert reward == pytest.approx(-info["bytes_moved"] / unit)
+
+
+def test_migration_cost_is_a_dataset_fraction_not_a_byte_count(tiny_config) -> None:
+    """The same physical move must score the same in a big and a small cluster.
+
+    This is the property the whole sim-to-real transfer rests on. The simulator
+    holds 60 GB and the cluster will hold one or two; if migration were charged
+    in bytes, a pre-trained Q-function would arrive on the cluster believing
+    every move was almost free. ADR-0010.
+    """
+    reward_cfg = RewardConfig(w_latency=0.0, w_migration=1.0, w_imbalance=0.0,
+                              inapplicable_action_cost=0.0)
+    rewards = []
+    for dataset_bytes in (6.0e10, 1.0e9):
+        cfg = replace(
+            tiny_config,
+            reward=reward_cfg,
+            catalog=replace(tiny_config.catalog, dataset_bytes=dataset_bytes),
+        )
+        env = ShardMindEnv(cfg)
+        env.reset(seed=0)
+        space = env.sim.action_space
+        target = int(np.flatnonzero(~env.sim.catalog.replicas[0])[0])
+        _, reward, _, _, info = env.step(
+            space.encode(ActionKind.MOVE_REPLICA_TO, 0, target))
+        assert info["action_applied"]
+        rewards.append(reward)
+
+    assert rewards[0] == pytest.approx(rewards[1], rel=1e-9)
 
 
 def test_a_policy_that_follows_the_traffic_beats_one_that_does_not(default_config) -> None:

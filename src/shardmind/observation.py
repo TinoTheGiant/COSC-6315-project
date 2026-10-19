@@ -146,8 +146,13 @@ class ObservationEncoder:
             cost.storage_bytes_per_region / self.topology.storage_capacity_bytes, 0.0, 1.0
         )
 
+        # Churn is a dataset fraction for the same reason the reward's
+        # migration term is: the observation space must mean the same thing in
+        # the simulator and on the cluster or the pre-trained weights do not
+        # transfer. One unit is the whole dataset moved within the history
+        # window, which saturates the feature.
         obs[self.layout["churn"]] = np.clip(
-            churn_history / cfg.reward.migration_scale_bytes, 0.0, 1.0
+            churn_history / cfg.catalog.dataset_bytes, 0.0, 1.0
         )
         obs[self.layout["rtt"]] = (self.topology.rtt / self.topology.max_rtt).ravel()
 

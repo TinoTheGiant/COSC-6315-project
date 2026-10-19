@@ -131,9 +131,11 @@ tab (the phone app works), and GitHub provides a Linux machine that runs the
 whole thing for up to six hours and hands back the results. The laptop is not
 involved at all. There are two workflows:
 
-- **Experiments** runs the simulator. Seeds, episode length and volatility are
-  fields in the form. It prints the result table into the run summary and
-  uploads the figures and the full record.
+- **Experiments** runs the simulator under the reference policies. Seeds,
+  episode length and volatility are fields in the form. It prints the result
+  table into the run summary and uploads the figures and the full record.
+- **Train agent** trains the DQN and then scores it against every baseline on
+  held-out seeds, in one job.
 - **Cluster pilot** brings up the six-node CockroachDB cluster, proves the
   injected latency is real, and runs the gate below.
 
@@ -276,6 +278,41 @@ report into the run summary, and uploads two artifacts: the whole run, and the
 figures on their own so they can be dropped straight into the paper. More runs
 is a button press.
 
+### Training the agent
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install stable-baselines3 tensorboard
+
+python scripts/train.py --timesteps 300000
+```
+
+About 170 environment steps a second on an ordinary CPU, so 300,000 steps is
+roughly half an hour. There is no GPU in this; the network is two hidden layers
+of 256 and the bottleneck is the simulator, not the gradient.
+
+The run writes one directory under `results/models/` holding the weights, both
+configurations, the evaluation history and a manifest. Two details matter and
+are easy to get wrong:
+
+- **Training resets onto a rotating set of 64 workload seeds**, not one. An
+  agent trained on a single realization learns that realization.
+- **Evaluation uses a disjoint block of seeds** and acts greedily, so the curve
+  reported is generalization rather than recall, and the agent is not penalized
+  for exploring.
+
+Score the result against the baselines, through the same episode loop they use:
+
+```bash
+python scripts/run_experiment.py --policies static follow best agent \
+    --model results/models/<id>/best_model.zip --seeds 8
+```
+
+**On GitHub, with no laptop.** Actions tab, **Train agent**, *Run workflow*. It
+trains, then evaluates against every baseline on held-out seeds, puts the
+comparison table in the job summary and uploads both the model and the
+evaluation.
+
 ### Track 2: the real cluster
 
 **The easy way, no local setup.** Push, then open the repository's **Actions**
@@ -373,6 +410,9 @@ src/shardmind/
   simulator.py    clock, transition, episode
   env.py          the Gymnasium adapter
   policies.py     reference policies to compare the agent against
+  agent/          the DQN: hyperparameters, training loop, and a wrapper that
+                  makes a trained model satisfy the same Policy protocol as
+                  the baselines, so both are scored by one evaluation path
   viz.py          the shared plotting vocabulary and the print-safe palette
 docker/           Dockerfile and the generated six-node Compose file
 scripts/
@@ -381,10 +421,12 @@ scripts/
   smoke_run.py       a quick look under each reference policy
   live_dashboard.py  the animated world map
   analysis_dashboard.py, plot_figures.py, make_atlas.py, export_episode.py
+  train.py           trains the DQN
   gen_cluster.py, cluster.sh, falsification_test.py   stage 2
   measure_action_space.py  reproduces the figures in ADR-0002
 .github/workflows/
   experiments.yml   simulator runs on GitHub's machines, figures uploaded
+  train.yml         trains the agent, then scores it against the baselines
   cluster-pilot.yml the whole stage-2 run, unattended
 tests/            ~150 tests
 docs/             specification, architecture, 11 ADRs, roadmap, debt audit

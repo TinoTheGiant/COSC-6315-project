@@ -10,7 +10,7 @@ three translations and nothing else:
 The reward is the negative weighted sum of three normalized terms::
 
     r = -( w_latency   * mean_latency_ms / latency_scale_ms
-         + w_migration * bytes_moved     / migration_scale_bytes
+         + w_migration * bytes_moved / (dataset_bytes * migration_scale_fraction)
          + w_imbalance * load_imbalance
          + inapplicable_action_cost  if the action changed nothing )
 
@@ -37,6 +37,28 @@ from shardmind.observation import ObservationEncoder
 from shardmind.simulator import ClusterSimulator
 
 ENV_ID = "ShardMind-v0"
+
+
+def observe(encoder: ObservationEncoder, sim: ClusterSimulator) -> np.ndarray:
+    """Encode a simulator's current state as an observation vector.
+
+    Lives here rather than on the simulator because the simulator knows nothing
+    about reinforcement learning ([ADR-0005]). It is a module-level function
+    rather than a method so that a trained policy can be evaluated outside a
+    Gymnasium environment -- by ``shardmind.agent.policy.LearnedPolicy``, and so
+    by ``scripts/run_experiment.py`` -- against exactly the same encoding the
+    agent saw during training. One definition, or the agent is quietly scored on
+    a different observation than it learned from.
+    """
+    result = sim.last
+    return encoder.encode(
+        catalog=sim.catalog,
+        window=result.window,
+        generator=sim.generator,
+        cost=result.cost,
+        churn_history=sim.churn_history,
+        progress=sim.progress,
+    )
 
 
 class ShardMindEnv(gym.Env):
@@ -87,20 +109,16 @@ class ShardMindEnv(gym.Env):
     # ------------------------------------------------------------- internals
 
     def _observe(self) -> np.ndarray:
-        result = self.sim.last
-        return self.encoder.encode(
-            catalog=self.sim.catalog,
-            window=result.window,
-            generator=self.sim.generator,
-            cost=result.cost,
-            churn_history=self.sim.churn_history,
-            progress=self.sim.progress,
-        )
+        return observe(self.encoder, self.sim)
 
     def _reward(self, result) -> float:
         w = self.cfg.reward
         latency_term = result.cost.mean_latency_ms / w.latency_scale_ms
-        migration_term = result.bytes_moved / w.migration_scale_bytes
+        # A fraction of the dataset, never a byte count. This is what makes a
+        # Q-function pre-trained on the 60 GB simulator meaningful on a 1 GB
+        # cluster: the same physical move scores the same in both. ADR-0010.
+        migration_term = result.bytes_moved / (
+            self.cfg.catalog.dataset_bytes * w.migration_scale_fraction)
         imbalance_term = result.cost.load_imbalance
         penalty = 0.0 if result.mutation.applied else w.inapplicable_action_cost
         return float(

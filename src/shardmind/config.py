@@ -102,8 +102,9 @@ class CatalogConfig:
     max_fragments: int = 20
     min_replicas: int = 2
     max_replicas: int = 4
-    #: Total logical dataset size. Only the ratio to ``migration_scale_bytes``
-    #: in :class:`RewardConfig` affects learning.
+    #: Total logical dataset size. Migration cost is expressed as a fraction
+    #: of this, never in bytes, so that a 60 GB simulator and a 1 GB cluster
+    #: produce rewards on the same scale. See :class:`RewardConfig`.
     dataset_bytes: float = 6.0e10
     #: How the initial fragments are placed: ``"hash"`` spreads primaries round
     #: robin over regions, as a consistent-hash partitioner would;
@@ -142,7 +143,17 @@ class RewardConfig:
     w_imbalance: float = 0.10
     #: Divisors that put each term on a comparable scale before weighting.
     latency_scale_ms: float = 100.0
-    migration_scale_bytes: float = 1.0e10
+    #: Migration is charged as ``bytes_moved / (dataset_bytes * this)``, that
+    #: is, as a fraction of the whole dataset rather than in bytes. The
+    #: simulator holds 60 GB and the CockroachDB cluster will hold one or two;
+    #: in bytes the same physical move would score sixty times differently in
+    #: the two environments, and a pre-trained Q-function would have to unlearn
+    #: the difference during fine-tuning. That is precisely the transfer
+    #: failure ADR-0009 chose CockroachDB to avoid. The default divisor of
+    #: 1/6 sets the unit of migration cost at one sixth of the dataset, which
+    #: is one fragment at the default granularity, so a reward of -1 in this
+    #: term means "a typical fragment moved".
+    migration_scale_fraction: float = 1.0 / 6.0
     #: Cost charged when an action is inapplicable in the current state and
     #: resolves to a no-op. Small, per the declarative action semantics: an
     #: inapplicable action should be uninteresting, not catastrophic.

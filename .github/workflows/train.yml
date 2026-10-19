@@ -1,0 +1,127 @@
+# Train the DQN on GitHub's hardware, then score it against the baselines.
+#
+# One job, two halves. The first trains; the second evaluates the resulting
+# model through scripts/run_experiment.py, which is the same loop the baselines
+# run through. The artifact therefore contains the comparison table, not just a
+# set of weights that somebody still has to measure.
+#
+# Timing, measured: roughly 170 environment steps per second on a two-core
+# runner, so 300,000 steps is about half an hour. A six-hour job ceiling leaves
+# generous headroom for longer budgets.
+name: Train agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      timesteps:
+        description: "Training steps. ~170/s, so 300000 is about 30 minutes"
+        default: "300000"
+      windows:
+        description: "Decision windows per episode"
+        default: "200"
+      volatility:
+        description: "Workload volatility"
+        default: "1.0"
+      seed:
+        description: "Learner seed. Change it for an independent training run"
+        default: "0"
+      eval_seeds:
+        description: "Held-out seeds used for the final comparison table"
+        default: "8"
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # The CPU-only torch build. The CUDA build is several gigabytes and the
+      # runners have no GPU, so installing it would cost minutes and buy
+      # nothing.
+      - name: Install dependencies
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install stable-baselines3 tensorboard numpy pandas matplotlib gymnasium pytest
+
+      - name: Test suite
+        env:
+          PYTHONPATH: src
+        run: python -m pytest tests -q
+
+      - name: Train
+        id: train
+        env:
+          PYTHONPATH: src
+          MPLBACKEND: Agg
+          TIMESTEPS: ${{ inputs.timesteps }}
+          WINDOWS: ${{ inputs.windows }}
+          VOLATILITY: ${{ inputs.volatility }}
+          SEED: ${{ inputs.seed }}
+        run: |
+          python scripts/train.py \
+            --timesteps "$TIMESTEPS" \
+            --windows "$WINDOWS" \
+            --volatility "$VOLATILITY" \
+            --seed "$SEED"
+          MODEL_DIR=$(ls -d results/models/*/ | sort | tail -1)
+          echo "model_dir=${MODEL_DIR%/}" >> "$GITHUB_OUTPUT"
+          echo "model_id=$(basename "${MODEL_DIR%/}")" >> "$GITHUB_OUTPUT"
+
+      # The point of the second half: the agent is measured by the same episode
+      # loop as the baselines, on seeds it never trained on.
+      - name: Evaluate against the baselines
+        id: eval
+        env:
+          PYTHONPATH: src
+          MPLBACKEND: Agg
+          WINDOWS: ${{ inputs.windows }}
+          VOLATILITY: ${{ inputs.volatility }}
+          EVAL_SEEDS: ${{ inputs.eval_seeds }}
+        run: |
+          python scripts/run_experiment.py \
+            --policies static random follow best agent \
+            --model "${{ steps.train.outputs.model_dir }}/best_model.zip" \
+            --seeds "$EVAL_SEEDS" \
+            --seed-start 2000 \
+            --windows "$WINDOWS" \
+            --volatility "$VOLATILITY" \
+            --label "agent-${{ steps.train.outputs.model_id }}" \
+            --figures
+          RUN_DIR=$(ls -d results/runs/*/ | sort | tail -1)
+          echo "run_dir=${RUN_DIR%/}" >> "$GITHUB_OUTPUT"
+          echo "run_id=$(basename "${RUN_DIR%/}")" >> "$GITHUB_OUTPUT"
+
+      - name: Put the comparison in the job summary
+        run: |
+          cat "${{ steps.eval.outputs.run_dir }}/report.md" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo ""
+            echo "### Training"
+            echo ""
+            echo '```json'
+            cat "${{ steps.train.outputs.model_dir }}/best_model.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the model
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-${{ steps.train.outputs.model_id }}
+          path: ${{ steps.train.outputs.model_dir }}
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Upload the evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-${{ steps.eval.outputs.run_id }}
+          path: ${{ steps.eval.outputs.run_dir }}
+          retention-days: 90
+          if-no-files-found: error
