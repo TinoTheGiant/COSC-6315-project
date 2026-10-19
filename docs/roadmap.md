@@ -1,66 +1,94 @@
 # Roadmap
 
-**Window:** 11 September to 6 November 2026. **Rewritten 7 October**, at day 27
-of 57, because [ADR-0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md) put
-a real-cluster workstream on the critical path and the original plan had no room
-for one.
+**Target: 26 October 2026.** Rewritten 19 October, at day 39, for two reasons:
+the deadline moved in from 6 November, and the midterm rubric arrived and says
+what the submission is actually marked on. The plan below is organized around
+that rubric rather than around the original phase structure, because points not
+earned are the only failure mode that matters this week.
 
 ## Where the project actually stands
 
 | | State |
 |---|---|
-| Simulator, workload, cost model, action space, observation | **done**, 122 tests passing |
-| Baselines | **partial.** `StaticHashPolicy`, `RandomPolicy`, `FollowTrafficPolicy` built. No characterization tests. Threshold and Lion-style rebalancers not built |
+| Simulator, workload, cost model, action space, observation | **done**, 152 tests passing |
+| Reference policies | **done.** `StaticHashPolicy`, `RandomPolicy`, `FollowTrafficPolicy`, plus the per-window bound. No characterization tests |
+| Reward normalization to a dataset fraction | **done**, 19 October. ADR-0010's precondition for pre-training |
+| Experiment record keeping | **done**, 19 October. `scripts/run_experiment.py`; config, seeds and commit recorded with every row |
 | Visualization, dashboards, GIS map, figure design system | **done** |
-| Tabular Q-learning sanity check | **not started** |
-| DQN wiring | **not started**. No `shardmind/agent/`, no `scripts/train.py` |
-| Real-cluster harness | **not started**. `shardmind/harness/` specified in [`harness-architecture.md`](harness-architecture.md), not built |
-| Paper | **not started** |
+| DQN wiring | **done**, 19 October. `shardmind/agent/`, `scripts/train.py`, verified end to end on a short run. **Not yet trained to convergence** |
+| Real-cluster gate | **passed once, must be re-run.** Run 1 compared one region against two, not six, because of a `RELOCATE LEASE` constraint found during it |
+| Real-cluster harness | **not started.** Specified in [`harness-architecture.md`](harness-architecture.md) |
+| Paper | **not started.** This is now the largest gap |
+| Tabular Q sanity check | **dropped.** The DQN is wired and cheap to run; a reduced-state rehearsal of it no longer buys enough to spend a day on |
 
-Two measured results already exist and are reportable: a traffic-following
-policy beats static hashing 94 ms against 157 ms at 451 GB moved per episode,
-and per-cell traffic concentration is 53 percent against an even split of 16.7
-percent whilst per-fragment is 41 percent. Both are **simulator** results and
-must be labeled as such throughout.
+## What the midterm rubric asks for, and where each point sits
 
-## The shape of the remaining 30 days
+Fifty points. The honest reading is that roughly forty are already earned by
+work that exists, and the ten that are not are the two cheapest categories on
+the sheet. That is the whole argument for how this week is spent.
 
-Two tracks, run in parallel, because the cluster work is mostly waiting on
-containers and the simulator work is mostly waiting on training runs. One gate
-between them that decides whether the headline result is measured or modeled.
+| Rubric item | Points | State |
+|---|---|---|
+| Core system or simulation framework established and functional | 10 | **Earned.** Simulator, cost model, action space, observation encoder, Gymnasium adapter, 152 tests |
+| Baseline integration or data pipeline operating without blocking errors | 5 | **Earned.** Three reference policies plus a bound, driven by one experiment runner, dispatchable from Actions |
+| Codebase organization, version control, documentation | 5 | **Earned.** Git since 11 October, twelve ADRs, a README that explains the project to a non-specialist |
+| Clear identification of evaluation metrics | 5 | **Earned in the code, not yet in prose.** Mean and p95 latency, GB moved per episode, cross-region transaction fraction, load imbalance. Needs to be stated in the paper |
+| Implementation of a classical baseline | 5 | **Earned.** Static hash partitioning is the classical system; follow-traffic is the reactive heuristic |
+| Preliminary test datasets or synthetic workload generators active | 5 | **Earned.** The drifting, spiking, Zipf-skewed workload generator with transaction templates |
+| Early quantitative results or trace logs | 3 | **One dispatch away.** Press *Run workflow* on **Experiments** and the run record is the evidence |
+| Basic analysis, critical thinking on anomalies | 2 | **Partly earned.** [`open-questions.md`](open-questions.md) and the two pilot defects in [`results-log.md`](results-log.md) are exactly this; both need a paragraph in the paper |
+| Completed **Introduction** and **Related Work** | 5 | **Not started** |
+| Established **System Model / Methodology** | 2 | **Not started**, but [`mdp-specification.md`](mdp-specification.md) is most of it already |
+| Placeholders for Evaluation and Conclusion | 0 | Trivial |
+| Effective presentation of architecture, methodology, preliminary outcomes | 2 | **Not started** |
+| Realistic execution plan and mitigation | 1 | **This document** |
 
-```
-  Track A  simulator        action encoding -> tabular Q -> DQN -> pre-train -> sim results
-  Track B  cluster          key -> 6 nodes -> settings -> FALSIFICATION TEST -> harness -> fine-tune
-                                                              |
-                                                     GATE, 12 October
-```
+**The conclusion to draw from that table:** the paper and the presentation are
+worth ten points and perhaps two days of work. Training the agent to beat the
+baseline is worth nothing directly on this rubric. It matters enormously for
+the final submission and not at all for this one, so it runs in the background,
+on GitHub's machines, whilst the writing happens.
 
-| Block | Dates | Track A, simulator | Track B, cluster |
-|---|---|---|---|
-| 0 | **today** | Push to private GitHub; pin dependencies | Obtain the free licence key; open a Codespace |
-| 1 | 07–12 Oct | `MOVE_REPLICA` encoding; RF 3; **reward normalization**; tabular Q sanity check | `cluster-up`/`down` scripts; six nodes; verify five settings; **falsification test** |
-| 2 | 13–19 Oct | DQN wired; first runs on the reduced instance | Measurement protocol, fix `N`; `placement.py`; `executor.py` |
-| 3 | 20–26 Oct | Full pre-training; pre-training converged and saved | `driver.py`; `harness/env.py`; `DQN.load` parity check |
-| 4 | 27 Oct–02 Nov | Simulator results, sweeps, all figures | **Fine-tuning run**, overnight; cluster results |
-| 5 | 03–06 Nov | Full draft, revision, buffer | |
+## The seven days
 
-## The gate: CLEARED, 8 October
+Everything on the cluster and every training run is a button press in the
+Actions tab, so the laptop constraint does not bind on any of it. The writing is
+the only work that needs a person at a keyboard.
 
-**Cluster pilot #1 passed.** p95 gap 193.7 ms between co-located and spread
-leaseholders, bootstrap 95% CI [190.8, 195.5]. Placement measurably changes
-transaction latency on a real cluster, so the reward signal exists and agent work
-is unblocked four days early. The `netem` injection measured accurate to 0.2 ms
-across all five pairs.
+| Day | Press a button | Write |
+|---|---|---|
+| **Mon 20** | Dispatch **Experiments**: 8 seeds, 200 windows. Dispatch **Cluster pilot**, which re-runs the gate on the fixed script | Paper skeleton, all sections present. Introduction |
+| **Tue 21** | Dispatch **Train agent**: 300,000 steps, about half an hour | Related Work, from Lion and GeoTP outwards |
+| **Wed 22** | Evaluate the trained agent; if it does not clear the follow-traffic baseline, adjust the migration weight and the exploration schedule and dispatch again | System Model and Methodology, mostly transcribed from `mdp-specification.md` |
+| **Thu 23** | Dispatch **Experiments** at volatility 0.5, 1.0 and 2.0 for the sweep | Evaluation section, written around whatever results exist by then |
+| **Fri 24** | Collect figures from the artifacts | Finish Evaluation; Conclusion and Limitations as honest placeholders |
+| **Sat 25** | — | Slides: architecture, methodology, preliminary outcomes, plan for the remaining 40 percent |
+| **Sun 26** | Buffer | Read the whole thing once, out loud, and submit |
 
-Two defects the run exposed, both fixed: `RELOCATE` reports failure in a result
-column rather than a non-zero exit, and `RELOCATE LEASE` only works to a store
-already holding a replica. The second means run 1 compared one region against
-two, not one against six, so **the gate must be re-run on the fixed script before
-any number from it is reported**. Full entry, including a finding worth putting
-in the paper, in [results-log.md](results-log.md).
+## Mitigation, item by item
 
-The original statement of the gate follows, since the re-run still has to pass it.
+**If the agent does not beat the follow-traffic baseline by 26 October.** It is
+reported as a preliminary negative, with the training curve and the held-out
+evaluation, and the submission still clears the 50 to 60 percent milestone the
+rubric asks for. Nothing on the rubric requires the agent to win. The failure
+mode to avoid is spending the week tuning hyperparameters and arriving with no
+paper, which converts a safe thirty-eight points into a risky twenty.
+
+**If the re-run gate fails.** The contribution becomes the simulator result and
+the cluster becomes a measured negative finding, exactly as planned in October.
+The fallback has not changed and remains publishable.
+
+**If the Actions runner is slow or the job is queued.** Every workflow writes a
+complete, self-describing run directory, so a job that finishes at 3 a.m.
+unattended is still usable at 9 a.m. Nothing waits on a person watching it.
+
+**If OneDrive or the laptop misbehaves.** The repository is on GitHub, the
+results are in Actions artifacts, and neither needs the machine.
+
+**What is deliberately not being done this week.** The real-cluster harness,
+fine-tuning on the cluster, characterization tests for the baselines, and the
+Lion-style cost-model rebalancer. All four are for the final submission. Listed
+here so none of them gets quietly started on Tuesday.
 
 ## The gate, originally scheduled 12 October
 
@@ -106,96 +134,42 @@ schedule.
 | **Lion-style cost-model rebalancer baseline** | Stretch. It is the strongest related-work comparison and the first thing to add back if block 2 finishes early |
 | **Six regions, if the pilot says they will not fit** | Fall back to four regions on **both** sides and re-run the simulator baselines at four. Decide in block 1, never later, because region count fixes the action-space cardinality and therefore weight transfer |
 
-## Block 1, concretely
+## Block 1, kept as a record
 
-Six days, and the ordering matters because each item de-risks the next.
+Block 1 ran 7 to 19 October and is complete except for the cluster re-run. Its
+items, with outcomes:
 
-**Where the work runs.** [ADR-0011](adr/ADR-0011-where-the-compute-runs.md)
-settles it with two measurements. The simulator runs at **0.356 ms/step**, so a
-50,000-step pre-training run is 18 seconds of environment time and single-digit
-minutes in total: pre-training is free and stays. A GPU would not help, because
-each cluster step is dominated by network wait rather than arithmetic, so Kaggle
-is the wrong tool and is rejected. The cluster runs on the laptop when it is
-available and in **GitHub Codespaces** when it is not, from the same Compose
-stack, with 30 free hours a month on a 4-core machine and state that survives
-stopping the codespace.
+| Item | Outcome |
+|---|---|
+| Enterprise Free licence key | Obtained. No payment method, no charge |
+| Six nodes under Docker, generated from `DEFAULT_RTT_MS` | Done. `scripts/gen_cluster.py`, `scripts/cluster.sh`, verified in CI by the pilot workflow |
+| Verify the five balancer settings individually | Done, each set and read back in the pilot workflow |
+| The falsification test | **Passed**, 8 October, then invalidated by a defect found during it. Re-run pending |
+| `MOVE_REPLICA` encoding | Done, 19 October. 261 actions, chosen by measurement. [ADR-0002 amendment](adr/ADR-0002-flat-declarative-action-space.md) |
+| Replication factor fixed at 3 | Done |
+| Migration cost as a dataset fraction | Done, 19 October |
+| Tabular Q-learning sanity check | **Dropped.** The DQN is wired and a short run costs minutes; rehearsing it on a reduced state space no longer earns its day |
 
-**Block 0, today, 30 minutes total.** Three things that are pure risk reduction,
-itemized in [`tech-debt.md`](tech-debt.md): push the repository to a private
-GitHub repo so an off-machine copy exists, pin the dependencies, and obtain the
-licence key. The first of those is the highest-value half hour remaining in the
-project.
-
-**Track B first, because it has a hardware answer that could change everything.**
-
-1. **Obtain the Enterprise Free licence key.** Free, no payment method, a few
-   minutes. Do it before touching Docker. A cluster running without one is
-   throttled to five concurrent transactions after seven days, and that throttle
-   looks exactly like a catastrophic latency regression rather than like a
-   licensing event.
-2. **Six nodes up under Docker, driven by a script from the first attempt.**
-   One node per region, `--cache=128MiB --max-sql-memory=256MiB` (about 2.3 GB
-   total, so the laptop stays usable), distinct `--locality`, Toxiproxy between
-   regions at half the intended round trip per direction. Write `cluster-up` and
-   `cluster-down` as scripts immediately, per
-   [ADR-0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md): the
-   cluster is rebuilt at the start of every working session, so a manual startup
-   performed twice a day will be got wrong. If six nodes will not fit, call the
-   four-region fallback **today**.
-2b. **Generate and verify the cluster.** `python scripts/gen_cluster.py` emits
-   the Compose file and the `netem` rules from `DEFAULT_RTT_MS`, so the cluster's
-   geography is the simulator's by construction. Then `scripts/cluster.sh up`
-   and, before trusting a single measurement, `scripts/cluster.sh latency`.
-   **None of that configuration has ever been executed**, so treat the first run
-   as a debugging session and budget half a day for it.
-
-3. **Verify the five balancer settings individually.** Four of
-   `kv.allocator.load_based_rebalancing`, `kv.replicate_queue.enabled`,
-   `kv.lease_queue.enabled`, `kv.split_queue.enabled` and
-   `kv.range_merge.queue.enabled` are in source but absent from the public
-   settings documentation. Set each, read it back, and confirm placement stops
-   drifting with the agent idle.
-4. **The falsification test.** The gate above.
-
-**Track A, which can proceed whilst containers download.**
-
-5. [x] **`MOVE_REPLICA` encoding: DONE, 19 October.** Destination-only,
-   `2 x 20 x 6 + 20 + 1 = 261` actions, measured 29.2% applicable against 22.1%
-   for the old space and 22.9% for the naive 861-action form. The farthest-donor
-   tie-break costs no reachability (0 unreachable pairs of 3,600, diameter 5
-   against 3). `MOVE_LEASE` is restricted to regions already holding a replica,
-   which declines 44.7% applicability to keep the cheap and expensive cost tiers
-   distinct. Recorded in the amendment to
-   [ADR-0002](adr/ADR-0002-flat-declarative-action-space.md). **The follow-traffic
-   baseline moved from 94.19 ms to 110.54 ms as a direct consequence**, which is
-   the honest comparison: the baseline now lives in the agent's action space.
-6. **Set replication factor to 3** and re-run the two headline measurements to
-   confirm they survive at fixed RF. If the 94-against-157 gap moves materially,
-   that is a finding and the paper's numbers change.
-6b. **Normalize migration cost to a fraction of dataset size**, in `shardmind.cost`
-   and the harness together. The simulator holds 60 GB and the cluster will hold
-   one or two, so a bytes-denominated reward term puts the two environments on
-   different scales and makes every pre-trained Q-value wrong by a constant.
-   **This must land before pre-training starts**, because the weights depend on
-   it. [Debt item 2](tech-debt.md).
-7. **Tabular Q-learning on a reduced state space.** Three regions, three
-   fragments, allocation only. One question: can *any* learning agent beat static
-   hashing here? If not, the reward function is wrong, and half a day in block 1
-   is the whole point of asking.
+Two decisions from block 1 that still bind everything downstream. The simulator
+runs at **0.356 ms per step**, so pre-training is seconds of environment time
+and minutes in total, which is why a GPU buys nothing here and Kaggle was
+rejected ([ADR-0011](adr/ADR-0011-where-the-compute-runs.md)). And the region
+count fixes the action-space cardinality, so the six-region choice is now
+locked: changing it would invalidate every trained weight.
 
 ## Not yet built
 
-- `shardmind/agent/`, wrapping Stable-Baselines3 DQN, block 2
-- `scripts/train.py`, `scripts/finetune.py`, block 2 and 3
-- `shardmind/harness/`, the five modules in [`harness-architecture.md`](harness-architecture.md), blocks 1 to 3
+- `shardmind/harness/`, the five modules in [`harness-architecture.md`](harness-architecture.md). **Final submission, not this week**
+- `scripts/finetune.py`. Depends on the harness
 - `docs/validation-plan.md`: topology, injected latencies, workload parameters,
   and the agreement statistic that counts as a pass. **Fix the threshold before
   seeing results**
-- Characterization tests for the three existing baselines, pinning each on a
-  fixed seed
+- Characterization tests for the reference policies, pinning each on a fixed seed
 - `tests/test_policies.py`, `tests/test_simulator.py`, `tests/test_observation.py`
   are absent. The coverage gap is real but it is behind the paper in priority
-- `paper/`, block 5
+- The Lion-style cost-model rebalancer baseline. The strongest related-work
+  comparison, and the first thing to add back once the paper exists
+- `paper/`. **Starts Monday 20 October**
 
 ## Working in short sessions
 
@@ -213,9 +187,15 @@ interrupted run is auditable rather than quietly degraded.
 
 ## The schedule's honest risk
 
-The plan has four days of buffer, which is thin, and it depends on the fine-tuning
-run in block 4 working first time. The mitigating fact is that pre-training moves
-the expensive part off the cluster: at 2 to 6 s per step a 2000-step fine-tuning
-run is 1 to 3.5 hours and fits in a night. The thing that would actually break
-this schedule is not compute, it is discovering on 2 November that the cluster
-never had a signal to learn from. That is what the 12 October gate is for.
+One day of buffer, which is thin, and it is spent entirely on writing rather
+than on compute. That is the right place for it: every compute task this week
+is a dispatch that runs unattended on somebody else's machine, and the only
+irreducibly serial work is a person writing prose.
+
+The risk is therefore not that a job fails. It is the familiar one of spending
+Tuesday and Wednesday tuning a learning rate because the agent is more
+interesting than the Related Work section, and arriving on Sunday with a better
+agent and no paper. Ten of the fifty points depend on writing and none of them
+depend on the agent winning. The schedule above is built to make that trade
+hard to get wrong, and this paragraph exists so that the reasoning survives
+being tempted.
