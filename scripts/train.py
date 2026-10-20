@@ -39,6 +39,10 @@ def main() -> None:
     parser.add_argument("--windows", type=int, default=None,
                         help="override windows per episode")
     parser.add_argument("--volatility", type=float, default=None)
+    parser.add_argument("--w-migration", type=float, default=None,
+                        help="reward weight on migration. This is the knob the "
+                             "stability frontier is swept over, and it only means "
+                             "anything here: the baselines never read the reward")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--outdir", type=Path, default=None)
     parser.add_argument("--no-tensorboard", action="store_true")
@@ -51,6 +55,9 @@ def main() -> None:
     if args.volatility is not None:
         env_cfg = env_cfg.evolve(workload=replace(env_cfg.workload,
                                                   volatility=args.volatility))
+    if args.w_migration is not None:
+        env_cfg = env_cfg.evolve(reward=replace(env_cfg.reward,
+                                                w_migration=args.w_migration))
 
     agent_cfg = DQNConfig.load(args.agent_config) if args.agent_config else DQNConfig()
     changes = {}
