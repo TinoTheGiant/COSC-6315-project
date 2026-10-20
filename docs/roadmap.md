@@ -51,6 +51,9 @@ on GitHub's machines, whilst the writing happens.
 
 ## The seven days
 
+Step by step, with the exact dispatch settings, in
+[`midterm-checklist.md`](midterm-checklist.md).
+
 Everything on the cluster and every training run is a button press in the
 Actions tab, so the laptop constraint does not bind on any of it. The writing is
 the only work that needs a person at a keyboard.

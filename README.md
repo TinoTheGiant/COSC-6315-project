@@ -271,8 +271,10 @@ concatenated without ambiguity and no number is ever separated from the
 configuration that produced it. The methods section of the paper is then a
 transcription of `manifest.json` rather than an act of memory.
 
-**Sweeps.** A sweep is several runs that differ in exactly one setting. Run
-them one at a time, then join them:
+**Sweeps.** A sweep is several runs that differ in exactly one setting. The
+**Sweep** workflow runs every value in one job and uploads the assembled table
+and figure, which is one button rather than four downloads. Locally, run them
+one at a time and join them:
 
 ```bash
 python scripts/assemble_sweep.py --over volatility
@@ -440,6 +442,7 @@ scripts/
   measure_action_space.py  reproduces the figures in ADR-0002
 .github/workflows/
   experiments.yml   simulator runs on GitHub's machines, figures uploaded
+  sweep.yml         every value of one setting, assembled into one figure
   train.yml         trains the agent, then scores it against the baselines
   cluster-pilot.yml the whole stage-2 run, unattended
 tests/            ~150 tests

@@ -1,0 +1,104 @@
+# A whole sweep in one button press.
+#
+# Dispatching Experiments once per value works, but it leaves you downloading
+# four archives and joining them by hand, which is ten minutes of fiddling and
+# an easy place to mix up a run. This workflow runs every value in one job and
+# uploads the assembled table and figure, so the output is the paper figure
+# rather than the ingredients for it.
+#
+# Each value is a full run in its own right, with its own manifest, config and
+# seeds, so nothing is lost by doing them together: the artifact contains every
+# individual run directory as well as the assembled sweep.
+name: Sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      # Only the two settings run_experiment.py exposes as flags. Adding a
+      # third means adding the flag there first, or the loop below builds a
+      # command the script does not accept.
+      over:
+        description: "Setting to sweep"
+        type: choice
+        default: volatility
+        options: [volatility, w_migration]
+      values:
+        description: "Comma-separated values, e.g. 0.5,1.0,2.0,4.0"
+        default: "0.5,1.0,2.0,4.0"
+      seeds:
+        description: "Seeds per value"
+        default: "8"
+      windows:
+        description: "Decision windows per episode"
+        default: "200"
+      policies:
+        description: "Space-separated: static random follow best"
+        default: "static random follow best"
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install numpy pandas matplotlib gymnasium pytest
+
+      - name: Test suite
+        env:
+          PYTHONPATH: src
+        run: python -m pytest tests -q
+
+      - name: Run every value
+        env:
+          PYTHONPATH: src
+          MPLBACKEND: Agg
+          OVER: ${{ inputs.over }}
+          VALUES: ${{ inputs.values }}
+          SEEDS: ${{ inputs.seeds }}
+          WINDOWS: ${{ inputs.windows }}
+          POLICIES: ${{ inputs.policies }}
+        run: |
+          read -r -a POLICY_LIST <<< "$POLICIES"
+          IFS=',' read -r -a VALUE_LIST <<< "$VALUES"
+          for VALUE in "${VALUE_LIST[@]}"; do
+            VALUE="$(echo "$VALUE" | tr -d '[:space:]')"
+            echo "::group::$OVER = $VALUE"
+            python scripts/run_experiment.py \
+              --seeds "$SEEDS" \
+              --windows "$WINDOWS" \
+              "--${OVER//_/-}" "$VALUE" \
+              --policies "${POLICY_LIST[@]}" \
+              --label "sweep-$OVER-$VALUE"
+            echo "::endgroup::"
+          done
+
+      - name: Assemble
+        id: assemble
+        env:
+          PYTHONPATH: src
+          MPLBACKEND: Agg
+          OVER: ${{ inputs.over }}
+        run: |
+          python scripts/assemble_sweep.py --over "$OVER"
+          echo "out=results/sweeps/$OVER" >> "$GITHUB_OUTPUT"
+
+      - name: Put the sweep in the job summary
+        run: cat "${{ steps.assemble.outputs.out }}/sweep.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the sweep
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-${{ inputs.over }}-${{ github.run_id }}
+          path: |
+            results/sweeps
+            results/runs
+          retention-days: 90
+          if-no-files-found: error

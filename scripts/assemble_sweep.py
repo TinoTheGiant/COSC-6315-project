@@ -46,7 +46,7 @@ SWEEPABLE = {
 }
 
 LABEL = {"static": "Static hash", "random": "Random", "follow": "Follow traffic",
-         "best": "Best per window", "agent": "Learned policy"}
+         "best": "Best per window (fixed shards)", "agent": "Learned policy"}
 
 
 def load_run(directory: Path) -> tuple[dict, pd.DataFrame]:
