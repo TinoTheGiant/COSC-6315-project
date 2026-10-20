@@ -271,6 +271,19 @@ concatenated without ambiguity and no number is ever separated from the
 configuration that produced it. The methods section of the paper is then a
 transcription of `manifest.json` rather than an act of memory.
 
+**Sweeps.** A sweep is several runs that differ in exactly one setting. Run
+them one at a time, then join them:
+
+```bash
+python scripts/assemble_sweep.py --over volatility
+python scripts/assemble_sweep.py --over w_migration
+```
+
+It refuses to combine runs that differ in more than the swept setting, which is
+the reason it exists rather than a spreadsheet: a sweep assembled from runs with
+different episode lengths is not a sweep, and the figure is wrong in a way
+nobody notices until a reviewer asks.
+
 **On GitHub, with no laptop.** Open the **Actions** tab, choose **Experiments**,
 and press *Run workflow*. Set the seeds, the episode length and the volatility
 in the form. The job runs the test suite first, then the experiment, prints the
@@ -418,6 +431,7 @@ docker/           Dockerfile and the generated six-node Compose file
 scripts/
   run_experiment.py  the only script whose output may be cited: one run,
                      one directory, config and seeds recorded with every row
+  assemble_sweep.py  joins several runs into one sweep table and figure
   smoke_run.py       a quick look under each reference policy
   live_dashboard.py  the animated world map
   analysis_dashboard.py, plot_figures.py, make_atlas.py, export_episode.py

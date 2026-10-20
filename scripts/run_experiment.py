@@ -298,6 +298,10 @@ def main() -> None:
                         help="override windows per episode")
     parser.add_argument("--volatility", type=float, default=None,
                         help="override workload volatility")
+    parser.add_argument("--w-migration", type=float, default=None,
+                        help="override the reward's migration weight. Sweeping this "
+                             "traces the responsiveness against stability frontier: "
+                             "at zero the agent may thrash, high enough it sits still")
     parser.add_argument("--policies", nargs="+", default=list(DEFAULT_POLICIES),
                         choices=list(POLICY_FACTORIES))
     parser.add_argument("--model", type=Path, default=None,
@@ -320,6 +324,8 @@ def main() -> None:
         cfg = cfg.evolve(episode=replace(cfg.episode, windows_per_episode=args.windows))
     if args.volatility is not None:
         cfg = cfg.evolve(workload=replace(cfg.workload, volatility=args.volatility))
+    if args.w_migration is not None:
+        cfg = cfg.evolve(reward=replace(cfg.reward, w_migration=args.w_migration))
 
     seeds = list(range(args.seed_start, args.seed_start + args.seeds))
     started = datetime.now(timezone.utc)
@@ -362,6 +368,7 @@ def main() -> None:
         "policies": list(args.policies),
         "windows_per_episode": cfg.episode.windows_per_episode,
         "volatility": cfg.workload.volatility,
+        "w_migration": cfg.reward.w_migration,
         "agent": agent_record,
         "packages": package_versions(),
         "machine": {

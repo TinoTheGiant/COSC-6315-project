@@ -27,6 +27,9 @@ on:
       volatility:
         description: "Workload volatility. 1.0 is the default environment"
         default: "1.0"
+      w_migration:
+        description: "Reward weight on migration. Sweep it for the stability frontier"
+        default: "0.30"
       policies:
         description: "Space-separated: static random follow best"
         default: "static random follow best"
@@ -80,6 +83,7 @@ jobs:
           SEED_START: ${{ inputs.seed_start }}
           WINDOWS: ${{ inputs.windows }}
           VOLATILITY: ${{ inputs.volatility }}
+          W_MIGRATION: ${{ inputs.w_migration }}
           POLICIES: ${{ inputs.policies }}
           LABEL: ${{ inputs.label }}
         run: |
@@ -89,6 +93,7 @@ jobs:
             --seed-start "$SEED_START" \
             --windows "$WINDOWS" \
             --volatility "$VOLATILITY" \
+            --w-migration "$W_MIGRATION" \
             --policies "${POLICY_LIST[@]}" \
             --label "$LABEL" \
             --figures
