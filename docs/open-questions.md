@@ -312,3 +312,78 @@ submission reports a wired, trained agent, a held-out evaluation, a negative
 result and a diagnosis, which is what an honest progress report looks like at
 50 to 60 percent. The risk is spending the remaining days chasing it instead of
 writing.
+
+---
+
+## The sweep answers the headroom question, 20 October 2026
+
+**Sweep #1**, commit `5f1b671`, 8 seeds per value, 200 windows. Simulator only.
+This supersedes the reading recorded above, which was taken at volatility 1.0
+alone and was therefore misleading.
+
+| volatility | static hash | follow traffic | bound | headroom | follow's advantage |
+|---|---|---|---|---|---|
+| 0.5 | 156.27 | 94.31 | 93.87 | 0.44 ms | 39.7% |
+| 1.0 | 156.11 | 98.66 | 93.66 | 5.00 ms | 36.8% |
+| 2.0 | 155.37 | 125.37 | 89.47 | 35.90 ms | 19.3% |
+| 4.0 | 155.77 | 139.58 | 82.38 | 57.20 ms | 10.4% |
+
+GB moved by follow traffic: 405, 785, 1057, 1115.
+
+**The headroom opens from 0.4 ms to 57.2 ms**, which is 41% of the heuristic's
+own latency at volatility 4. The premise holds, and more strongly than the
+volatility-1.0 reading suggested.
+
+Three things in the table are worth stating separately in the paper.
+
+**Static hashing is flat.** 156.27, 156.11, 155.37, 155.77. It does not degrade
+with volatility because it was never tracking anything in the first place. The
+advantage column therefore falls because the heuristic gets worse, not because
+the baseline gets better.
+
+**The bound improves with volatility**, 93.87 down to 82.38. Sharper traffic
+concentration means a well-chosen placement does better. So the achievable
+optimum rises whilst the reactive heuristic falls, and the widening gap between
+them is the finding.
+
+**The heuristic pays more and gets less.** Movement rises by a factor of 2.75
+whilst the advantage falls from 39.7% to 10.4%. Under fast drift a reactive
+rule is buying churn.
+
+### What this changes
+
+**Train at volatility 2 to 4, not 1.0.** Both agent runs so far trained at
+volatility 1.0, where the entire available prize is 5 ms. The agent was asked
+to win a contest with almost nothing in it. That is the most likely single
+reason the learned policy looks so weak, and it is a mistake in the experiment
+design rather than in the agent.
+
+The earlier entry's conclusion, that the contribution must move to movement
+cost, is withdrawn. Movement cost remains a real second axis, but the latency
+story is intact at the volatilities where the problem is actually hard.
+
+---
+
+## Removing the migration penalty helps, but does not close the gap
+
+**Train agent #2**, commit `5f1b671`, identical to run 1 except
+`w_migration = 0.0`. Evaluated on held-out seeds 2000 to 2007.
+
+| | latency | GB moved |
+|---|---|---|
+| run 1, `w_migration = 0.30` | 146.55 ms | 53.2 |
+| run 2, `w_migration = 0.00` | 135.57 ms | 192.8 |
+| follow traffic | 90.76 ms | 752.6 |
+
+Movement rose by a factor of 3.6 and latency improved by 11 ms. So the
+migration penalty was suppressing movement, as the diagnosis predicted, and it
+was not the only thing.
+
+Two further facts point at what else is wrong. Run 2's held-out evaluation was
+**127.66 ms at the final training step** and still falling, where run 1
+plateaued at 138 ms by step 160,000: the budget ran out before convergence. And
+both runs trained at volatility 1.0, where the sweep above shows only 5 ms of
+headroom exists at all.
+
+The next experiment is therefore not another tuning pass. It is training at
+volatility 2 to 4, for longer, and that is post-midterm work.

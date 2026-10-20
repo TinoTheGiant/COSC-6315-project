@@ -1,0 +1,71 @@
+% References.
+%
+% RULE: do not add an entry for a paper you have not opened. An invented
+% citation is the fastest way to lose a reader's trust, and it is checkable
+% in seconds.
+%
+% Entries marked VERIFY are correct in author, title, venue and year, taken
+% from the paper itself, but need page numbers and a DOI from the publisher
+% before submission.
+
+@inproceedings{lion2024,
+  author    = {Qiushi Zheng and Zhanhao Zhao and Wei Lu and Chang Yao and
+               Yuxing Chen and Anqun Pan and Xiaoyong Du},
+  title     = {Lion: Minimizing Distributed Transactions through Adaptive
+               Replica Provision},
+  booktitle = {Proc. IEEE 40th International Conference on Data Engineering
+               (ICDE)},
+  year      = {2024},
+  note      = {Extended version: arXiv:2403.11221}
+  % VERIFY: pages, DOI.
+}
+
+@inproceedings{geotp2025,
+  author    = {Qiyu Zhuang and Xinyue Shi and Shuang Liu and Wei Lu and
+               Zhanhao Zhao and Yuxing Chen and Tong Li and Anqun Pan and
+               Xiaoyong Du},
+  title     = {{GeoTP}: Latency-aware Geo-Distributed Transaction Processing
+               in Database Middlewares},
+  booktitle = {Proc. IEEE 41st International Conference on Data Engineering
+               (ICDE)},
+  year      = {2025}
+  % VERIFY: pages, DOI.
+}
+
+@article{dqn2015,
+  author  = {Volodymyr Mnih and Koray Kavukcuoglu and David Silver and
+             Andrei A. Rusu and Joel Veness and Marc G. Bellemare and
+             Alex Graves and Martin Riedmiller and Andreas K. Fidjeland and
+             Georg Ostrovski and others},
+  title   = {Human-level control through deep reinforcement learning},
+  journal = {Nature},
+  volume  = {518},
+  number  = {7540},
+  pages   = {529--533},
+  year    = {2015}
+  % VERIFY: DOI.
+}
+
+@article{sb3,
+  author  = {Antonin Raffin and Ashley Hill and Adam Gleave and
+             Anssi Kanervisto and Maximilian Ernestus and Noah Dormann},
+  title   = {Stable-Baselines3: Reliable Reinforcement Learning
+             Implementations},
+  journal = {Journal of Machine Learning Research},
+  volume  = {22},
+  number  = {268},
+  pages   = {1--8},
+  year    = {2021}
+}
+
+% ---------------------------------------------------------------------
+% TO ADD. Each needs reading first.
+%
+% - Two or three classical treatments of fragmentation and allocation as
+%   an optimization problem, for Related Work section A.
+% - One representative paper each from learned index selection, learned
+%   knob tuning and learned query optimization, for Related Work section C.
+% - CockroachDB, for the system used in validation. The SIGMOD 2020 paper
+%   by Taft et al. is the usual citation; open it and confirm before use.
+% - Spanner and TiDB, if the Introduction names them as examples of
+%   production multi-region databases. Only cite them if you name them.

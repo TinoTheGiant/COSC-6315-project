@@ -1,0 +1,39 @@
+% STATUS: OUTLINE ONLY. Zero points at the midterm. Write it after the
+% Evaluation section, because a conclusion written first tends to describe
+% the result you hoped for.
+
+\section{Conclusion and Future Work}
+
+% ---------------------------------------------------------------------
+% WHAT TO SAY, in about three paragraphs.
+%
+% 1. What was established. The problem stated as an MDP with a measured
+%    action encoding; four baselines; a validated cost assumption on real
+%    hardware; and the measured relationship between workload volatility
+%    and the room available to a smarter policy.
+%
+% 2. The main finding. A reactive heuristic is near-optimal under slow
+%    drift and falls 41% short of the achievable bound under fast drift,
+%    whilst moving nearly three times as much data. The case for learning
+%    is therefore conditional on volatility, and that condition is now
+%    measured rather than assumed.
+%
+% 3. What was not achieved. The agent does not yet beat the heuristic.
+%    Say it in one sentence, without hedging, and then say what the
+%    evidence points at.
+
+% ---------------------------------------------------------------------
+\subsection{Future work}
+% In the order they should be attempted:
+%
+% 1. Train at volatility 2 to 4, where there is something to win.
+% 2. Address credit assignment: n-step returns, or reward shaping that
+%    credits a move with the latency it saves in later windows rather
+%    than charging it entirely at the moment it is made.
+% 3. Longer training. Run 2 had not converged at 300,000 steps.
+% 4. Fine-tune the pre-trained agent on the real cluster. The apparatus
+%    exists and the parity constraints are satisfied; the harness is not
+%    yet built.
+% 5. Choose N by measurement and re-run the cluster experiment.
+% 6. Add a cost-model rebalancer in the style of Lion as a stronger
+%    baseline than follow traffic.

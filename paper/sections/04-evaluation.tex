@@ -1,0 +1,143 @@
+% STATUS: OUTLINE ONLY. The rubric awards zero points for this section at
+% the midterm, so it exists to show the structure. Every number below is
+% already measured and recorded; what is missing is the prose and the
+% figures, which is Thursday and Friday's work.
+%
+% Every figure listed here has a run directory behind it. Take the number
+% from the run directory, never from this file, and never from memory.
+
+\section{Evaluation}
+
+% ---------------------------------------------------------------------
+\subsection{Questions}
+% Four, in order:
+%   Q1  Does placement matter at all on a real cluster?
+%   Q2  How much does following the traffic beat doing nothing?
+%   Q3  How does that advantage change as the workload moves faster?
+%   Q4  Does a learned policy beat the heuristic?
+% Q4's answer is "not yet", and the section is structured so that is
+% reported rather than buried.
+
+% ---------------------------------------------------------------------
+\subsection{Setup}
+% Six regions, replication factor 3, 256 cells, 200 decision windows per
+% episode, eight seeds. Round-trip matrix stated as a table.
+% Cluster: six CockroachDB nodes in containers, netem latency injection
+% accurate to 0.1 ms across the measured pairs.
+% Hardware: GitHub Actions ubuntu-latest, 2 cores, 7 GB. State this.
+
+% ---------------------------------------------------------------------
+\subsection{Q1: placement changes latency on a real cluster}
+% Source: Cluster pilot #2, 20 October 2026, docs/results-log.md run 2.
+%
+%                        p50      p95      stdev
+%   leases co-located    272.7    275.5    48.8
+%   leases spread       1013.4   1648.0   302.0
+%   p95 gap 1372.5 ms
+%
+% THREE THINGS THAT MUST APPEAR IN THIS SUBSECTION:
+%
+% 1. "Co-located" means the leases, not the data. With replication factor
+%    3 and one node per region, three replicas cannot fit in one region,
+%    so every write pays a cross-region quorum even in the co-located
+%    case. That is why the co-located p50 is 272.7 ms and not single
+%    digits. The experiment isolates the leaseholder effect, which is
+%    exactly what MOVE_LEASE corresponds to.
+% 2. The confidence interval is indicative, not a precision claim. At
+%    N = 200 transactions the p95 is the 190th order statistic, so the
+%    bootstrap interval is degenerate at the top. Report the gap, report
+%    N, say the interval is indicative, and state that choosing N by
+%    measurement is outstanding work.
+% 3. Six database processes shared two cores. Say so.
+
+% ---------------------------------------------------------------------
+\subsection{Q2: following the traffic beats doing nothing}
+% Source: Experiments #1, 20 October 2026, 8 seeds, volatility 1.0.
+%
+%   Static hash                      156.11  [148.92, 164.33]     0.0 GB
+%   Random                           158.02  [150.98, 165.63]   204.8 GB
+%   Follow traffic                    98.66  [ 89.49, 106.58]   785.2 GB
+%   Best per window (fixed shards)    93.66  [ 86.60,  99.63]     0.0 GB
+%
+% 36.8% improvement. Note that random is no better than static despite
+% moving 205 GB, which is the point of including it: the gain comes from
+% choosing where, not from moving.
+%
+% TABLE 1 goes here.
+
+% ---------------------------------------------------------------------
+\subsection{Q3: the advantage collapses as the workload moves faster}
+% Source: Sweep #1, 20 October 2026, 8 seeds per value.
+% THIS IS THE SECTION THE PAPER IS FOR. Give it the space.
+%
+%   volatility   static   follow   bound    headroom   advantage
+%        0.5     156.27    94.31   93.87     0.44 ms      39.7%
+%        1.0     156.11    98.66   93.66     5.00 ms      36.8%
+%        2.0     155.37   125.37   89.47    35.90 ms      19.3%
+%        4.0     155.77   139.58   82.38    57.20 ms      10.4%
+%
+%   GB moved by follow traffic: 405 -> 785 -> 1057 -> 1115
+%
+% The three observations, in this order:
+%
+%   (a) Static hashing is flat. It does not degrade with volatility
+%       because it was never tracking anything. Say this plainly; it is
+%       the reason the advantage column falls rather than the baseline
+%       rising.
+%   (b) The bound IMPROVES with volatility, 93.87 -> 82.38, because
+%       sharper traffic concentration means a well-chosen placement does
+%       better. So the achievable optimum gets better whilst the
+%       heuristic gets worse. That widening gap is the finding.
+%   (c) The heuristic pays more and gets less: movement rises from
+%       405 GB to 1115 GB whilst its advantage falls from 39.7% to
+%       10.4%. A reactive rule under fast drift is buying churn.
+%
+% The conclusion to draw: the room for a learned policy is largest
+% exactly where the problem is hardest. At volatility 0.5 there is
+% nothing to win. At volatility 4 there is 41% of the heuristic's own
+% latency to win.
+%
+% FIGURE 2 goes here, two panels: latency against volatility, and GB
+% moved against volatility. Source: results/sweeps/volatility/sweep.png.
+
+% ---------------------------------------------------------------------
+\subsection{Q4: the learned policy does not yet match the heuristic}
+% Sources: Train agent #1 and #2, 20 October 2026, both at volatility 1.0,
+% both evaluated on held-out seeds 2000-2007.
+%
+%   run 1, w_migration = 0.30:   146.55 ms,  53.2 GB moved
+%   run 2, w_migration = 0.00:   135.57 ms, 192.8 GB moved
+%   follow traffic:               90.76 ms, 752.6 GB moved
+%
+% Report this straight. The structure of the argument:
+%
+%   (a) Run 1 learned to sit still: 53 GB against the heuristic's 753.
+%       The migration penalty is immediate and certain whilst the latency
+%       benefit is delayed and spread over later windows, and a Q-function
+%       trained for 1,500 episodes resolves that disagreement by not
+%       moving.
+%   (b) Run 2 removed the penalty entirely. Movement rose to 193 GB and
+%       latency improved by 11 ms, which confirms (a) as a contributing
+%       cause but does not close the gap.
+%   (c) Run 2's held-out evaluation was still improving at the final
+%       training step, 127.66 ms at step 300,000 against run 1's plateau
+%       at 138 ms by step 160,000. The budget ran out before convergence.
+%   (d) Both runs trained at volatility 1.0, where the sweep shows the
+%       available headroom is 5 ms. The agent was asked to win a contest
+%       with almost no prize. Training at volatility 2 to 4 is the
+%       obvious next experiment and is outstanding work.
+%
+% FIGURE 3: training curve, held-out latency against timestep, both runs.
+% Source: eval_history.json in each model directory.
+
+% ---------------------------------------------------------------------
+\subsection{Threats to validity}
+% - The simulator's cost model is analytic. Q1 validates that placement
+%   matters on real hardware; it does not validate the magnitudes.
+% - Two cores for six database processes adds scheduling noise.
+% - N = 200 transactions was chosen by convenience rather than by
+%   measurement.
+% - The bound holds the starting shard boundaries, so it is not a global
+%   optimum and should not be read as one.
+% - Results at volatility 1.0 should not be generalized to other
+%   volatilities, which is precisely what Q3 demonstrates.

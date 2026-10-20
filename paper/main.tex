@@ -1,0 +1,60 @@
+% ShardMind: a DQN agent for continuous re-fragmentation and re-allocation
+% of database shards under geographically migrating workloads.
+%
+% COSC 6315, University of Texas Permian Basin.
+%
+% Build:  pdflatex main && bibtex main && pdflatex main && pdflatex main
+%
+% Section files live in sections/. Each one says at the top whether it is
+% written or still an outline, so the state of the draft is visible without
+% reading the whole thing.
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+\begin{document}
+
+\title{ShardMind: Learning to Re-Fragment and Re-Allocate\\
+Database Shards under Geographically Migrating Workloads}
+
+\author{\IEEEauthorblockN{Tinotenda Kaseke}
+\IEEEauthorblockA{\textit{Department of Computer Science} \\
+\textit{University of Texas Permian Basin}\\
+Odessa, TX, USA \\
+tinokaseke@gmail.com}}
+
+\maketitle
+
+\begin{abstract}
+% WRITE LAST. Four sentences: the problem, what was built, the main
+% measured result, what it means. Do not write this until the Evaluation
+% section is finished, because an abstract written early commits you to a
+% result you may not have.
+\end{abstract}
+
+\begin{IEEEkeywords}
+distributed databases, data fragmentation, data allocation, reinforcement
+learning, deep Q-networks, geo-distributed transactions
+\end{IEEEkeywords}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-system-model}
+\input{sections/04-evaluation}
+\input{sections/05-conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

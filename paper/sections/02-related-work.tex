@@ -1,0 +1,112 @@
+% STATUS: written, 20 October 2026.
+%
+% Every citation below points at a source I have read. Before submission,
+% fill the entries marked VERIFY in references.bib with page numbers and
+% DOIs from the publisher, and add any further related work in the three
+% groups the section already sets up. Do not add a citation you have not
+% opened.
+
+\section{Related Work}
+
+Three bodies of work meet in this problem: the classical treatment of
+fragmentation and allocation as an optimization to be solved, recent systems
+that adapt placement to a moving workload, and the use of learning to replace
+hand-written database administration.
+
+\subsection{Fragmentation and allocation as an optimization problem}
+
+The question of how to divide a database and where to put the pieces is as old
+as distributed databases themselves, and the classical treatment is to state it
+as an optimization problem and solve it once. A cost model scores a candidate
+arrangement against an expected workload, and a solver searches for the
+arrangement that minimizes it. The result is then installed and the database
+runs with it.
+
+The weakness is in the word once. A solved-once answer is correct for the
+workload it was solved against and degrades as the real workload departs from
+it. Where the departure is slow this is tolerable, and where the workload has a
+geographic centre that moves on a daily cycle it is not. That observation
+motivates the systems in the next group, which re-solve the problem as the
+workload changes.
+
+% TODO: cite two or three classical treatments here. Candidates to read:
+% vertical and horizontal partitioning in distributed database design, and
+% the allocation problem as stated in the standard textbook treatment.
+
+\subsection{Adapting placement to a moving workload}
+
+Lion~\cite{lion2024} is the closest system to this work in intent. It observes
+that a transaction is slow mainly because it spans machines, and it therefore
+arranges replicas so that some single node holds a copy of every partition a
+given transaction touches, allowing that transaction to commit locally rather
+than through the multi-round agreement protocol that a distributed commit
+requires. A graph-based analyzer groups partitions that are accessed together,
+a cost model assigns those groups to nodes subject to a load-balance
+constraint, and an LSTM predictor forecasts the workload so that replicas are
+provisioned before the shift rather than after it. Lion reports up to 2.7 times
+higher throughput and 76.4\% better scalability than the approaches it is
+compared against.
+
+Lion establishes three things this work depends on. Adapting placement to a
+moving workload is worth a large amount of real throughput. Migration cost and
+load balance both belong in the objective rather than latency alone.
+Anticipating a shift beats reacting to one, by roughly a factor of four in
+adaptation speed.
+
+It also leaves three openings. The adaptation is a heuristic pipeline rather
+than a learned policy: the LSTM forecasts, but a hand-written cost model
+decides, so the system never improves from the outcomes of its own decisions.
+Geographic distance does not appear in its cost function, which is expressed in
+bytes moved, so two placements that differ by an ocean score identically.
+Fragment boundaries are fixed, so Lion moves replicas of a partition but never
+splits one.
+
+GeoTP~\cite{geotp2025} supplies the geographic dimension that Lion does not
+have. It targets database middleware connecting heterogeneous data sources
+across regions, where the dominant costs are the network latency between the
+middleware and its data sources and the length of time a transaction holds
+locks whilst waiting on remote work. GeoTP reduces both: a decentralized
+prepare phase cuts the number of network round trips a distributed transaction
+needs, and a latency-aware scheduler delays lock acquisition so that the
+contention window is shorter. It reports up to 17.7 times improvement on YCSB
+and TPC-C.
+
+GeoTP shows that latency awareness is worth building a scheduler around, and
+its cost accounting is the model for the one used here. It optimizes the
+execution of transactions against a given placement, however, and does not
+change where the data sits. The two papers are therefore complementary, and
+the gap between them is where this work sits: Lion adapts placement without
+seeing geography, GeoTP sees geography without adapting placement.
+
+\subsection{Learning to administer a database}
+
+A separate line of work replaces hand-written database administration with
+learned policies, in index selection, in configuration tuning, and in query
+optimization. The common argument is that these decisions are made repeatedly
+against a changing workload, that the quality of a decision is measurable after
+the fact, and that a system able to learn from its own outcomes should
+eventually beat a fixed rule written by a person who could not anticipate every
+workload.
+
+Placement is a natural member of that family and has received less attention
+than the others, which is the opportunity this work takes up.
+
+% TODO: cite representative learned index selection, knob tuning and query
+% optimization work. Read at least one from each before citing it.
+
+\subsection{What is new here}
+
+This work learns fragmentation and geographic placement \emph{jointly}, as one
+policy, for transactional workloads. Lion learns neither and adapts only
+replica placement. GeoTP optimizes execution rather than placement. The learned
+administration literature addresses other decisions. Stating the contribution
+precisely: the agent chooses, in one action space, where a shard's primary copy
+sits, where its replicas sit, and where the boundary between two shards falls,
+and it is rewarded on a cost that combines transaction latency, the volume of
+data moved, and load imbalance.
+
+I state one limitation of the contribution up front, because the evaluation
+reports it. The agent described here is wired, trained and measured, and it
+does not yet outperform the hand-written heuristic it is meant to replace.
+What this paper establishes is the problem, the measurement apparatus, the
+baselines, and the conditions under which a learned policy has room to win.

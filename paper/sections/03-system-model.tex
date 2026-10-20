@@ -1,0 +1,192 @@
+% STATUS: written, 20 October 2026.
+%
+% Most of this is transcribed from docs/mdp-specification.md and
+% docs/adr/ADR-0002-flat-declarative-action-space.md. If either of those
+% changes, change this with it.
+
+\section{System Model and Methodology}
+
+\subsection{What is being decided}
+
+A cluster has $R$ regions, each holding one database node. The keyspace is
+divided into $C$ atomic cells, and a \emph{shard} is a contiguous run of cells.
+Each shard has one \emph{primary} copy, which serves writes, and some number of
+\emph{replicas}, which hold the same data and can serve reads. The number of
+replicas per shard, called the replication factor, is fixed at three throughout
+this work and is not something the agent controls.
+
+Three decisions are therefore available at any moment. Which region holds a
+given shard's primary. Which regions hold its replicas. Where the boundary
+between two shards falls. The first two are allocation and the third is
+fragmentation, and this work treats them as one problem because they interact:
+splitting a shard is only worth doing if the two halves are then placed
+differently.
+
+\subsection{The cost of a placement}
+
+Latency is computed analytically from a fixed matrix of round-trip times
+between regions. A read costs the round trip to its nearest copy. A write costs
+the round trip to the primary plus the time for a majority of replicas to
+acknowledge it, since a write is not durable until enough copies agree. A
+transaction touching several shards costs its member operations plus, if those
+shards' primaries sit in more than one region, an additional charge for the
+two-phase commit protocol that keeps it atomic.
+
+That last term is the mechanism this work is built on. It is what makes placing
+together two shards that are used together worth something, and therefore what
+makes the fragmentation decision interact with the allocation decision.
+
+\subsection{The workload}
+
+The workload generator produces a stream of requests whose geographic origin
+moves. Each of the $C$ cells sits at an angular position on a circle, as do the
+regions, and traffic for a cell originates predominantly from whichever regions
+sit near its angle. The whole angular field rotates over a daily period, which
+is what makes a placement chosen at one time wrong at a later one. Cell
+popularity follows a Zipf distribution, so a minority of cells carry most of
+the traffic, and localized spikes arrive as a Poisson process, multiplying one
+region's traffic for a short burst.
+
+Adjacent cells are given correlated but not identical angular positions by a
+random walk. This is the detail that makes splitting worthwhile: a wide shard
+spans divergent angles and therefore cannot be placed well anywhere, whilst its
+two halves can each be placed well.
+
+A single parameter, \emph{volatility}, scales the rotation speed, the spike
+rate and the spike size together, so one number moves the environment from
+placid to violent. It is the main axis the evaluation sweeps.
+
+\subsection{The decision problem}
+
+The problem is stated as a Markov decision process. The agent acts once per
+decision window.
+
+\paragraph{Observation} The state is encoded as a fixed-length vector
+describing, for every shard, its size and the regions holding its primary and
+replicas; for every region, its share of requests and its storage occupancy;
+the recent history of data movement; the matrix of inter-region round-trip
+times; and a small set of scalars summarizing current cost.
+
+\paragraph{Actions} The action space is flat and declarative, with 261 actions
+at $R=6$ regions and a cap of 20 shards. Four kinds:
+
+\begin{itemize}
+\item \textsc{move\_lease}$(f, r)$ makes region $r$ the primary for shard $f$.
+It moves no data and is only legal where $r$ already holds a replica.
+\item \textsc{move\_replica\_to}$(f, r)$ places a replica of shard $f$ in
+region $r$, evicting the existing replica furthest from $r$ so that the
+replication factor stays constant. It costs one shard's worth of movement.
+\item \textsc{split}$(f)$ divides shard $f$ at its midpoint.
+\item \textsc{noop} does nothing.
+\end{itemize}
+
+Two properties of this encoding matter. First, every action names a desired end
+state rather than an operation, so every action is defined in every state: an
+action that cannot be applied resolves to a small penalty rather than an
+error. This matters because a Deep Q-Network cannot mask illegal actions, so an
+action space with illegal members would need machinery that this one avoids.
+Second, the encoding was chosen by measurement rather than by taste. The
+destination-only form of \textsc{move\_replica\_to} gives 261 actions against
+861 for the naive source-and-destination form, with a higher fraction of
+actions applicable in a typical state, and a breadth-first search over the
+reachability graph confirms that no placement becomes unreachable.
+
+\paragraph{Reward} The reward is the negative weighted sum of three normalized
+terms: mean latency divided by a scale constant, data moved as a fraction of
+the total dataset, and load imbalance. Expressing movement as a fraction of the
+dataset rather than in bytes is deliberate and necessary: the simulator holds
+60\,GB and the real cluster used for validation holds about 1\,GB, and a reward
+denominated in bytes would score the same physical move sixty times
+differently in the two environments, making a policy pre-trained in one
+meaningless in the other.
+
+\subsection{Baselines}
+
+Four reference points. Three are policies and one is a bound.
+
+\begin{itemize}
+\item \textbf{Static hash} never moves anything. The initial placement is what
+a consistent-hash partitioner produces, and it is held for the whole episode.
+This is what a production database does today and it is the thing to beat.
+\item \textbf{Random} selects a legal action uniformly. It is a control: it
+proves that any gain comes from choosing \emph{where} to move data rather than
+from moving data at all.
+\item \textbf{Follow traffic} finds, each window, the single shard whose
+primary placement costs the most relative to the best available region, and
+moves it towards that region. It is the obvious rule an operator would write by
+hand, and it is myopic by construction, weighing no migration cost and
+anticipating no drift.
+\item \textbf{Best per window (fixed shards)} is not a policy. It is the lowest
+latency reachable by relocating every primary for free and instantly, each
+window, at the shard boundaries the episode started with. No real policy can
+reach it, because it pays no movement cost and sees the window it is
+optimizing. It is also not a global optimum, because it never splits a shard, so
+a policy that splits can legitimately sit below it.
+\end{itemize}
+
+\subsection{The agent}
+
+The agent is a Deep Q-Network. A Q-network is a function that, given the
+current state, estimates the long-run value of each available action; the
+policy is then to take the action with the highest estimate. The network here
+has two hidden layers of 256 units and is trained with the standard
+Stable-Baselines3 implementation~\cite{sb3}, following Mnih et
+al.~\cite{dqn2015}.
+
+Two choices in the training setup are worth stating because they are easy to
+get wrong. Training resets onto a rotating set of 64 workload seeds rather than
+one, because an agent trained on a single realization learns that realization
+rather than the structure behind it. Evaluation uses a block of seeds disjoint
+from the training seeds and acts greedily rather than exploring, so the
+reported number is generalization rather than recall.
+
+\subsection{Metrics}
+
+Every result in this paper reports some subset of five quantities.
+
+\begin{itemize}
+\item \textbf{Mean latency}, in milliseconds, averaged over the windows of an
+episode.
+\item \textbf{p95 latency}, the value below which 95\% of observations fall. It
+is reported alongside the mean because an average can hide a bad tail, and
+users experience the tail.
+\item \textbf{Data moved}, in gigabytes per episode. This is the price paid for
+whatever latency was bought.
+\item \textbf{Cross-region transaction fraction}, the share of transactions
+whose shards span more than one region and which therefore pay the two-phase
+commit charge.
+\item \textbf{Load imbalance}, a measure of how unevenly requests are spread
+across regions, included because a policy can lower latency by piling all the
+work onto one region, which is not a real improvement.
+\end{itemize}
+
+Results are reported as the mean over eight seeds with a 95\% percentile
+bootstrap confidence interval computed over those seeds. The bootstrap is used
+rather than a $t$ interval because eight is a small sample and nothing
+guarantees the per-seed means are normally distributed.
+
+\subsection{Experimental apparatus}
+
+Every number reported here comes from a single script that writes one
+self-contained directory per run, holding the resolved configuration, the seed
+list, the commit the code was at, the package versions, the machine, the raw
+per-window record, the per-seed summary, and the exact command that reproduces
+the run. Runs execute on GitHub Actions rather than on a personal machine, so
+each is unattended and each records the hardware it received. This is reported
+because it is part of the method: a number that cannot be traced to the
+configuration that produced it cannot be defended.
+
+\subsection{Validation on a real cluster}
+
+The simulator's cost model is an assumption, and the assumption is testable.
+I deploy six CockroachDB nodes, one per simulated region, in containers on a
+single host, with wide-area round-trip times injected between them using the
+Linux kernel's traffic control facility. CockroachDB was selected over sixteen
+other candidate systems on one criterion: it exposes a \emph{synchronous}
+statement for relocating a shard's lease and its replicas. Synchrony is
+essential rather than convenient. If a placement command returns before the
+placement has changed, the reward observed after an action belongs to a state
+the action did not produce, and the decision problem is no longer well defined.
+
+% TODO: a figure of the architecture belongs here. Simulator on the left,
+% cluster on the right, the three parity constraints between them.
