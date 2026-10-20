@@ -41,7 +41,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from shardmind.actions import ActionSpace  # noqa: E402
+from shardmind.actions import ActionKind, ActionSpace  # noqa: E402
 from shardmind.config import ShardMindConfig  # noqa: E402
 from shardmind.cost import evaluate  # noqa: E402
 from shardmind.policies import (  # noqa: E402
@@ -136,6 +136,16 @@ def run_episode(cfg: ShardMindConfig, policy_key: str, seed: int) -> pd.DataFram
 
     rows = []
     cumulative_bytes = 0.0
+    # What the policy actually did, not merely what it achieved. Without this
+    # a weak result is indistinguishable between "it never moved anything",
+    # "it moved constantly and badly" and "it spent the episode splitting",
+    # which are three different diagnoses with three different fixes.
+    # The first row is the state before any action, so its action columns are
+    # empty rather than NOOP. Counting that row as a deliberate no-op would
+    # inflate every policy's idleness by one window.
+    action_taken = -1
+    action_kind_name = ""
+    action_applied = True
     for window_index in range(cfg.episode.windows_per_episode + 1):
         window = sim.last.window
         if policy_key == "best":
@@ -170,11 +180,19 @@ def run_episode(cfg: ShardMindConfig, policy_key: str, seed: int) -> pd.DataFram
             "n_fragments": float(sim.catalog.n_fragments),
             "gb_moved": sim.last.bytes_moved / 1e9,
             "cum_gb_moved": cumulative_bytes,
+            # The action that PRODUCED this row's state, so a row reads as
+            # "this is what the cluster looked like after doing that".
+            "action": action_taken,
+            "action_kind": action_kind_name,
+            "action_applied": bool(action_applied),
         })
 
         if sim.last.done:
             break
-        sim.step(policy.act(sim) if policy is not None else space.noop_index)
+        action_taken = policy.act(sim) if policy is not None else space.noop_index
+        action_kind_name = space.decode(action_taken).kind.name
+        result = sim.step(action_taken)
+        action_applied = bool(result.mutation.applied)
         cumulative_bytes += sim.last.bytes_moved / 1e9
 
     return pd.DataFrame(rows)
@@ -184,6 +202,8 @@ def summarize(steps: pd.DataFrame, tail_percentile: float) -> pd.DataFrame:
     """Collapse each (policy, seed) episode to the numbers the paper quotes."""
     rows = []
     for (policy, seed), group in steps.groupby(["policy", "seed"], sort=True):
+        acted = group[group["action_kind"] != ""] if "action_kind" in group else group.iloc[0:0]
+        attempted = acted[acted["action_kind"] != ActionKind.NOOP.name]
         rows.append({
             "policy": policy,
             "seed": int(seed),
@@ -196,6 +216,19 @@ def summarize(steps: pd.DataFrame, tail_percentile: float) -> pd.DataFrame:
             "load_imbalance": float(group["load_imbalance"].mean()),
             "gb_moved_total": float(group["gb_moved"].sum()),
             "final_fragments": float(group["n_fragments"].iloc[-1]),
+            # The share of windows spent on each kind of action, and the share
+            # of them that were inapplicable in the state they met. A policy
+            # that is 95 percent NOOP has not learned a cautious strategy, it
+            # has learned to do nothing.
+            #
+            # NOOP is excluded from the inapplicable rate. Choosing to do
+            # nothing is a decision, not a failed action, and counting it as
+            # one would report every idle policy as maximally incompetent.
+            **{f"frac_{kind.name.lower()}": float(
+                (acted["action_kind"] == kind.name).mean()) if len(acted) else 0.0
+               for kind in ActionKind},
+            "frac_inapplicable": float(
+                1.0 - attempted["action_applied"].mean()) if len(attempted) else 0.0,
         })
     return pd.DataFrame(rows)
 
@@ -276,6 +309,30 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
             f"already close to the best that lease movement alone can do, and that "
             f"what is left for a learned policy is movement cost rather than latency.",
         ]
+
+    # What each policy did with its turns. This is the table that turns "the
+    # agent was weak" into a diagnosis.
+    if "frac_noop" in summary.columns:
+        lines += [
+            "",
+            "## What each policy did with its windows",
+            "",
+            "Share of decision windows spent on each kind of action, and the share",
+            "of chosen actions that were inapplicable in the state they met. An",
+            "inapplicable action costs a small penalty and changes nothing.",
+            "",
+            "| Policy | Move lease | Move replica | Split | Nothing | Inapplicable |",
+            "|---|---|---|---|---|---|",
+        ]
+        for policy in order:
+            group = summary[summary.policy == policy]
+            lines.append(
+                f"| {label.get(policy, policy)} |"
+                f" {group['frac_move_lease'].mean() * 100:.1f}% |"
+                f" {group['frac_move_replica_to'].mean() * 100:.1f}% |"
+                f" {group['frac_split'].mean() * 100:.1f}% |"
+                f" {group['frac_noop'].mean() * 100:.1f}% |"
+                f" {group['frac_inapplicable'].mean() * 100:.1f}% |")
 
     lines += [
         "",

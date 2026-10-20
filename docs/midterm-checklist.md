@@ -61,6 +61,11 @@ Either answer is usable. Neither needs anything rerun.
 
 ### 1b. The diagnostic training run
 
+> **Superseded on 20 October.** The sweep showed the headroom at volatility
+> 1.0 is 5 ms, so both the runs below were competing for almost nothing. The
+> current training runs are in "Step 1c" and use volatility 2 and 4. This
+> entry is kept because the two runs it produced are reported in the paper.
+
 > Actions → **Train agent** → *Run workflow*
 >
 | Field | Value |
@@ -87,6 +92,57 @@ has no reason to, so:
   produces that pair by chance.
 
 Write down which one it is. That sentence is your Limitations section.
+
+### 1c. Training where there is something to win
+
+Dispatch all three at once. They run concurrently and each takes roughly 90
+minutes, so the set costs about 270 Actions minutes of the 2,000 free each
+month.
+
+| | Volatility | Migration weight | Timesteps | Asks |
+|---|---|---|---|---|
+| **A** | `2.0` | `0.30` | `1000000` | What does the stated objective produce where the task is hard but not extreme? |
+| **B** | `4.0` | `0.30` | `1000000` | The same, at the volatility with the most headroom |
+| **C** | `4.0` | `0.0` | `1000000` | With no movement charge at all, how fast can the agent get? The upper bound on its latency |
+
+Everything else default: windows 200, seed 0, eval seeds 8.
+
+Three things changed from the earlier runs, and all three were wrong before.
+
+**Volatility.** Both earlier runs trained at 1.0, where the entire available
+prize is 5 ms. That was a mistake in experiment design rather than in the
+agent.
+
+**Budget.** Run 2's held-out score was still falling at step 300,000. A
+million steps gives it room to converge, and the exploration schedule is a
+fraction of the budget so it anneals over 300,000 steps rather than 90,000.
+
+**What to compare on.** At volatility 4 the follow-traffic heuristic moves
+1,115 GB per episode. Under the project's own reward, with the migration weight
+at 0.30, that movement costs roughly as much as the latency it buys. So the
+heuristic is barely net-positive on the objective the agent is optimizing, and
+comparing the two on latency alone is comparing them on something only one of
+them is trying to maximize. **Report the latency and movement pair, or the
+reward, not latency by itself.** Run C is the exception, since with no movement
+charge latency is the whole objective.
+
+### What to read in the result
+
+The job summary now carries an action mix table: the share of windows each
+policy spent moving a lease, moving a replica, splitting, or doing nothing,
+plus the share of attempted actions that were inapplicable. That turns a weak
+result into a diagnosis.
+
+| What the agent's row shows | What it means |
+|---|---|
+| Mostly **nothing** | It learned to sit still. The movement charge, or credit assignment, is suppressing it |
+| High **inapplicable** | It never learned which actions are legal in which state. An exploration or representation problem |
+| Lots of **move replica**, little **move lease** | It is paying for relocations and not collecting the free follow-up. The two-step sequence is not being learned |
+| A mix resembling follow traffic's | It has learned the heuristic. Then the question is whether it beats it, and on which axis |
+
+For reference, at volatility 1.0 the baselines sit at: follow traffic 42.5%
+lease, 38.7% replica, 0% split, 18.8% nothing, 0% inapplicable; random 86.2%
+inapplicable, which is why it achieves nothing despite moving 205 GB.
 
 ---
 
