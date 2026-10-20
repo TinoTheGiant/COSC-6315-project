@@ -41,11 +41,16 @@ POLICY = {
                "label": "Static hash"},
     "follow": {"color": "#b0aea3", "dash": (0, (1.5, 2)),  "lw": 1.6, "z": 2,
                "label": "Follow traffic"},
-    # The oracle is an upper bound, not a policy. Drawn as a reference rule
-    # rather than a fourth series, which keeps every figure inside the
+    # The bound is not a policy, and it is not a global optimum either. It is
+    # the lowest latency reachable by relocating every lease for free, each
+    # window, AT THE SHARD BOUNDARIES THE EPISODE STARTED WITH. A policy that
+    # splits a shard can therefore sit below this line, which is a correct
+    # result rather than a bug. The label says "fixed shards" so that a
+    # reviewer reading a figure is not left to infer it. Drawn as a reference
+    # rule rather than a fourth series, which keeps every figure inside the
     # three-series grayscale budget. See policy_reference().
     "best":   {"color": "#52514e", "dash": (0, (4, 2, 1, 2)), "lw": 1.1, "z": 4,
-               "label": "Best per window"},
+               "label": "Best per window (fixed shards)"},
 }
 
 #: The grayscale budget, made explicit so it cannot drift.

@@ -139,9 +139,12 @@ def run_episode(cfg: ShardMindConfig, policy_key: str, seed: int) -> pd.DataFram
     for window_index in range(cfg.episode.windows_per_episode + 1):
         window = sim.last.window
         if policy_key == "best":
-            # Free, instantaneous relocation of every primary. Unreachable by
-            # construction: it pays no migration cost and sees the window it is
-            # optimizing for. The gap to it is headroom, not a deficit.
+            # Free, instantaneous relocation of every primary, at the shard
+            # boundaries this episode started with. Unreachable by two
+            # constructions: it pays no migration cost, and it sees the window
+            # it is optimizing for. It is NOT a global optimum, because it
+            # never splits a shard. A policy that splits can legitimately beat
+            # it, and the figure label says "fixed shards" for that reason.
             catalog = sim.catalog.copy()
             demand = catalog.aggregate_cells(window.reads + window.writes)
             target = (demand @ sim.topology.rtt).argmin(axis=1)
@@ -231,8 +234,10 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
         "## Aggregate over seeds",
         "",
         "Mean of the per-seed episode means, with a 95% percentile bootstrap",
-        "interval over seeds. `best` is the per-window lower bound on latency,",
-        "not an achievable policy.",
+        "interval over seeds. `best` is the lowest latency reachable by moving",
+        "every lease for free each window at the starting shard boundaries. It",
+        "is not an achievable policy, and it is not a global optimum either: a",
+        "policy that splits a shard can sit below it.",
         "",
         f"| Policy | Mean latency (ms) | 95% CI | p{tail_percentile:g} (ms) |"
         " GB moved | Cross-region txns |",
@@ -241,7 +246,7 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
     present = set(summary["policy"])
     order = [p for p in ("agent", *DEFAULT_POLICIES) if p in present]
     label = {"static": "Static hash", "random": "Random", "follow": "Follow traffic",
-             "best": "Best per window", "agent": "Learned policy"}
+             "best": "Best per window (fixed shards)", "agent": "Learned policy"}
     tail_col = f"p{tail_percentile:g}_latency_ms"
     for policy in order:
         group = summary[summary.policy == policy]
@@ -265,8 +270,11 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
         follow = summary[summary.policy == "follow"]["mean_latency_ms"].mean()
         best = summary[summary.policy == "best"]["mean_latency_ms"].mean()
         lines += [
-            f"Headroom remaining between follow traffic and the per-window bound: "
-            f"**{follow - best:.2f} ms**.",
+            f"Headroom between follow traffic and the fixed-shard bound: "
+            f"**{follow - best:.2f} ms** ({(follow - best) / follow * 100:.1f}% of "
+            f"follow traffic). A small number here means the reactive heuristic is "
+            f"already close to the best that lease movement alone can do, and that "
+            f"what is left for a learned policy is movement cost rather than latency.",
         ]
 
     lines += [

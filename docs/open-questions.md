@@ -214,3 +214,101 @@ has no counterpart in it. That is a fit problem, not a difficulty problem, and
 it is better discovered in week 3 than week 7.
 
 **Priority:** highest open item in the project.
+
+---
+
+## The headroom problem, 20 October 2026
+
+**Experiments #1**, commit `a9d1045`, 8 seeds, 200 windows, volatility 1.0, on a
+GitHub runner. Simulator only.
+
+| Policy | Mean latency (ms) | 95% CI | GB moved |
+|---|---|---|---|
+| Static hash | 156.11 | [148.92, 164.33] | 0.0 |
+| Random | 158.02 | [150.98, 165.63] | 204.8 |
+| Follow traffic | 98.66 | [89.49, 106.58] | 785.2 |
+| Best per window (fixed shards) | 93.66 | [86.60, 99.63] | 0.0 |
+
+Following the traffic beats static hashing by **36.8%**, which is the project's
+central claim and it holds with a comfortable margin.
+
+**The problem is the next line down.** Follow traffic sits **5.00 ms** above the
+fixed-shard bound, which is 5.1% of its own mean, and the two confidence
+intervals overlap heavily. At volatility 1.0, a myopic one-shard-per-window
+heuristic is already close to the best that lease movement alone can achieve.
+There is almost nothing left on the latency axis for a learned policy to win.
+
+### What this does and does not mean
+
+It does not invalidate the project. It relocates the contribution. Three places
+where room remains, in the order they should be tested:
+
+1. **Movement cost.** Follow traffic pays 785 GB per episode to reach 98.66 ms.
+   An agent reaching comparable latency for a fraction of that bandwidth is a
+   defensible result, and it is what the reward's migration term already asks
+   for. This is the most likely place the thesis survives.
+2. **Volatility.** Reacting one window late should cost more as the workload
+   drifts faster. If the follow-to-bound gap widens with volatility, the latency
+   story returns at the top of the sweep. **Untested. This is the next run.**
+3. **Splitting.** The bound holds the shard boundaries the episode started with,
+   so it is not a global optimum. A policy that splits a wide shard spanning
+   divergent traffic angles can sit below the line. The per-cell against
+   per-fragment concentration gap recorded earlier, 53% against 41%, is the
+   quantity that says how much is there.
+
+### What must not happen
+
+The temptation is to report the 36.8% figure and leave the 5 ms unmentioned. A
+reviewer computing the second number from the first table will find it in
+seconds, and finding it unacknowledged is worse than the number itself. It goes
+in the Evaluation section as stated, with the three directions above as the
+response.
+
+---
+
+## The agent does not work yet, 20 October 2026
+
+**Train agent #1**, commit `4447fdf`. 300,000 steps in 26 minutes on a 2-core
+runner, then evaluated on seeds 2000 to 2007, which it never trained on.
+
+| Policy | Mean latency (ms) | 95% CI | GB moved |
+|---|---|---|---|
+| Learned policy | 146.55 | [141.48, 151.72] | 53.2 |
+| Static hash | 151.19 | [145.35, 157.01] | 0.0 |
+| Follow traffic | 90.76 | [83.55, 101.06] | 752.6 |
+| Best per window (fixed shards) | 85.77 | [79.48, 94.40] | 0.0 |
+
+The agent beats doing nothing by 3.1% and loses to the hand-written heuristic by
+a wide margin. Best evaluation during training was 138.24 ms at step 160,000, so
+it was not still improving when the budget ran out.
+
+### The diagnosis I believe, and the experiment that tests it
+
+The agent moved **53 GB where follow traffic moved 753**. It did not fail to find
+good placements so much as learn not to move at all. That is the signature of a
+credit assignment failure rather than a tuning failure: the migration penalty is
+immediate and certain, the latency benefit is delayed and spread over many
+windows, and a Q-function trained for 1,500 episodes on a 261-action space
+resolves that disagreement by sitting still.
+
+The arithmetic says the economics do favor moving. Relocating one of six shards
+costs 0.30 in reward; the latency gain from 151 ms to 91 ms is 0.59 per window
+thereafter. So the penalty is not too large in expectation. It is too large *at
+the moment the action is taken*, which is a different problem and a familiar one.
+
+**The test:** train once at `w_migration = 0.0`. If the agent then approaches
+follow traffic, the diagnosis holds and the fix is reward shaping, a longer
+exploration schedule, or n-step returns. If it still fails with no migration
+penalty at all, the problem is exploration or representation instead, and the
+261-action space with a two-step relocation sequence is the first suspect:
+reaching a new region requires `MOVE_REPLICA_TO` and then `MOVE_LEASE` in
+consecutive windows, and epsilon-greedy exploration almost never produces that
+pair by chance.
+
+### What this costs the midterm
+
+Nothing. The rubric awards no points for the agent beating the baseline. The
+submission reports a wired, trained agent, a held-out evaluation, a negative
+result and a diagnosis, which is what an honest progress report looks like at
+50 to 60 percent. The risk is spending the remaining days chasing it instead of
+writing.

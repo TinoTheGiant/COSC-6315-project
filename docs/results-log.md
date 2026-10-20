@@ -110,3 +110,69 @@ thing a reviewer asks about.
    already holding a replica. See the amendment to
    [ADR-0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md).
 4. Re-run the gate on the fixed script before any number from it is reported.
+
+---
+
+## Run 2 — Cluster pilot #2, 20 October 2026
+
+**Commit** `a9d1045`. GitHub Actions, `ubuntu-latest`, private repository, so
+again a **2-core / 7 GB** runner. Total duration 9m 18s. Six nodes, replication
+factor 3, `netem` egress shaping, 6 ranges of 2,000 rows.
+
+This is the re-run that run 1 required. Run 1 compared one region against two,
+not one against six, because `RELOCATE LEASE` silently refused every move to a
+store holding no voting replica and `cockroach sql -e` exited 0 regardless. Both
+defects were fixed on 11 October. **This entry supersedes run 1's gate verdict.**
+
+### The gate: PASS, and the real effect is seven times larger
+
+| | p50 (ms) | p95 (ms) | stdev (ms) |
+|---|---|---|---|
+| leaseholders co-located in us-east-1 | 272.7 | 275.5 | 48.8 |
+| leaseholders spread across all six regions | 1013.4 | 1648.0 | 302.0 |
+
+**p95 gap 1372.5 ms**, 95% bootstrap CI [1218.6, 1373.8]. Run 1 reported 193.7 ms
+on the same statistic. The difference is the defect, not variance.
+
+Placement confirmation is now in the log rather than assumed: case A observed
+`['us-east-1']`, case B observed all six region names. Store IDs were resolved
+from `crdb_internal.kv_store_status` joined to `kv_node_status`, which matters
+because node IDs are assigned in join order: this run's mapping was
+`us-east-1: 1, us-west-2: 2, eu-central-1: 3, eu-west-1: 4, ap-northeast-1: 5,
+ap-southeast-1: 6`, which is not the configuration order.
+
+Latency injection remains accurate, now to 0.1 ms across the five measured pairs.
+
+### Three things to be careful about when quoting this
+
+**1. "Co-located" means the leases, not the data.** With replication factor 3
+and one node per region, three voting replicas cannot fit in one region, so every
+write pays a cross-region quorum acknowledgement even in case A. That is why the
+co-located p50 is 272.7 ms rather than the single-digit figure an intra-region
+RTT of 1 ms would suggest. The experiment therefore isolates the *leaseholder*
+placement effect at fixed, spread replication. That is the right thing to
+measure, because `MOVE_LEASE` is precisely the action it corresponds to, but the
+paper must say so or the number reads as an error.
+
+**2. The confidence interval is not a precision claim.** The point estimate of
+1372.5 ms sits essentially on the interval's upper bound of 1373.8. A bootstrap
+interval on a difference of p95s behaves this way when the p95 is close to the
+largest observation, which is what happens at N = 200 transactions: the 95th
+percentile is the 190th order statistic and a resample rarely exceeds it. The
+verdict is safe regardless, because a 1,372 ms gap against a co-located standard
+deviation of 48.8 ms is not a borderline call. But **N must be chosen by
+measurement before any interval from this experiment goes in the paper**, which
+is the open item the roadmap has carried since 7 October.
+
+**3. Two cores, six nodes.** The workflow warns about this itself. Six
+CockroachDB processes contending for two cores adds scheduling noise to the
+quantity being measured, and it inflates both arms. A public repository would
+get a 4-core / 16 GB runner at no cost. That is a decision about repository
+visibility rather than a technical one, and it should be made before the final
+measurements rather than after.
+
+### Status
+
+The gate is cleared properly. Placement measurably changes transaction latency on
+a real six-region cluster, so the reward signal exists and the sim-to-real half of
+the project is unblocked.
