@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from shardmind.config import TopologyConfig
-from shardmind.topology import DEFAULT_RTT_MS, build_topology
+from fragalloc.config import TopologyConfig
+from fragalloc.topology import DEFAULT_RTT_MS, build_topology
 
 
 def test_matrix_is_symmetric_with_intra_region_diagonal(topology) -> None:

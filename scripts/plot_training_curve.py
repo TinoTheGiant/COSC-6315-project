@@ -29,7 +29,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from shardmind import viz  # noqa: E402
+from fragalloc import viz  # noqa: E402
 
 
 def load_history(directory: Path) -> pd.DataFrame:

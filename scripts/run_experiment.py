@@ -11,7 +11,7 @@ One invocation is one *run*. A run writes a single directory under
 ``results/runs/`` containing:
 
     manifest.json   who, what, when, which commit, which package versions
-    config.json     the fully resolved ShardMindConfig, reloadable as-is
+    config.json     the fully resolved FragAllocConfig, reloadable as-is
     steps.csv       one row per (policy, seed, window). The raw record.
     summary.csv     one row per (policy, seed). The unit of statistics.
     report.md       the aggregated table, with bootstrap intervals
@@ -41,15 +41,15 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from shardmind.actions import ActionKind, ActionSpace  # noqa: E402
-from shardmind.config import ShardMindConfig  # noqa: E402
-from shardmind.cost import evaluate  # noqa: E402
-from shardmind.policies import (  # noqa: E402
+from fragalloc.actions import ActionKind, ActionSpace  # noqa: E402
+from fragalloc.config import FragAllocConfig  # noqa: E402
+from fragalloc.cost import evaluate  # noqa: E402
+from fragalloc.policies import (  # noqa: E402
     FollowTrafficPolicy,
     RandomPolicy,
     StaticHashPolicy,
 )
-from shardmind.simulator import ClusterSimulator  # noqa: E402
+from fragalloc.simulator import ClusterSimulator  # noqa: E402
 
 #: Policies the runner knows how to build. ``best`` is not a policy; it is the
 #: per-window lower bound on latency, computed by relocating every primary for
@@ -110,7 +110,7 @@ def package_versions() -> dict[str, str]:
     return out
 
 
-def config_digest(cfg: ShardMindConfig) -> str:
+def config_digest(cfg: FragAllocConfig) -> str:
     """A short, stable fingerprint of the configuration.
 
     Two runs with the same digest used the same environment. Printed in the
@@ -123,7 +123,7 @@ def config_digest(cfg: ShardMindConfig) -> str:
 
 # -------------------------------------------------------------------- the run
 
-def run_episode(cfg: ShardMindConfig, policy_key: str, seed: int) -> pd.DataFrame:
+def run_episode(cfg: FragAllocConfig, policy_key: str, seed: int) -> pd.DataFrame:
     """One seeded episode under one policy, as one row per window."""
     space = ActionSpace(cfg.catalog.max_fragments, cfg.n_regions)
     factory = POLICY_FACTORIES[policy_key]
@@ -356,7 +356,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", type=Path, default=None,
-                        help="JSON config to start from. Defaults to ShardMindConfig().")
+                        help="JSON config to start from. Defaults to FragAllocConfig().")
     parser.add_argument("--seeds", type=int, default=5, help="how many seeds to run")
     parser.add_argument("--seed-start", type=int, default=0, help="first seed")
     parser.add_argument("--windows", type=int, default=None,
@@ -384,7 +384,7 @@ def main() -> None:
     if args.model is not None and "agent" not in args.policies:
         args.policies = list(args.policies) + ["agent"]
 
-    cfg = ShardMindConfig.load(args.config) if args.config else ShardMindConfig()
+    cfg = FragAllocConfig.load(args.config) if args.config else FragAllocConfig()
     if args.windows is not None:
         cfg = cfg.evolve(episode=replace(cfg.episode, windows_per_episode=args.windows))
     if args.volatility is not None:
@@ -403,7 +403,7 @@ def main() -> None:
 
     agent_record: dict | None = None
     if args.model is not None:
-        from shardmind.agent.policy import LearnedPolicy
+        from fragalloc.agent.policy import LearnedPolicy
 
         learned = LearnedPolicy(args.model, cfg, deterministic=not args.stochastic)
         POLICY_FACTORIES["agent"] = lambda space, seed: learned
@@ -479,7 +479,7 @@ def main() -> None:
         try:
             import matplotlib
             matplotlib.use("Agg")
-            from shardmind import viz  # noqa: F401
+            from fragalloc import viz  # noqa: F401
             _draw_figures(steps, summary, cfg, figures)
         except Exception as exc:  # pragma: no cover - plotting is not the result
             print(f"  figures skipped: {exc}")
@@ -490,11 +490,11 @@ def main() -> None:
 
 
 def _draw_figures(steps: pd.DataFrame, summary: pd.DataFrame,
-                  cfg: ShardMindConfig, outdir: Path) -> None:
+                  cfg: FragAllocConfig, outdir: Path) -> None:
     """Three figures that belong to the run, drawn in the project's style."""
     import matplotlib.pyplot as plt
 
-    from shardmind import viz
+    from fragalloc import viz
 
     viz.use_paper_style()
     series = [p for p in viz.SERIES_POLICIES if p in set(steps["policy"])]

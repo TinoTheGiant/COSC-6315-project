@@ -1,6 +1,6 @@
 """Ready-made cluster geographies, so region count can be a dial rather than a rewrite.
 
-The first six regions carry the hand-set latency table from :mod:`shardmind.topology`,
+The first six regions carry the hand-set latency table from :mod:`fragalloc.topology`,
 chosen to match commonly observed inter-region round-trip times. Regions beyond
 those six use a distance model instead:
 
@@ -21,8 +21,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from shardmind.config import TopologyConfig
-from shardmind.topology import DEFAULT_RTT_MS
+from fragalloc.config import TopologyConfig
+from fragalloc.topology import DEFAULT_RTT_MS
 
 #: Name, latitude, longitude. The first six are the measured set.
 MASTER_REGIONS: tuple[tuple[str, float, float], ...] = (

@@ -88,7 +88,7 @@ layout B, does the cluster agree?"
 
 | Dimension | Assessment |
 |-----------|------------|
-| Fits the cost model | **Strong.** Real distributed SQL transactions, real two-phase commit, real lease placement. The commit term in `shardmind.cost` corresponds to something the cluster actually does |
+| Fits the cost model | **Strong.** Real distributed SQL transactions, real two-phase commit, real lease placement. The commit term in `fragalloc.cost` corresponds to something the cluster actually does |
 | Fits the action space | **Partial.** Four of five actions map cleanly; merge cannot be forced |
 | Placement control | Zone configs with `constraints`, `voter_constraints`, `lease_preferences` |
 | Observability | `crdb_internal.ranges_no_leases`, `crdb_internal.zones`, `SHOW RANGES` |
@@ -188,9 +188,9 @@ put to the instructor explicitly rather than assumed.
 - The paper gains its strongest missing piece. [ADR-0001](ADR-0001-simulate-rather-than-measure.md)
   named internal-consistency-without-external-validity as the largest blind
   spot, and `docs/open-questions.md` item 7 still lists it. This closes it.
-- A new module is needed, `shardmind/harness/`, holding the SQL executor, the
+- A new module is needed, `fragalloc/harness/`, holding the SQL executor, the
   placement reader and the workload driver. It should depend on
-  `shardmind.cost` and `shardmind.catalog` and nothing above them
+  `fragalloc.cost` and `fragalloc.catalog` and nothing above them
   ([ADR-0005](ADR-0005-simulator-independent-of-gymnasium.md) already keeps
   those importable without Gymnasium).
 - The physical cluster is scoped to three regions, matching

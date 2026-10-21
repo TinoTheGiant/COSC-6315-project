@@ -157,7 +157,7 @@ avoid.
 
 **Both environments must express migration cost as a fraction of total dataset
 size, not in bytes.** The reward becomes unit-free in that term and transfers.
-This is a change to `shardmind.cost` as well as to the harness, and it must be
+This is a change to `fragalloc.cost` as well as to the harness, and it must be
 made before pre-training starts, because every pre-trained weight depends on it.
 
 ## Options Considered
@@ -222,14 +222,14 @@ instead of every 200; the format does not change.
 
 ## Consequences
 
-- **`shardmind/harness/cluster.py` grows a lifecycle**: `up`, `down`, `status`,
+- **`fragalloc/harness/cluster.py` grows a lifecycle**: `up`, `down`, `status`,
   and a `verify` that re-checks the five balancer settings on every start, since
   a fresh cluster has them at defaults.
 - **A `Makefile`, or equivalent**, so a session starts with one command. This is
   not polish. A multi-step manual startup performed twice a day will be got wrong.
-- **`shardmind/harness/checkpoint.py` is a new module** with one job and a
+- **`fragalloc/harness/checkpoint.py` is a new module** with one job and a
   round-trip test.
-- **`shardmind.cost` changes**: migration cost becomes a dataset fraction. Before
+- **`fragalloc.cost` changes**: migration cost becomes a dataset fraction. Before
   pre-training, not after.
 - **Every reported run states how many steps were discarded to suspends.** If
   that number is large the result is weaker, and hiding it would be misconduct.
@@ -252,7 +252,7 @@ instead of every 200; the format does not change.
    manual cluster exists to become precious.
 3. [ ] Implement suspend detection in the measurement loop **before the first
    real run**, not after a suspicious result appears.
-4. [ ] Change migration cost to a dataset fraction in `shardmind.cost`, with a
+4. [ ] Change migration cost to a dataset fraction in `fragalloc.cost`, with a
    test asserting the simulator and harness agree on the same placement change.
 5. [ ] Checkpoint round-trip test: save, tear the cluster down, bring it up,
    restore, and assert placement and agent state match exactly.

@@ -26,16 +26,16 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from shardmind.catalog import FragmentCatalog          # noqa: E402
-from shardmind.config import ShardMindConfig           # noqa: E402
-from shardmind.topology import DEFAULT_RTT_MS, build_topology  # noqa: E402
+from fragalloc.catalog import FragmentCatalog          # noqa: E402
+from fragalloc.config import FragAllocConfig           # noqa: E402
+from fragalloc.topology import DEFAULT_RTT_MS, build_topology  # noqa: E402
 
 RF = 3
 SEEDS, STEPS = 5, 240
 
 
 def setup():
-    base = ShardMindConfig()
+    base = FragAllocConfig()
     cfg = base.evolve(catalog=replace(base.catalog, min_replicas=RF, max_replicas=RF))
     R = len(cfg.topology.region_names)
     return cfg, R, cfg.catalog.max_fragments, cfg.workload.n_cells

@@ -39,8 +39,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shardmind.config import WorkloadConfig
-from shardmind.topology import Topology
+from fragalloc.config import WorkloadConfig
+from fragalloc.topology import Topology
 
 TWO_PI = 2.0 * np.pi
 

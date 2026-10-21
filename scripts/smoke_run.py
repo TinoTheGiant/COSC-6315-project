@@ -14,10 +14,10 @@ import argparse
 import statistics
 from dataclasses import replace
 
-from shardmind.actions import ActionSpace
-from shardmind.config import ShardMindConfig
-from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy, RandomPolicy, rollout
-from shardmind.simulator import ClusterSimulator
+from fragalloc.actions import ActionSpace
+from fragalloc.config import FragAllocConfig
+from fragalloc.policies import FollowTrafficPolicy, StaticHashPolicy, RandomPolicy, rollout
+from fragalloc.simulator import ClusterSimulator
 
 
 def main() -> None:
@@ -28,7 +28,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
-    base = ShardMindConfig()
+    base = FragAllocConfig()
     cfg = base.evolve(
         workload=replace(base.workload, volatility=args.volatility),
         episode=replace(base.episode, windows_per_episode=args.windows),

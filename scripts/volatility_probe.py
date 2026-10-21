@@ -17,15 +17,15 @@ from dataclasses import replace
 
 import numpy as np
 
-from shardmind.config import ShardMindConfig
-from shardmind.cost import evaluate
-from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy, rollout
-from shardmind.simulator import ClusterSimulator
+from fragalloc.config import FragAllocConfig
+from fragalloc.cost import evaluate
+from fragalloc.policies import FollowTrafficPolicy, StaticHashPolicy, rollout
+from fragalloc.simulator import ClusterSimulator
 
 VOLATILITIES = (0.0, 0.5, 1.0, 2.0, 4.0, 8.0)
 
 
-def instantaneous_best(sim: ClusterSimulator, cfg: ShardMindConfig, seed: int) -> float:
+def instantaneous_best(sim: ClusterSimulator, cfg: FragAllocConfig, seed: int) -> float:
     """Mean latency of re-optimizing every primary every window, for free.
 
     Not an oracle. It is the best *allocation-only* placement reachable in one
@@ -63,7 +63,7 @@ def main() -> None:
     parser.add_argument("--windows", type=int, default=100)
     args = parser.parse_args()
 
-    base = ShardMindConfig()
+    base = FragAllocConfig()
     header = (
         f"{'vol':>5}{'static':>10}{'follow':>10}{'inst.best':>11}"
         f"{'track gap':>11}{'GB/episode':>12}"

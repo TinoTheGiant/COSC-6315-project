@@ -1,4 +1,4 @@
-# Graph Report - shardmind  (2026-10-11)
+# Graph Report - fragalloc  (2026-10-11)
 
 ## Corpus Check
 - 70 files · ~60,818 words
@@ -56,7 +56,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `FragmentCatalog` - 56 edges
-2. `ShardMindConfig` - 51 edges
+2. `FragAllocConfig` - 51 edges
 3. `ClusterSimulator` - 46 edges
 4. `Dashboard` - 32 edges
 5. `ActionSpace` - 32 edges
@@ -70,13 +70,13 @@
 - `Latency injection assertion` --semantically_similar_to--> `Validation as placement-ranking agreement`  [INFERRED] [semantically similar]
   .github/workflows/cluster-pilot.yml → docs/adr/ADR-0001-simulate-rather-than-measure.md
 - `test_the_default_configuration_stays_within_a_few_hundred_actions()` --uses--> `ActionSpace`  [INFERRED]
-  tests/test_actions.py → src/shardmind/actions.py
+  tests/test_actions.py → src/fragalloc/actions.py
 - `test_spaces_have_the_declared_shape()` --uses--> `ActionSpace`  [INFERRED]
-  tests/test_env.py → src/shardmind/actions.py
-- `test_each_node_declares_its_region_as_locality()` --uses--> `ShardMindConfig`  [INFERRED]
-  tests/test_cluster_parity.py → src/shardmind/config.py
-- `test_one_node_per_region()` --uses--> `ShardMindConfig`  [INFERRED]
-  tests/test_cluster_parity.py → src/shardmind/config.py
+  tests/test_env.py → src/fragalloc/actions.py
+- `test_each_node_declares_its_region_as_locality()` --uses--> `FragAllocConfig`  [INFERRED]
+  tests/test_cluster_parity.py → src/fragalloc/config.py
+- `test_one_node_per_region()` --uses--> `FragAllocConfig`  [INFERRED]
+  tests/test_cluster_parity.py → src/fragalloc/config.py
 
 ## Import Cycles
 - None detected.
@@ -93,7 +93,7 @@
 
 ### Community 0 - "Configuration and Workload Core"
 Cohesion: 0.06
-Nodes (20): CatalogConfig, EpisodeConfig, ShardMindConfig, tup(), WorkloadConfig, _Block, ObservationEncoder, _txn_demand_by_fragment() (+12 more)
+Nodes (20): CatalogConfig, EpisodeConfig, FragAllocConfig, tup(), WorkloadConfig, _Block, ObservationEncoder, _txn_demand_by_fragment() (+12 more)
 
 ### Community 1 - "Cost Model and Latency"
 Cohesion: 0.07
@@ -109,7 +109,7 @@ Nodes (23): bootstrap_gap(), build_table(), connect(), main(), observed_lease_re
 
 ### Community 4 - "MDP and Architecture Spec"
 Cohesion: 0.10
-Nodes (26): Observation Space Parity, ActionSpace, ShardMind Architecture, ClusterSimulator, cost.evaluate, FragmentCatalog, ObservationEncoder, ShardMindConfig (+18 more)
+Nodes (26): Observation Space Parity, ActionSpace, System architecture, ClusterSimulator, cost.evaluate, FragmentCatalog, ObservationEncoder, FragAllocConfig (+18 more)
 
 ### Community 5 - "Live Dashboard"
 Cohesion: 0.08
@@ -117,7 +117,7 @@ Nodes (3): build_config(), Dashboard, main()
 
 ### Community 6 - "Gymnasium Environment"
 Cohesion: 0.09
-Nodes (14): RewardConfig, register_env(), ShardMindEnv, actions(), env(), test_an_inapplicable_action_is_charged_a_small_fixed_cost(), test_migration_weight_penalizes_moving_data(), test_observations_stay_inside_the_declared_box() (+6 more)
+Nodes (14): RewardConfig, register_env(), FragAllocEnv, actions(), env(), test_an_inapplicable_action_is_charged_a_small_fixed_cost(), test_migration_weight_penalizes_moving_data(), test_observations_stay_inside_the_declared_box() (+6 more)
 
 ### Community 7 - "Catalog and Cost Tests"
 Cohesion: 0.11
@@ -205,7 +205,7 @@ Nodes (6): great_circle_km(), is_modelled(), modelled_rtt_ms(), region_meta(), r
 
 ### Community 28 - "Layering and Dependency ADRs"
 Cohesion: 0.21
-Nodes (8): Pure-NumPy N-region simulator, truncated versus terminated bootstrapping contract, ClusterSimulator layer, CostBreakdown named record, Published ObservationEncoder.layout, ShardMindEnv Gymnasium adapter, shardmind/harness/ module, Reference policies (no-op, random, greedy primary)
+Nodes (8): Pure-NumPy N-region simulator, truncated versus terminated bootstrapping contract, ClusterSimulator layer, CostBreakdown named record, Published ObservationEncoder.layout, FragAllocEnv Gymnasium adapter, fragalloc/harness/ module, Reference policies (no-op, random, greedy primary)
 
 ### Community 29 - "CI Cluster Pilot Workflow"
 Cohesion: 0.22
@@ -213,7 +213,7 @@ Nodes (5): Cluster pilot job, default.json six-region baseline, Six-node Cockroa
 
 ### Community 30 - "Research Framing and Base Papers"
 Cohesion: 0.24
-Nodes (6): The fidelity objection, GeoTP: Latency-Aware Geo-Distributed Transaction Processing in Database Middlewares (ICDE 2025), Lion: Minimizing Distributed Transactions Through Adaptive Replica Provision (ICDE 2024), The gap this project occupies, ShardMind: RL for dynamic data fragmentation and allocation, world-50m.json Natural Earth outlines
+Nodes (6): The fidelity objection, GeoTP: Latency-Aware Geo-Distributed Transaction Processing in Database Middlewares (ICDE 2025), Lion: Minimizing Distributed Transactions Through Adaptive Replica Provision (ICDE 2024), The gap this project occupies, Reinforcement Learning for Dynamic Data Fragmentation and Allocation, world-50m.json Natural Earth outlines
 
 ### Community 31 - "Early Database Validation Plan"
 Cohesion: 0.25
@@ -236,7 +236,7 @@ Nodes (5): test_a_different_seed_gives_a_different_episode(), test_the_configure
   docs/harness-architecture.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **10 isolated node(s):** `shardmind`, `Reference policies (no-op, random, greedy primary)`, `The fidelity objection`, `inapplicable_action_cost`, `Measured applicable-action fraction (~54%)` (+5 more)
+- **10 isolated node(s):** `fragalloc`, `Reference policies (no-op, random, greedy primary)`, `The fidelity objection`, `inapplicable_action_cost`, `Measured applicable-action fraction (~54%)` (+5 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 250 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -247,14 +247,14 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.159) - this node is a cross-community bridge._
 - **Are the 29 inferred relationships involving `FragmentCatalog` (e.g. with `ActionSpace` and `CatalogConfig`) actually correct?**
   _`FragmentCatalog` has 29 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `shardmind`, `Reference policies (no-op, random, greedy primary)`, `The fidelity objection` to the rest of the system?**
+- **What connects `fragalloc`, `Reference policies (no-op, random, greedy primary)`, `The fidelity objection` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Configuration and Workload Core` be split into smaller, more focused modules?**
   _Cohesion score 0.056314699792960665 - nodes in this community are weakly interconnected._
-- **Why does `ShardMindConfig` connect `Configuration and Workload Core` to `Cost Model and Latency`, `Falsification Test and Parity`, `Determinism Tests`, `Live Dashboard`, `Gymnasium Environment`, `Cluster Pilot and netem Results`, `Action Space and Simulator`, `Baseline Policies`, `Cluster Simulator Loop`, `Analysis Dashboard`, `Episode Export and Atlas`, `Topology Construction and Tests`?**
+- **Why does `FragAllocConfig` connect `Configuration and Workload Core` to `Cost Model and Latency`, `Falsification Test and Parity`, `Determinism Tests`, `Live Dashboard`, `Gymnasium Environment`, `Cluster Pilot and netem Results`, `Action Space and Simulator`, `Baseline Policies`, `Cluster Simulator Loop`, `Analysis Dashboard`, `Episode Export and Atlas`, `Topology Construction and Tests`?**
   _High betweenness centrality (0.081) - this node is a cross-community bridge._
-- **Are the 32 inferred relationships involving `ShardMindConfig` (e.g. with `episode_frame()` and `main()`) actually correct?**
-  _`ShardMindConfig` has 32 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 32 inferred relationships involving `FragAllocConfig` (e.g. with `episode_frame()` and `main()`) actually correct?**
+  _`FragAllocConfig` has 32 INFERRED edges - model-reasoned connections that need verification._
 
 ### Low-confidence Hints
 _AMBIGUOUS edges — the extractor was unsure. Verify before acting on these._

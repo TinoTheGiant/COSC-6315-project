@@ -12,7 +12,7 @@ space, same reward units. Everything below follows from that.
 ## 1. The pipeline
 
 ```
-   shardmind.env (simulator)            shardmind.harness.env (CockroachDB)
+   fragalloc.env (simulator)            fragalloc.harness.env (CockroachDB)
    ~0.5 ms per step                     ~2 to 6 s per step
    tens of thousands of steps           low thousands of steps
           |                                      |
@@ -75,21 +75,21 @@ proxy. Getting that wrong puts every number in the paper out by a factor of two.
 ## 3. Module layout
 
 ```
-src/shardmind/harness/
+src/fragalloc/harness/
   cluster.py      compose-file generation, node lifecycle, Toxiproxy control,
                   cluster-setting application and verification
   placement.py    range-id and store-id resolution, placement readback,
                   intent assertion
   executor.py     action -> SQL statement, error classification
   driver.py       concurrent per-region transaction load, client-side timing
-  env.py          Gymnasium environment, spaces identical to shardmind.env
+  env.py          Gymnasium environment, spaces identical to fragalloc.env
   checkpoint.py   save and restore: agent state, placement, workload position
 ```
 
 Dependency rule, mirroring [ADR-0005](adr/ADR-0005-simulator-independent-of-gymnasium.md):
-`harness` depends on `shardmind.actions`, `shardmind.catalog`,
-`shardmind.observation`, `shardmind.workload` and `shardmind.topologies`. It must
-**not** import `shardmind.cost` or `shardmind.simulator`. The cluster replaces
+`harness` depends on `fragalloc.actions`, `fragalloc.catalog`,
+`fragalloc.observation`, `fragalloc.workload` and `fragalloc.topologies`. It must
+**not** import `fragalloc.cost` or `fragalloc.simulator`. The cluster replaces
 the cost model; importing it would invite accidentally reporting a modeled number
 as a measured one.
 

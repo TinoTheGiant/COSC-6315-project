@@ -86,9 +86,9 @@ jobs:
           PYTHONPATH=src python - <<'PY' | tee latency.txt
           import subprocess, sys
           sys.path.insert(0, "src")
-          from shardmind.config import ShardMindConfig
-          from shardmind.topology import DEFAULT_RTT_MS
-          names = list(ShardMindConfig().topology.region_names)
+          from fragalloc.config import FragAllocConfig
+          from fragalloc.topology import DEFAULT_RTT_MS
+          names = list(FragAllocConfig().topology.region_names)
           src = f"crdb-{names[0]}"
           bad = []
           print(f"{'pair':<36}{'expected':>10}{'measured':>10}")

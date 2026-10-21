@@ -3,7 +3,7 @@
 ``ClusterSimulator`` owns the topology, the workload generator, the fragment
 catalogue and the clock. It applies an action and advances one decision window.
 It knows nothing about observations, rewards or Gymnasium; that translation
-lives in :mod:`shardmind.env`. The separation is what lets the cost model and
+lives in :mod:`fragalloc.env`. The separation is what lets the cost model and
 the baselines be tested without importing an RL stack, and is recorded in
 ADR-0005.
 
@@ -23,12 +23,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shardmind.actions import ActionSpace
-from shardmind.catalog import FragmentCatalog, MutationResult
-from shardmind.config import ShardMindConfig
-from shardmind.cost import CostBreakdown, evaluate
-from shardmind.topology import Topology, build_topology
-from shardmind.workload import WorkloadGenerator, WorkloadWindow
+from fragalloc.actions import ActionSpace
+from fragalloc.catalog import FragmentCatalog, MutationResult
+from fragalloc.config import FragAllocConfig
+from fragalloc.cost import CostBreakdown, evaluate
+from fragalloc.topology import Topology, build_topology
+from fragalloc.workload import WorkloadGenerator, WorkloadWindow
 
 
 @dataclass(frozen=True)
@@ -46,8 +46,8 @@ class StepResult:
 class ClusterSimulator:
     """A seeded, reproducible multi-region cluster under drifting demand."""
 
-    def __init__(self, config: ShardMindConfig | None = None) -> None:
-        self.cfg = config or ShardMindConfig()
+    def __init__(self, config: FragAllocConfig | None = None) -> None:
+        self.cfg = config or FragAllocConfig()
         self.topology: Topology = build_topology(self.cfg.topology, self.cfg.catalog.dataset_bytes)
         self.action_space = ActionSpace(self.cfg.catalog.max_fragments, self.cfg.n_regions)
 

@@ -22,16 +22,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from shardmind.agent.config import DQNConfig  # noqa: E402
-from shardmind.agent.train import train  # noqa: E402
-from shardmind.config import ShardMindConfig  # noqa: E402
+from fragalloc.agent.config import DQNConfig  # noqa: E402
+from fragalloc.agent.train import train  # noqa: E402
+from fragalloc.config import FragAllocConfig  # noqa: E402
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", type=Path, default=None,
-                        help="environment config JSON. Defaults to ShardMindConfig().")
+                        help="environment config JSON. Defaults to FragAllocConfig().")
     parser.add_argument("--agent-config", type=Path, default=None,
                         help="hyperparameter JSON. Defaults to DQNConfig().")
     parser.add_argument("--timesteps", type=int, default=None,
@@ -48,7 +48,7 @@ def main() -> None:
     parser.add_argument("--no-tensorboard", action="store_true")
     args = parser.parse_args()
 
-    env_cfg = ShardMindConfig.load(args.config) if args.config else ShardMindConfig()
+    env_cfg = FragAllocConfig.load(args.config) if args.config else FragAllocConfig()
     if args.windows is not None:
         env_cfg = env_cfg.evolve(episode=replace(env_cfg.episode,
                                                  windows_per_episode=args.windows))

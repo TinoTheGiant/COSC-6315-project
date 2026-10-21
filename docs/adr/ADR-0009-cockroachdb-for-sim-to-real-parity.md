@@ -107,7 +107,7 @@ interesting in the first place.
 | Cost-model parity | **Holds.** All five cost terms have counterparts |
 | Existing results | **Preserved**, subject to the action-space adjustment below |
 
-**Pros:** every term in `shardmind.cost` corresponds to something the cluster
+**Pros:** every term in `fragalloc.cost` corresponds to something the cluster
 actually does. Reads really are served from the nearest replica, writes really do
 pay a quorum, and cross-range transactions really do pay two-phase commit when
 their leaseholders span regions. That is the whole argument of

@@ -12,13 +12,13 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from shardmind.config import ShardMindConfig
-from shardmind.env import ShardMindEnv
-from shardmind.simulator import ClusterSimulator
+from fragalloc.config import FragAllocConfig
+from fragalloc.env import FragAllocEnv
+from fragalloc.simulator import ClusterSimulator
 
 
-def _trajectory(cfg: ShardMindConfig, seed: int, actions: list[int]):
-    env = ShardMindEnv(cfg)
+def _trajectory(cfg: FragAllocConfig, seed: int, actions: list[int]):
+    env = FragAllocEnv(cfg)
     obs, _ = env.reset(seed=seed)
     observations, rewards = [obs.copy()], []
     for action in actions:
@@ -33,7 +33,7 @@ def _trajectory(cfg: ShardMindConfig, seed: int, actions: list[int]):
 @pytest.fixture
 def actions(tiny_config) -> list[int]:
     rng = np.random.default_rng(123)
-    n = ShardMindEnv(tiny_config).action_space.n
+    n = FragAllocEnv(tiny_config).action_space.n
     return [int(a) for a in rng.integers(n, size=tiny_config.episode.windows_per_episode)]
 
 

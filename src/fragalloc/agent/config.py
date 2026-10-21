@@ -1,6 +1,6 @@
 """Hyperparameters for the DQN, as a frozen dataclass.
 
-Separate from :class:`~shardmind.config.ShardMindConfig` on purpose. That one
+Separate from :class:`~fragalloc.config.FragAllocConfig` on purpose. That one
 describes the *environment*: a question about the world. This one describes the
 *learner*: a question about how we attack it. Keeping them apart means a sweep
 over environments and a sweep over learners are different experiments, and a

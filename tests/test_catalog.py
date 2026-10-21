@@ -7,8 +7,8 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from shardmind.catalog import FragmentCatalog, _even_boundaries
-from shardmind.config import CatalogConfig
+from fragalloc.catalog import FragmentCatalog, _even_boundaries
+from fragalloc.config import CatalogConfig
 
 
 @pytest.fixture

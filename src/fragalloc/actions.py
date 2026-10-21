@@ -71,7 +71,7 @@ from enum import IntEnum
 
 import numpy as np
 
-from shardmind.catalog import FragmentCatalog, MutationResult
+from fragalloc.catalog import FragmentCatalog, MutationResult
 
 
 class ActionKind(IntEnum):

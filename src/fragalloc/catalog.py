@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shardmind.config import CatalogConfig
+from fragalloc.config import CatalogConfig
 
 
 @dataclass(frozen=True)

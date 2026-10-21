@@ -13,7 +13,7 @@ from dataclasses import replace
 
 import pytest
 
-from shardmind.agent.config import DQNConfig
+from fragalloc.agent.config import DQNConfig
 
 
 def test_the_default_configuration_is_valid() -> None:
@@ -68,7 +68,7 @@ def test_every_hyperparameter_reaches_either_sb3_or_the_training_loop() -> None:
     """No field may be decorative.
 
     Each DQNConfig field is either passed to Stable-Baselines3 or consumed by
-    shardmind.agent.train. This test names the second group explicitly, so
+    fragalloc.agent.train. This test names the second group explicitly, so
     adding a field without wiring it up fails here rather than in a silent run.
     """
     consumed_by_training_loop = {

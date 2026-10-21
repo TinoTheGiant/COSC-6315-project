@@ -1,7 +1,7 @@
 """Configuration objects for every tunable in the simulator.
 
 Every parameter the experiments sweep lives here, in a frozen dataclass, so a
-run is fully described by one ``ShardMindConfig`` value. ``to_dict`` and
+run is fully described by one ``FragAllocConfig`` value. ``to_dict`` and
 ``from_dict`` round-trip through plain JSON, which keeps the experiment records
 in ``results/`` readable without importing the package.
 """
@@ -32,7 +32,7 @@ class TopologyConfig:
     #: Round-trip time charged for a request served inside its own region.
     intra_region_rtt_ms: float = 1.0
     #: Optional explicit RTT matrix in milliseconds. ``None`` uses the built-in
-    #: table in :mod:`shardmind.topology`.
+    #: table in :mod:`fragalloc.topology`.
     rtt_matrix_ms: tuple[tuple[float, ...], ...] | None = None
     #: Per-region storage capacity as a multiple of an even share of the dataset.
     #: 2.0 means any one region may hold twice its fair share before it is full.
@@ -174,7 +174,7 @@ class EpisodeConfig:
 
 
 @dataclass(frozen=True)
-class ShardMindConfig:
+class FragAllocConfig:
     """The complete description of one experimental configuration."""
 
     topology: TopologyConfig = field(default_factory=TopologyConfig)
@@ -210,7 +210,7 @@ class ShardMindConfig:
     def n_regions(self) -> int:
         return len(self.topology.region_names)
 
-    def evolve(self, **changes: Any) -> "ShardMindConfig":
+    def evolve(self, **changes: Any) -> "FragAllocConfig":
         """Return a copy with top-level fields replaced.
 
         Nested changes are expressed by passing a whole replacement sub-config::
@@ -223,7 +223,7 @@ class ShardMindConfig:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ShardMindConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "FragAllocConfig":
         def tup(x: Any) -> Any:
             return tuple(tup(i) for i in x) if isinstance(x, list) else x
 
@@ -241,5 +241,5 @@ class ShardMindConfig:
         Path(path).write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
 
     @classmethod
-    def load(cls, path: str | Path) -> "ShardMindConfig":
+    def load(cls, path: str | Path) -> "FragAllocConfig":
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))

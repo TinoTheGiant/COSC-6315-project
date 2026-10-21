@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from shardmind.config import ShardMindConfig
-from shardmind.topology import DEFAULT_RTT_MS
+from fragalloc.config import FragAllocConfig
+from fragalloc.topology import DEFAULT_RTT_MS
 
 yaml = pytest.importorskip("yaml")
 REPO = Path(__file__).resolve().parents[1]
@@ -40,12 +40,12 @@ def _delays(service: dict) -> dict[str, float]:
 
 
 def test_one_node_per_region(compose) -> None:
-    names = ShardMindConfig().topology.region_names
+    names = FragAllocConfig().topology.region_names
     assert len(compose["services"]) == len(names)
 
 
 def test_each_node_declares_its_region_as_locality(compose) -> None:
-    names = list(ShardMindConfig().topology.region_names)
+    names = list(FragAllocConfig().topology.region_names)
     for i, name in enumerate(names):
         assert f"--locality=region={name}" in compose["services"][f"node{i}"]["command"]
 

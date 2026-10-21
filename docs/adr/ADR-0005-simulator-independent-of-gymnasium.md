@@ -22,10 +22,10 @@ baseline or a ranking comparison wants.
 
 Two layers:
 
-- `shardmind.simulator.ClusterSimulator` owns the topology, the workload, the
+- `fragalloc.simulator.ClusterSimulator` owns the topology, the workload, the
   catalogue and the clock. It imports NumPy and nothing else. It knows nothing
   about observations, rewards or episodes-as-RL-objects.
-- `shardmind.env.ShardMindEnv` is a thin Gymnasium adapter holding exactly three
+- `fragalloc.env.FragAllocEnv` is a thin Gymnasium adapter holding exactly three
   translations: state to observation vector, integer to action, cost vector to
   scalar reward.
 
@@ -76,14 +76,14 @@ also silently couples every cost-model test to the observation layout, so
 changing the encoding breaks tests that have nothing to do with encoding.
 
 The secondary benefit is that the validation harness (ADR-0001) can call
-`shardmind.cost.evaluate` directly on a handful of candidate placements without
+`fragalloc.cost.evaluate` directly on a handful of candidate placements without
 constructing an environment, an agent or an episode.
 
 ## Consequences
 
-- `shardmind.cost`, `shardmind.catalog`, `shardmind.workload` and
-  `shardmind.topology` are importable without Gymnasium installed. Only
-  `shardmind.env` needs it.
+- `fragalloc.cost`, `fragalloc.catalog`, `fragalloc.workload` and
+  `fragalloc.topology` are importable without Gymnasium installed. Only
+  `fragalloc.env` needs it.
 - The observation encoding is a separate, separately testable object with a
   published layout (`ObservationEncoder.layout`), which makes feature ablations
   a matter of slicing rather than of rewriting the environment.
@@ -92,4 +92,4 @@ constructing an environment, an agent or an episode.
 ## Action Items
 
 1. [x] Keep Gymnasium out of every module but `env.py`.
-2. [ ] Build the Phase 2 baselines against `ClusterSimulator`, not `ShardMindEnv`.
+2. [ ] Build the Phase 2 baselines against `ClusterSimulator`, not `FragAllocEnv`.

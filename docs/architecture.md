@@ -17,7 +17,7 @@ spend, and an author who had not implemented RL before starting.
 ## High-level design
 
 ```
-                 ShardMindConfig          one frozen record describes a run
+                 FragAllocConfig          one frozen record describes a run
                         |
         +---------------+---------------+
         |               |               |
@@ -36,14 +36,14 @@ spend, and an author who had not implemented RL before starting.
                 |
         +-------+--------+
         |                |
-   ShardMindEnv      baselines /          the adapter is thin on purpose
+   FragAllocEnv      baselines /          the adapter is thin on purpose
    Gymnasium         validation harness
    obs, reward
         |
    Stable-Baselines3 DQN
 ```
 
-The load-bearing boundary is between `ClusterSimulator` and `ShardMindEnv`.
+The load-bearing boundary is between `ClusterSimulator` and `FragAllocEnv`.
 Everything below it is a model of a database cluster and imports only NumPy.
 Everything above it is reinforcement learning. ADR-0005 has the argument; the
 short version is that four of six objectives live below the line, and a cost
@@ -52,7 +52,7 @@ asserts on `obs[698]` is not.
 
 ## Data flow through one step
 
-1. `ShardMindEnv.step(a)` receives an integer.
+1. `FragAllocEnv.step(a)` receives an integer.
 2. `ActionSpace.decode(a)` turns it into a desired end state.
 3. `ActionSpace.apply` calls one of `FragmentCatalog`'s five mutators, which
    either changes the catalogue and reports bytes moved, or refuses and reports
@@ -62,7 +62,7 @@ asserts on `obs[698]` is not.
 5. `cost.evaluate` scores the new catalogue against that demand and returns a
    `CostBreakdown`.
 6. `ObservationEncoder.encode` builds the observation vector.
-7. `ShardMindEnv._reward` scalarizes the cost vector.
+7. `FragAllocEnv._reward` scalarizes the cost vector.
 
 One step is roughly half a millisecond, so a 200-window episode is about a tenth
 of a second and tens of thousands of episodes are an overnight run on a CPU.
@@ -101,36 +101,36 @@ Recorded as ADRs in `docs/adr/`:
 
 ## Integration points
 
-- **Gymnasium.** `ShardMindEnv` registers as `ShardMind-v0` and passes
+- **Gymnasium.** `FragAllocEnv` registers as `FragAlloc-v0` and passes
   `gymnasium.utils.env_checker.check_env`. Episodes truncate, never terminate;
   the distinction matters for value bootstrapping.
 - **Stable-Baselines3.** Not yet wired. `MlpPolicy` over a 703-element `Box`
   and a `Discrete(261)`. Phase 3.
-- **`shardmind/harness/`, the CockroachDB environment.** Not yet built, and on
+- **`fragalloc/harness/`, the CockroachDB environment.** Not yet built, and on
   the critical path. Six nodes, one per region, replication factor 3, Toxiproxy
   supplying wide-area latency. Placement driven by three synchronous statements:
   `ALTER RANGE ... RELOCATE LEASE`, `ALTER RANGE ... RELOCATE VOTERS` and
   `ALTER TABLE ... SPLIT AT`. It must expose the **same** observation and action
-  spaces as `shardmind.env`, because that is what lets a simulator-pre-trained
+  spaces as `fragalloc.env`, because that is what lets a simulator-pre-trained
   DQN load against it. Specified in
   [harness-architecture.md](harness-architecture.md); decided in
   [ADR-0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md), which supersedes
   ADR-0008 and, through it, the MongoDB plan in ADR-0001. The dependency rule:
-  `harness` may import `shardmind.actions`, `catalog`, `observation`, `workload`
+  `harness` may import `fragalloc.actions`, `catalog`, `observation`, `workload`
   and `topologies`, but **not** `cost` or `simulator`, so a modeled number can
   never be reported as a measured one.
 - **Experiment records.** `ClusterSimulator.snapshot()` returns a flat
-  JSON-friendly dict per step, and `ShardMindConfig.save` writes the run's full
+  JSON-friendly dict per step, and `FragAllocConfig.save` writes the run's full
   configuration. Together those are enough to reproduce any figure.
 
 ## What is not here yet
 
 Phase 2 onward, in `docs/roadmap.md`:
 
-- `shardmind/baselines/`: consistent hashing, greedy nearest-region, threshold
+- `fragalloc/baselines/`: consistent hashing, greedy nearest-region, threshold
   rebalancing, and a Lion-style cost-model rebalancer.
-- `shardmind/harness/`: the CockroachDB executor, placement reader and workload
-  driver. Depends on `shardmind.cost` and `shardmind.catalog`, nothing above.
+- `fragalloc/harness/`: the CockroachDB executor, placement reader and workload
+  driver. Depends on `fragalloc.cost` and `fragalloc.catalog`, nothing above.
 - A tabular Q-learning agent on a reduced state space, as the week 3 check that
   the reward function points somewhere before the DQN is suspected of anything.
 - The DQN itself, the sweeps, and the ablations.

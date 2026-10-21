@@ -6,8 +6,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 COMPOSE="docker compose -f docker/docker-compose.yml"
 FIRST_NODE="$(python3 -c "import sys;sys.path.insert(0,'src');
-from shardmind.config import ShardMindConfig
-print('crdb-'+ShardMindConfig().topology.region_names[0])")"
+from fragalloc.config import FragAllocConfig
+print('crdb-'+FragAllocConfig().topology.region_names[0])")"
 
 # Four of these five are registered in CockroachDB's source but absent from the
 # public settings docs, so each is verified rather than assumed (ADR-0009 AI 4).
@@ -70,9 +70,9 @@ latency)
   python3 - <<'PY'
 import subprocess, sys
 sys.path.insert(0, "src")
-from shardmind.config import ShardMindConfig
-from shardmind.topology import DEFAULT_RTT_MS
-names = list(ShardMindConfig().topology.region_names)
+from fragalloc.config import FragAllocConfig
+from fragalloc.topology import DEFAULT_RTT_MS
+names = list(FragAllocConfig().topology.region_names)
 print(f"{'pair':<34}{'expected':>10}{'measured':>10}")
 src = f"crdb-{names[0]}"
 for j in range(1, len(names)):

@@ -31,12 +31,12 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from shardmind import viz
-from shardmind.actions import ActionSpace
-from shardmind.config import ShardMindConfig
-from shardmind.cost import evaluate
-from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy
-from shardmind.simulator import ClusterSimulator
+from fragalloc import viz
+from fragalloc.actions import ActionSpace
+from fragalloc.config import FragAllocConfig
+from fragalloc.cost import evaluate
+from fragalloc.policies import FollowTrafficPolicy, StaticHashPolicy
+from fragalloc.simulator import ClusterSimulator
 
 TITLE = "Reinforcement Learning for Dynamic Data Fragmentation and Allocation"
 
@@ -45,7 +45,7 @@ POLICIES = ["static", "follow", "best"]
 
 # ------------------------------------------------------------------ data
 
-def episode_frame(cfg: ShardMindConfig, seed: int) -> pd.DataFrame:
+def episode_frame(cfg: FragAllocConfig, seed: int) -> pd.DataFrame:
     """One seeded episode under every strategy, as tidy rows."""
     space = ActionSpace(cfg.catalog.max_fragments, cfg.n_regions)
     rows = []
@@ -94,7 +94,7 @@ def episode_frame(cfg: ShardMindConfig, seed: int) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def sweep_frame(base: ShardMindConfig, volatilities, seeds: int, windows: int) -> pd.DataFrame:
+def sweep_frame(base: FragAllocConfig, volatilities, seeds: int, windows: int) -> pd.DataFrame:
     """Latency and churn across the volatility sweep, one row per run."""
     rows = []
     for volatility in volatilities:
@@ -114,7 +114,7 @@ def sweep_frame(base: ShardMindConfig, volatilities, seeds: int, windows: int) -
     return pd.DataFrame(rows)
 
 
-def residence_times(frame: pd.DataFrame, cfg: ShardMindConfig) -> dict[str, list[int]]:
+def residence_times(frame: pd.DataFrame, cfg: FragAllocConfig) -> dict[str, list[int]]:
     """How many consecutive turns each chunk spent in one region."""
     # Reconstructed from move counts is not enough, so re-run and track per chunk.
     space = ActionSpace(cfg.catalog.max_fragments, cfg.n_regions)
@@ -347,7 +347,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", type=Path, default=None,
-                        help="a saved ShardMindConfig JSON to start from "
+                        help="a saved FragAllocConfig JSON to start from "
                              "(see configs/), instead of the built-in defaults")
     parser.add_argument("--seeds", type=int, default=4)
     parser.add_argument("--windows", type=int, default=200)
@@ -356,7 +356,7 @@ def main() -> None:
     parser.add_argument("--show", action="store_true", help="open a window instead of saving")
     args = parser.parse_args()
 
-    base = ShardMindConfig.load(args.config) if args.config else ShardMindConfig()
+    base = FragAllocConfig.load(args.config) if args.config else FragAllocConfig()
     cfg = base.evolve(
         workload=replace(base.workload, volatility=args.volatility),
         episode=replace(base.episode, windows_per_episode=args.windows),

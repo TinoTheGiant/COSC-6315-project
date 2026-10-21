@@ -122,7 +122,7 @@ SURFACE = "#fbfbfc"
 PANEL = "#f2f4f7"
 
 BLUE_RAMP = ["#fbfbfc", "#cde2fb", "#9ec5f4", "#5598e7", "#2a78d6", "#184f95", "#0d366b"]
-BLUES = LinearSegmentedColormap.from_list("shardmind_blues", BLUE_RAMP)
+BLUES = LinearSegmentedColormap.from_list("fragalloc_blues", BLUE_RAMP)
 
 SEA = "#d9e3ef"
 LAND = "#f9fbfd"

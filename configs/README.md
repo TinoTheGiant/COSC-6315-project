@@ -1,6 +1,6 @@
 # Configurations
 
-Each file is a complete `ShardMindConfig`, so a run is reproducible from the
+Each file is a complete `FragAllocConfig`, so a run is reproducible from the
 file plus its seed.
 
 | File | What it is for |
@@ -11,8 +11,8 @@ file plus its seed.
 | `reduced-tabular.json` | Three regions, six-fragment cap, 64 cells: small enough for the week 3 tabular Q-learning sanity check |
 
 ```python
-from shardmind.config import ShardMindConfig
-cfg = ShardMindConfig.load("configs/high-volatility.json")
+from fragalloc.config import FragAllocConfig
+cfg = FragAllocConfig.load("configs/high-volatility.json")
 ```
 
 A sweep is a loop over `evolve`, not a folder of near-identical files. These

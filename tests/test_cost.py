@@ -12,9 +12,9 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from shardmind.catalog import FragmentCatalog
-from shardmind.config import CatalogConfig, CostConfig
-from shardmind.cost import (
+from fragalloc.catalog import FragmentCatalog
+from fragalloc.config import CatalogConfig, CostConfig
+from fragalloc.cost import (
     coefficient_of_variation,
     evaluate,
     read_latency,
@@ -22,8 +22,8 @@ from shardmind.cost import (
     weighted_percentile,
     write_latency,
 )
-from shardmind.topology import build_topology
-from shardmind.workload import WorkloadGenerator
+from fragalloc.topology import build_topology
+from fragalloc.workload import WorkloadGenerator
 
 from conftest import single_origin_window
 

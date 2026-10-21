@@ -7,7 +7,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from shardmind.workload import TWO_PI, WorkloadGenerator
+from fragalloc.workload import TWO_PI, WorkloadGenerator
 
 
 def _make(cfg, topology, seed=0, horizon=64, **workload_changes):

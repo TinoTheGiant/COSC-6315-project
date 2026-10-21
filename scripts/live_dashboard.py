@@ -39,12 +39,12 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.gridspec import GridSpec
 from matplotlib.widgets import Button, Slider
 
-from shardmind import topologies, viz
-from shardmind.actions import ActionSpace
-from shardmind.config import ShardMindConfig
-from shardmind.cost import evaluate
-from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy
-from shardmind.simulator import ClusterSimulator
+from fragalloc import topologies, viz
+from fragalloc.actions import ActionSpace
+from fragalloc.config import FragAllocConfig
+from fragalloc.cost import evaluate
+from fragalloc.policies import FollowTrafficPolicy, StaticHashPolicy
+from fragalloc.simulator import ClusterSimulator
 
 TITLE = "Reinforcement Learning for Dynamic Data Fragmentation and Allocation"
 
@@ -53,9 +53,9 @@ POLICY_ORDER = ("static", "follow", "best")
 
 
 def build_config(volatility: float, windows: int, regions: int,
-                 chunks: int, seed: int) -> ShardMindConfig:
+                 chunks: int, seed: int) -> FragAllocConfig:
     """A configuration from the five dials the dashboard exposes."""
-    base = ShardMindConfig()
+    base = FragAllocConfig()
     topology = topologies.topology_for(regions)
     return base.evolve(
         topology=topology,
@@ -89,7 +89,7 @@ class BestPerWindow:
         return None
 
     @staticmethod
-    def evaluate(sim: ClusterSimulator, cfg: ShardMindConfig) -> tuple[float, np.ndarray]:
+    def evaluate(sim: ClusterSimulator, cfg: FragAllocConfig) -> tuple[float, np.ndarray]:
         window = sim.last.window
         catalog = sim.catalog.copy()
         demand = catalog.aggregate_cells(window.reads + window.writes)
@@ -103,7 +103,7 @@ class BestPerWindow:
 class Dashboard:
     """The figure, its widgets, and the three simulations behind them."""
 
-    def __init__(self, cfg: ShardMindConfig, shown: str, interactive: bool = True) -> None:
+    def __init__(self, cfg: FragAllocConfig, shown: str, interactive: bool = True) -> None:
         self.cfg = cfg
         self.shown = shown
         self.interactive = interactive
@@ -116,7 +116,7 @@ class Dashboard:
 
     # --------------------------------------------------------------- the run
 
-    def load(self, cfg: ShardMindConfig) -> None:
+    def load(self, cfg: FragAllocConfig) -> None:
         """Point the dashboard at a new configuration and start the episode over."""
         self.cfg = cfg
         self.regions = list(cfg.topology.region_names)
@@ -528,7 +528,7 @@ def main() -> None:
     parser.add_argument("--policy", choices=list(POLICY_ORDER), default="follow",
                         help="which strategy the map follows at startup")
     parser.add_argument("--config", type=Path, default=None,
-                        help="a saved ShardMindConfig JSON to start from (see configs/)")
+                        help="a saved FragAllocConfig JSON to start from (see configs/)")
     parser.add_argument("--volatility", type=float, default=1.0)
     parser.add_argument("--regions", type=int, default=6,
                         help=f"2 to {topologies.MAX_REGIONS}; beyond 6 the latencies are modelled")
@@ -541,10 +541,10 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.config:
-        cfg = ShardMindConfig.load(args.config).evolve(
-            workload=replace(ShardMindConfig.load(args.config).workload,
+        cfg = FragAllocConfig.load(args.config).evolve(
+            workload=replace(FragAllocConfig.load(args.config).workload,
                              volatility=args.volatility),
-            episode=replace(ShardMindConfig.load(args.config).episode,
+            episode=replace(FragAllocConfig.load(args.config).episode,
                             windows_per_episode=args.windows),
             seed=args.seed,
         )

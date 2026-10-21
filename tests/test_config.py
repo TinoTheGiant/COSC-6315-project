@@ -6,10 +6,10 @@ from dataclasses import replace
 
 import pytest
 
-from shardmind.config import CatalogConfig, ShardMindConfig, TopologyConfig, WorkloadConfig
+from fragalloc.config import CatalogConfig, FragAllocConfig, TopologyConfig, WorkloadConfig
 
 
-def test_defaults_are_valid(default_config: ShardMindConfig) -> None:
+def test_defaults_are_valid(default_config: FragAllocConfig) -> None:
     assert default_config.n_regions == 6
     assert default_config.catalog.initial_fragments <= default_config.catalog.max_fragments
 
@@ -27,24 +27,24 @@ def test_defaults_are_valid(default_config: ShardMindConfig) -> None:
 )
 def test_invalid_configurations_are_rejected(kwargs, message) -> None:
     with pytest.raises(ValueError, match=message):
-        ShardMindConfig(**kwargs)
+        FragAllocConfig(**kwargs)
 
 
 def test_n_cells_must_admit_max_fragments() -> None:
     with pytest.raises(ValueError, match="n_cells"):
-        ShardMindConfig(
+        FragAllocConfig(
             workload=WorkloadConfig(n_cells=4), catalog=CatalogConfig(max_fragments=20)
         )
 
 
-def test_json_round_trip(tmp_path, default_config: ShardMindConfig) -> None:
+def test_json_round_trip(tmp_path, default_config: FragAllocConfig) -> None:
     path = tmp_path / "cfg.json"
     default_config.save(path)
-    restored = ShardMindConfig.load(path)
+    restored = FragAllocConfig.load(path)
     assert restored == default_config
 
 
-def test_evolve_replaces_only_named_fields(default_config: ShardMindConfig) -> None:
+def test_evolve_replaces_only_named_fields(default_config: FragAllocConfig) -> None:
     changed = default_config.evolve(
         workload=replace(default_config.workload, volatility=4.0), seed=99
     )

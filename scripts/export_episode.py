@@ -19,11 +19,11 @@ from pathlib import Path
 
 import numpy as np
 
-from shardmind.config import ShardMindConfig
-from shardmind.topologies import region_meta
-from shardmind.cost import evaluate
-from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy
-from shardmind.simulator import ClusterSimulator
+from fragalloc.config import FragAllocConfig
+from fragalloc.topologies import region_meta
+from fragalloc.cost import evaluate
+from fragalloc.policies import FollowTrafficPolicy, StaticHashPolicy
+from fragalloc.simulator import ClusterSimulator
 
 
 def run(sim: ClusterSimulator, policy, seed: int) -> dict:
@@ -46,7 +46,7 @@ def run(sim: ClusterSimulator, policy, seed: int) -> dict:
     return {"latency": latency, "tail": tail, "gbMoved": moved, "homes": homes}
 
 
-def instantaneous_best(sim: ClusterSimulator, cfg: ShardMindConfig, seed: int) -> dict:
+def instantaneous_best(sim: ClusterSimulator, cfg: FragAllocConfig, seed: int) -> dict:
     """Re-home every chunk optimally every window, with migration free.
 
     A moving target, not an upper bound: it ignores migration cost, transaction
@@ -78,7 +78,7 @@ def instantaneous_best(sim: ClusterSimulator, cfg: ShardMindConfig, seed: int) -
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=None,
-                        help="a saved ShardMindConfig JSON to start from "
+                        help="a saved FragAllocConfig JSON to start from "
                              "(see configs/), instead of the built-in defaults")
     parser.add_argument("--volatility", type=float, default=1.0)
     parser.add_argument("--windows", type=int, default=200)
@@ -86,7 +86,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=Path("results/episode.json"))
     args = parser.parse_args()
 
-    base = ShardMindConfig.load(args.config) if args.config else ShardMindConfig()
+    base = FragAllocConfig.load(args.config) if args.config else FragAllocConfig()
     cfg = base.evolve(
         workload=replace(base.workload, volatility=args.volatility),
         episode=replace(base.episode, windows_per_episode=args.windows),

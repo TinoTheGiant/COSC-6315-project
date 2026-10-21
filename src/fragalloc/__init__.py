@@ -16,11 +16,11 @@ Keeping the first two apart means the cost model can be unit-tested and the
 baselines evaluated without Gymnasium, PyTorch or Stable-Baselines3 in the loop.
 """
 
-from shardmind.config import (
+from fragalloc.config import (
     CatalogConfig,
     CostConfig,
     RewardConfig,
-    ShardMindConfig,
+    FragAllocConfig,
     TopologyConfig,
     WorkloadConfig,
 )
@@ -31,7 +31,7 @@ __all__ = [
     "CatalogConfig",
     "CostConfig",
     "RewardConfig",
-    "ShardMindConfig",
+    "FragAllocConfig",
     "TopologyConfig",
     "WorkloadConfig",
     "__version__",

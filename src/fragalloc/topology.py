@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shardmind.config import TopologyConfig
+from fragalloc.config import TopologyConfig
 
 #: Representative inter-region round-trip times in milliseconds for the six
 #: default regions, in the order given by ``TopologyConfig.region_names``.

@@ -15,7 +15,7 @@ earned are the only failure mode that matters this week.
 | Reward normalization to a dataset fraction | **done**, 19 October. ADR-0010's precondition for pre-training |
 | Experiment record keeping | **done**, 19 October. `scripts/run_experiment.py`; config, seeds and commit recorded with every row |
 | Visualization, dashboards, GIS map, figure design system | **done** |
-| DQN wiring | **done**, 19 October. `shardmind/agent/`, `scripts/train.py`, verified end to end on a short run. **Not yet trained to convergence** |
+| DQN wiring | **done**, 19 October. `fragalloc/agent/`, `scripts/train.py`, verified end to end on a short run. **Not yet trained to convergence** |
 | Real-cluster gate | **passed once, must be re-run.** Run 1 compared one region against two, not six, because of a `RELOCATE LEASE` constraint found during it |
 | Real-cluster harness | **not started.** Specified in [`harness-architecture.md`](harness-architecture.md) |
 | Paper | **not started.** This is now the largest gap |
@@ -162,7 +162,7 @@ locked: changing it would invalidate every trained weight.
 
 ## Not yet built
 
-- `shardmind/harness/`, the five modules in [`harness-architecture.md`](harness-architecture.md). **Final submission, not this week**
+- `fragalloc/harness/`, the five modules in [`harness-architecture.md`](harness-architecture.md). **Final submission, not this week**
 - `scripts/finetune.py`. Depends on the harness
 - `docs/validation-plan.md`: topology, injected latencies, workload parameters,
   and the agreement statistic that counts as a pass. **Fix the threshold before

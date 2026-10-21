@@ -11,8 +11,8 @@ learns that realization. Evaluation uses a disjoint block of seeds
 not recall.
 
 **Evaluation is greedy and runs through the same code as the baselines.** The
-callback drives :class:`~shardmind.agent.policy.LearnedPolicy` over
-``shardmind.policies.rollout``, exactly as ``scripts/run_experiment.py`` drives
+callback drives :class:`~fragalloc.agent.policy.LearnedPolicy` over
+``fragalloc.policies.rollout``, exactly as ``scripts/run_experiment.py`` drives
 the hand-written policies. There is no separate agent evaluation loop to drift
 out of step with the baseline one.
 
@@ -34,13 +34,13 @@ from typing import Any
 
 import numpy as np
 
-from shardmind.agent.config import DQNConfig
-from shardmind.config import ShardMindConfig
-from shardmind.env import ShardMindEnv
+from fragalloc.agent.config import DQNConfig
+from fragalloc.config import FragAllocConfig
+from fragalloc.env import FragAllocEnv
 
 
-class SeedRotatingEnv(ShardMindEnv):
-    """A ShardMind environment that draws a fresh workload seed each episode.
+class SeedRotatingEnv(FragAllocEnv):
+    """An environment that draws a fresh workload seed each episode.
 
     Stable-Baselines3 calls ``reset()`` with ``seed=None`` between episodes,
     which here would mean "keep whatever the simulator had". That trains the
@@ -50,7 +50,7 @@ class SeedRotatingEnv(ShardMindEnv):
     sample.
     """
 
-    def __init__(self, config: ShardMindConfig, seeds: list[int]) -> None:
+    def __init__(self, config: FragAllocConfig, seeds: list[int]) -> None:
         super().__init__(config)
         self._seeds = list(seeds)
         self._next = 0
@@ -63,18 +63,18 @@ class SeedRotatingEnv(ShardMindEnv):
 
 
 def evaluate_greedy(
-    model, env_config: ShardMindConfig, seeds: list[int],
+    model, env_config: FragAllocConfig, seeds: list[int],
 ) -> dict[str, float]:
     """Score the greedy policy induced by ``model`` on held-out seeds.
 
-    Runs through ``shardmind.policies.rollout``, the same function the baselines
+    Runs through ``fragalloc.policies.rollout``, the same function the baselines
     use, so the agent's number and the baselines' numbers are produced by one
     loop. Returns the quantities the paper reports.
     """
-    from shardmind.observation import ObservationEncoder
-    from shardmind.policies import rollout
-    from shardmind.simulator import ClusterSimulator
-    from shardmind.env import observe
+    from fragalloc.observation import ObservationEncoder
+    from fragalloc.policies import rollout
+    from fragalloc.simulator import ClusterSimulator
+    from fragalloc.env import observe
 
     class _Greedy:
         def __init__(self, encoder: ObservationEncoder) -> None:
@@ -102,7 +102,7 @@ def evaluate_greedy(
     }
 
 
-def _make_eval_callback(agent_config: DQNConfig, env_config: ShardMindConfig,
+def _make_eval_callback(agent_config: DQNConfig, env_config: FragAllocConfig,
                         outdir: Path, history: list[dict[str, Any]]):
     """A callback that scores the greedy policy periodically and keeps the best.
 
@@ -145,7 +145,7 @@ def _make_eval_callback(agent_config: DQNConfig, env_config: ShardMindConfig,
 
 def train(
     agent_config: DQNConfig | None = None,
-    env_config: ShardMindConfig | None = None,
+    env_config: FragAllocConfig | None = None,
     outdir: Path | None = None,
     tensorboard: bool = True,
 ) -> Path:
@@ -153,7 +153,7 @@ def train(
     from stable_baselines3 import DQN
 
     agent_config = agent_config or DQNConfig()
-    env_config = env_config or ShardMindConfig()
+    env_config = env_config or FragAllocConfig()
 
     started = datetime.now(timezone.utc)
     outdir = Path(outdir or Path("results/models") / f"{started:%Y%m%dT%H%M%SZ}")

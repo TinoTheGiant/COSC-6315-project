@@ -18,11 +18,11 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shardmind.catalog import FragmentCatalog
-from shardmind.config import ShardMindConfig
-from shardmind.cost import CostBreakdown
-from shardmind.topology import Topology
-from shardmind.workload import WorkloadGenerator, WorkloadWindow
+from fragalloc.catalog import FragmentCatalog
+from fragalloc.config import FragAllocConfig
+from fragalloc.cost import CostBreakdown
+from fragalloc.topology import Topology
+from fragalloc.workload import WorkloadGenerator, WorkloadWindow
 
 EPS = 1e-12
 
@@ -67,7 +67,7 @@ class ObservationEncoder:
         fraction, load and storage imbalance, fragment count, episode progress.
     """
 
-    def __init__(self, cfg: ShardMindConfig, topology: Topology) -> None:
+    def __init__(self, cfg: FragAllocConfig, topology: Topology) -> None:
         self.cfg = cfg
         self.topology = topology
         f = cfg.catalog.max_fragments

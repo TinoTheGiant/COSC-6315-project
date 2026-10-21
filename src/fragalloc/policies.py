@@ -4,7 +4,7 @@ These are NOT the Phase 2 baselines. They exist so the environment can be
 driven without an agent and so the tests have something whose behaviour is
 predictable. The characterized baselines -- consistent hashing, nearest-region,
 threshold rebalancing and a Lion-style cost-model rebalancer -- belong in
-``shardmind/baselines/`` and are scheduled for week 3.
+``fragalloc/baselines/`` and are scheduled for week 3.
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ from typing import Protocol
 
 import numpy as np
 
-from shardmind.actions import ActionKind, ActionSpace
-from shardmind.simulator import ClusterSimulator
+from fragalloc.actions import ActionKind, ActionSpace
+from fragalloc.simulator import ClusterSimulator
 
 
 class Policy(Protocol):

@@ -3,8 +3,8 @@
 This module is the only place where the model meets the RL interface. It owns
 three translations and nothing else:
 
-* cluster state to an observation vector, via :class:`~shardmind.observation.ObservationEncoder`;
-* an integer to a placement action, via :class:`~shardmind.actions.ActionSpace`;
+* cluster state to an observation vector, via :class:`~fragalloc.observation.ObservationEncoder`;
+* an integer to a placement action, via :class:`~fragalloc.actions.ActionSpace`;
 * a cost vector to a scalar reward.
 
 The reward is the negative weighted sum of three normalized terms::
@@ -32,11 +32,11 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from shardmind.config import ShardMindConfig
-from shardmind.observation import ObservationEncoder
-from shardmind.simulator import ClusterSimulator
+from fragalloc.config import FragAllocConfig
+from fragalloc.observation import ObservationEncoder
+from fragalloc.simulator import ClusterSimulator
 
-ENV_ID = "ShardMind-v0"
+ENV_ID = "FragAlloc-v0"
 
 
 def observe(encoder: ObservationEncoder, sim: ClusterSimulator) -> np.ndarray:
@@ -45,7 +45,7 @@ def observe(encoder: ObservationEncoder, sim: ClusterSimulator) -> np.ndarray:
     Lives here rather than on the simulator because the simulator knows nothing
     about reinforcement learning ([ADR-0005]). It is a module-level function
     rather than a method so that a trained policy can be evaluated outside a
-    Gymnasium environment -- by ``shardmind.agent.policy.LearnedPolicy``, and so
+    Gymnasium environment -- by ``fragalloc.agent.policy.LearnedPolicy``, and so
     by ``scripts/run_experiment.py`` -- against exactly the same encoding the
     agent saw during training. One definition, or the agent is quietly scored on
     a different observation than it learned from.
@@ -61,18 +61,18 @@ def observe(encoder: ObservationEncoder, sim: ClusterSimulator) -> np.ndarray:
     )
 
 
-class ShardMindEnv(gym.Env):
+class FragAllocEnv(gym.Env):
     """Continuous re-fragmentation and re-allocation as a Gymnasium environment."""
 
     metadata = {"render_modes": ["ansi", "human"], "render_fps": 4}
 
     def __init__(
         self,
-        config: ShardMindConfig | None = None,
+        config: FragAllocConfig | None = None,
         render_mode: str | None = None,
     ) -> None:
         super().__init__()
-        self.cfg = config or ShardMindConfig()
+        self.cfg = config or FragAllocConfig()
         self.sim = ClusterSimulator(self.cfg)
         self.encoder = ObservationEncoder(self.cfg, self.sim.topology)
 
@@ -151,10 +151,10 @@ class ShardMindEnv(gym.Env):
 
 
 def register_env() -> None:
-    """Register ``ShardMind-v0`` with Gymnasium, idempotently."""
+    """Register ``FragAlloc-v0`` with Gymnasium, idempotently."""
     if ENV_ID in gym.registry:
         return
-    gym.register(id=ENV_ID, entry_point="shardmind.env:ShardMindEnv")
+    gym.register(id=ENV_ID, entry_point="fragalloc.env:FragAllocEnv")
 
 
 register_env()

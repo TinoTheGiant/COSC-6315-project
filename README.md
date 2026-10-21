@@ -3,7 +3,7 @@
 Teaching a neural network to be a database administrator: one that watches where
 traffic is coming from and continuously moves the data to meet it.
 
-Course project, COSC 6315. Tinotenda Kaseke, September to November 2026.
+Course project, COSC 6315. Tinotenda Kaseke, September to October 2026.
 Repository: `TinoTheGiant/COSC-6315-project`.
 
 ---
@@ -391,20 +391,20 @@ print, which an IEEE submission has to assume
 ## Using the environment directly
 
 ```python
-from shardmind.config import ShardMindConfig
-from shardmind.env import ShardMindEnv
+from fragalloc.config import FragAllocConfig
+from fragalloc.env import FragAllocEnv
 
-env = ShardMindEnv(ShardMindConfig())
+env = FragAllocEnv(FragAllocConfig())
 obs, info = env.reset(seed=0)                 # obs: 703 floats in [0, 1]
 obs, reward, terminated, truncated, info = env.step(env.action_space.sample())
 ```
 
-It registers as `ShardMind-v0` and passes
+It registers as `FragAlloc-v0` and passes
 `gymnasium.utils.env_checker.check_env`. Sweeping a parameter:
 
 ```python
 from dataclasses import replace
-base = ShardMindConfig()
+base = FragAllocConfig()
 volatile = base.evolve(workload=replace(base.workload, volatility=4.0))
 patient  = base.evolve(reward=replace(base.reward, w_migration=1.0))
 ```
@@ -414,7 +414,7 @@ patient  = base.evolve(reward=replace(base.reward, w_migration=1.0))
 ## What is in here
 
 ```
-src/shardmind/
+src/fragalloc/
   config.py       every tunable, frozen dataclasses, JSON round-trip
   topology.py     regions and the inter-region delay matrix
   workload.py     drifting demand over the keyspace; spikes; transactions

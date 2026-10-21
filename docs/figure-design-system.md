@@ -3,7 +3,7 @@
 One visual vocabulary, two targets: the **paper figures** that go into a printed
 two-column IEEE submission, and the **live dashboard** that runs on screen whilst
 an episode plays. A color means the same thing in both. The code is
-`src/shardmind/viz.py`; the rules are enforced by
+`src/fragalloc/viz.py`; the rules are enforced by
 `tests/test_viz_print_safety.py`.
 
 ## Why this exists

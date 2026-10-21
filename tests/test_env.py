@@ -9,18 +9,18 @@ import numpy as np
 import pytest
 from gymnasium.utils.env_checker import check_env
 
-from shardmind.actions import ActionKind, ActionSpace
-from shardmind.config import RewardConfig, ShardMindConfig
-from shardmind.env import ENV_ID, ShardMindEnv
+from fragalloc.actions import ActionKind, ActionSpace
+from fragalloc.config import RewardConfig, FragAllocConfig
+from fragalloc.env import ENV_ID, FragAllocEnv
 
 
 @pytest.fixture
-def env(tiny_config) -> ShardMindEnv:
-    return ShardMindEnv(tiny_config)
+def env(tiny_config) -> FragAllocEnv:
+    return FragAllocEnv(tiny_config)
 
 
 def test_passes_the_gymnasium_conformance_check(tiny_config) -> None:
-    check_env(ShardMindEnv(tiny_config), skip_render_check=True)
+    check_env(FragAllocEnv(tiny_config), skip_render_check=True)
 
 
 def test_spaces_have_the_declared_shape(env, tiny_config) -> None:
@@ -90,7 +90,7 @@ def test_an_inapplicable_action_is_charged_a_small_fixed_cost(tiny_config) -> No
         reward=RewardConfig(w_latency=0.0, w_migration=0.0, w_imbalance=0.0,
                             inapplicable_action_cost=0.05),
     )
-    env = ShardMindEnv(cfg)
+    env = FragAllocEnv(cfg)
     env.reset(seed=0)
     _, reward, _, _, info = env.step(env.sim.action_space.noop_index)
     assert not info["action_applied"]
@@ -103,7 +103,7 @@ def test_migration_weight_penalizes_moving_data(tiny_config) -> None:
         reward=RewardConfig(w_latency=0.0, w_migration=1.0, w_imbalance=0.0,
                             inapplicable_action_cost=0.0, migration_scale_fraction=1.0 / 6.0),
     )
-    env = ShardMindEnv(cfg)
+    env = FragAllocEnv(cfg)
     env.reset(seed=0)
     space = env.sim.action_space
     target = int(np.flatnonzero(~env.sim.catalog.replicas[0])[0])
@@ -130,7 +130,7 @@ def test_migration_cost_is_a_dataset_fraction_not_a_byte_count(tiny_config) -> N
             reward=reward_cfg,
             catalog=replace(tiny_config.catalog, dataset_bytes=dataset_bytes),
         )
-        env = ShardMindEnv(cfg)
+        env = FragAllocEnv(cfg)
         env.reset(seed=0)
         space = env.sim.action_space
         target = int(np.flatnonzero(~env.sim.catalog.replicas[0])[0])
@@ -149,8 +149,8 @@ def test_a_policy_that_follows_the_traffic_beats_one_that_does_not(default_confi
     the fault is in the reward rather than in the agent. This is the check the
     week 3 tabular sanity harness generalizes.
     """
-    from shardmind.policies import FollowTrafficPolicy, StaticHashPolicy, rollout
-    from shardmind.simulator import ClusterSimulator
+    from fragalloc.policies import FollowTrafficPolicy, StaticHashPolicy, rollout
+    from fragalloc.simulator import ClusterSimulator
 
     cfg = replace(default_config, episode=replace(default_config.episode, windows_per_episode=60))
     sim = ClusterSimulator(cfg)
@@ -165,7 +165,7 @@ def test_a_policy_that_follows_the_traffic_beats_one_that_does_not(default_confi
 
 
 def test_render_returns_text(tiny_config) -> None:
-    env = ShardMindEnv(tiny_config, render_mode="ansi")
+    env = FragAllocEnv(tiny_config, render_mode="ansi")
     env.reset(seed=0)
     text = env.render()
     assert "fragments" in text and "mean" in text

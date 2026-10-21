@@ -7,7 +7,7 @@ loop and the baselines inside ``rollout``, any difference between the two loops
 -- would land in the headline result and be indistinguishable from learning.
 
 So :class:`LearnedPolicy` satisfies the ``Policy`` protocol in
-:mod:`shardmind.policies`: it takes a :class:`~shardmind.simulator.ClusterSimulator`
+:mod:`fragalloc.policies`: it takes a :class:`~fragalloc.simulator.ClusterSimulator`
 and returns an action index. ``scripts/run_experiment.py`` then treats it as one
 more entry in the policy table.
 """
@@ -19,10 +19,10 @@ from typing import Any
 
 import numpy as np
 
-from shardmind.config import ShardMindConfig
-from shardmind.env import observe
-from shardmind.observation import ObservationEncoder
-from shardmind.simulator import ClusterSimulator
+from fragalloc.config import FragAllocConfig
+from fragalloc.env import observe
+from fragalloc.observation import ObservationEncoder
+from fragalloc.simulator import ClusterSimulator
 
 
 class LearnedPolicy:
@@ -37,7 +37,7 @@ class LearnedPolicy:
     def __init__(
         self,
         model_path: str | Path,
-        config: ShardMindConfig,
+        config: FragAllocConfig,
         deterministic: bool = True,
     ) -> None:
         from stable_baselines3 import DQN  # deferred: torch is a heavy import

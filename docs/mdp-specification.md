@@ -2,7 +2,7 @@
 
 **Status:** week 1 deliverable. Satisfies Objective 1.
 **Date:** 2026-09-20
-**Implements:** `shardmind.simulator`, `shardmind.env`, `shardmind.cost`
+**Implements:** `fragalloc.simulator`, `fragalloc.env`, `fragalloc.cost`
 
 This document states the control problem formally and records where each design
 choice answers a limitation in the base papers. Every symbol here corresponds to
@@ -289,15 +289,15 @@ will remain optimal.
 
 | Concept | Where |
 |---------|-------|
-| `L`, `phi_r` | `shardmind.topology.Topology` |
-| `psi_k`, `p_k`, `lambda`, spikes, templates | `shardmind.workload.WorkloadGenerator` |
-| catalogue, the five mutators, bytes moved | `shardmind.catalog.FragmentCatalog` |
-| `lat_read`, `lat_write`, `lat_txn`, commit, load, tail | `shardmind.cost` |
-| action encoding and application | `shardmind.actions.ActionSpace` |
-| observation encoding, layout | `shardmind.observation.ObservationEncoder` |
-| transition, clock, episode | `shardmind.simulator.ClusterSimulator` |
-| reward, Gymnasium API | `shardmind.env.ShardMindEnv` |
-| every default | `shardmind.config.ShardMindConfig` |
+| `L`, `phi_r` | `fragalloc.topology.Topology` |
+| `psi_k`, `p_k`, `lambda`, spikes, templates | `fragalloc.workload.WorkloadGenerator` |
+| catalogue, the five mutators, bytes moved | `fragalloc.catalog.FragmentCatalog` |
+| `lat_read`, `lat_write`, `lat_txn`, commit, load, tail | `fragalloc.cost` |
+| action encoding and application | `fragalloc.actions.ActionSpace` |
+| observation encoding, layout | `fragalloc.observation.ObservationEncoder` |
+| transition, clock, episode | `fragalloc.simulator.ClusterSimulator` |
+| reward, Gymnasium API | `fragalloc.env.FragAllocEnv` |
+| every default | `fragalloc.config.FragAllocConfig` |
 
 ---
 

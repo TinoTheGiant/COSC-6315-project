@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from shardmind.actions import Action, ActionKind, ActionSpace
-from shardmind.catalog import FragmentCatalog
-from shardmind.topology import build_topology
+from fragalloc.actions import Action, ActionKind, ActionSpace
+from fragalloc.catalog import FragmentCatalog
+from fragalloc.topology import build_topology
 
 
 @pytest.fixture

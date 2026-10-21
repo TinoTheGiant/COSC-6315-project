@@ -24,10 +24,10 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from shardmind.config import ShardMindConfig          # noqa: E402
-from shardmind.topology import DEFAULT_RTT_MS         # noqa: E402
+from fragalloc.config import FragAllocConfig          # noqa: E402
+from fragalloc.topology import DEFAULT_RTT_MS         # noqa: E402
 
-REGIONS = list(ShardMindConfig().topology.region_names)
+REGIONS = list(FragAllocConfig().topology.region_names)
 GATEWAY_PORT = 26257          # node0's mapped port on the host
 
 

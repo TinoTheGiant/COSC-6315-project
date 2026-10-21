@@ -246,7 +246,7 @@ read-at-nearest-replica term, so the tension between cheap local reads and
 expensive write quorums disappears from the cost model. Reads and writes both go
 to the one node holding the shard, and the remaining trade-offs are putting each
 shard where its traffic originates and co-locating shards that transact together.
-That is a narrower cost model than `shardmind.cost` currently implements, and the
+That is a narrower cost model than `fragalloc.cost` currently implements, and the
 paper must say so plainly rather than quietly. If the instructor considers
 replica placement essential to the contribution, that is the trigger to fall back
 to CockroachDB, which is why Action Item 1 comes before any code.
@@ -259,14 +259,14 @@ to CockroachDB, which is why Action Item 1 comes before any code.
   to `2pc`, the coordinator issues `PREPARE TRANSACTION` to each participating
   worker and then `COMMIT PREPARED`, so under injected latency commit cost is a
   direct function of which nodes hold the touched shards.
-- **`shardmind/harness/` is still the new module**, but it is smaller than
+- **`fragalloc/harness/` is still the new module**, but it is smaller than
   [ADR-0007](ADR-0007-real-database-validation.md) anticipated: no zone-config
   read-modify-write merge, no 256-partition scheme, no Toxiproxy requirement.
 - **Latency injection returns to `tc`/`netem`.** ADR-0007 chose Toxiproxy because
   the CockroachDB image ships no `iproute2`. The Postgres image can have
   `iproute2` installed, so netem in each container is available again. Note that
   netem shapes egress only, so half the intended round-trip goes on each side.
-- **`shardmind.cost` becomes a model of the harness rather than a substitute for
+- **`fragalloc.cost` becomes a model of the harness rather than a substitute for
   it.** Its read-at-nearest-replica and quorum terms have no counterpart under
   replication factor 1. Either the cost model is reduced to match, or it is kept
   and the divergence is documented as a limitation. This needs deciding before the
@@ -304,7 +304,7 @@ to CockroachDB, which is why Action Item 1 comes before any code.
    than run-to-run noise, the reward signal does not exist and the whole approach
    fails at the first hurdle. This is the cheapest possible falsification test and
    it should be run first.
-5. [ ] Decide the fate of `shardmind.cost`'s replication terms: reduce, or retain
+5. [ ] Decide the fate of `fragalloc.cost`'s replication terms: reduce, or retain
    and document the divergence.
 6. [ ] Rewrite `docs/roadmap.md` around the real-database critical path.
 7. [ ] Write `docs/validation-plan.md`: topology, injected latencies, workload

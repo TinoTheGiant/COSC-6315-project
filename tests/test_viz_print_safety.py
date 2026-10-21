@@ -5,7 +5,7 @@ photocopy. A palette that separates only by hue collapses the moment color is
 discarded, and that failure is invisible to whoever authored the figure on a
 color monitor. These tests are the check that nobody has to remember to run.
 
-The rule they encode comes from `shardmind.viz`: three series is the ceiling on
+The rule they encode comes from `fragalloc.viz`: three series is the ceiling on
 a light surface, every series carries a dash pattern as well as a color, and
 anything beyond three is a labeled reference rule rather than a fourth color.
 """
@@ -17,7 +17,7 @@ import itertools
 import matplotlib as mpl
 import pytest
 
-from shardmind import viz
+from fragalloc import viz
 
 
 # --------------------------------------------------------------------------

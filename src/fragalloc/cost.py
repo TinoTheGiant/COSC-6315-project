@@ -37,10 +37,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shardmind.config import CostConfig
-from shardmind.catalog import FragmentCatalog
-from shardmind.topology import Topology
-from shardmind.workload import WorkloadGenerator, WorkloadWindow
+from fragalloc.config import CostConfig
+from fragalloc.catalog import FragmentCatalog
+from fragalloc.topology import Topology
+from fragalloc.workload import WorkloadGenerator, WorkloadWindow
 
 
 @dataclass(frozen=True)
