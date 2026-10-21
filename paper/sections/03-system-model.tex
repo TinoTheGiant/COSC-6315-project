@@ -188,5 +188,46 @@ essential rather than convenient. If a placement command returns before the
 placement has changed, the reward observed after an action belongs to a state
 the action did not produce, and the decision problem is no longer well defined.
 
-% TODO: a figure of the architecture belongs here. Simulator on the left,
-% cluster on the right, the three parity constraints between them.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=3mm,
+  box/.style={draw, rounded corners=1pt, align=center, font=\scriptsize,
+              minimum width=30mm, inner sep=1.6mm},
+  title/.style={font=\scriptsize\bfseries},
+  parity/.style={<->, >={Stealth[length=1.6mm]}, dashed, gray},
+  note/.style={font=\tiny, gray, align=center}
+]
+
+% Left column: the simulator.
+\node[title] (simtitle) {Simulator};
+\node[box, below=2mm of simtitle] (simwork) {drifting workload\\256 cells, 6 regions};
+\node[box, below=of simwork] (simcost) {analytic cost model\\reads, writes, 2PC};
+\node[box, below=of simcost] (simobs) {observation encoder};
+
+% Right column: the real cluster.
+\node[title, right=26mm of simtitle] (clutitle) {CockroachDB cluster};
+\node[box, below=2mm of clutitle] (cluwork) {load generator\\6 nodes, netem latency};
+\node[box, below=of cluwork] (clucost) {measured latency\\from real transactions};
+\node[box, below=of clucost] (cluobs) {observation encoder};
+
+% The three parity constraints.
+\draw[parity] (simwork) -- node[note, above] {action space} node[note, below] {261 actions} (cluwork);
+\draw[parity] (simcost) -- node[note, above] {cost structure} (clucost);
+\draw[parity] (simobs) -- node[note, above] {observation space} (cluobs);
+
+% The agent, underneath, moving left to right.
+\node[box, below=6mm of $(simobs)!0.5!(cluobs)$, minimum width=62mm]
+  (agent) {Deep Q-Network\\pre-trained on the left, fine-tuned on the right};
+\draw[->, >={Stealth[length=1.6mm]}] (simobs) -- (agent);
+\draw[->, >={Stealth[length=1.6mm]}] (cluobs) -- (agent);
+
+\end{tikzpicture}
+\caption{The two halves of the system and the three things that must agree
+between them. The agent is pre-trained against the simulator, which is fast and
+cheap, and fine-tuned against the cluster, which is slow and real. Transfer is
+only meaningful if the observation space, the action space and the cost
+structure are the same on both sides, which is why the database was chosen for
+its ability to satisfy them rather than for its popularity.}
+\label{fig:architecture}
+\end{figure}

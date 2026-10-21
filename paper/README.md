@@ -41,17 +41,54 @@ the result.
 
 ## Figures
 
-`figures/` is empty. Three are needed:
+Three figures, and none of them needs drawing by hand.
 
-1. **Architecture.** Simulator on the left, CockroachDB cluster on the right,
-   the three parity constraints between them. Draw this by hand.
-2. **Volatility sweep**, two panels. Already rendered: it is `sweep.png` in
-   the Sweep artifact. Copy it in.
-3. **Training curve**, held-out latency against timestep for both agent runs.
-   Plot it from `eval_history.json` in each model artifact.
+| | Figure | Where it comes from | What you do |
+|---|---|---|---|
+| 1 | Architecture | Drawn in TikZ, inline in `sections/03-system-model.tex` | Nothing. It compiles with the paper |
+| 2 | Volatility sweep, two panels | `sweep.png` in the **Sweep** artifact | Download the artifact, copy the file into `figures/` |
+| 3 | Training curve with baselines | `figures/training-curve.png` in the **Train agent** artifact | Download, copy in |
 
-Figures 2 and 3 use the project's figure style, which is documented in
-`docs/figure-design-system.md` and is built to survive a grayscale print.
+Figures 2 and 3 are produced by the workflow runs that produced their data,
+which is deliberate. A figure reconstructed later from a downloaded archive is
+how a curve ends up plotted against baselines measured in a different
+environment.
+
+The cluster gate is a **table**, not a figure. Its source records only summary
+statistics, so a bar chart would show three numbers in more space than the
+three numbers take.
+
+Both generated figures use the project's figure style, documented in
+`docs/figure-design-system.md` and built to survive a grayscale print: one
+chromatic series for the agent against graded grays, every series carrying a
+mandatory dash pattern.
+
+### Adding them to the text
+
+```latex
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{sweep-volatility.png}
+  \caption{...}
+  \label{fig:sweep}
+\end{figure}
+```
+
+Figure 2 is two panels wide, so it may read better as `figure*` spanning both
+columns with `width=\textwidth`. Decide that when you see it in place.
+
+### If a figure needs regenerating locally
+
+```bash
+python scripts/assemble_sweep.py --over volatility
+python scripts/plot_training_curve.py results/models/<id> \
+    --baselines results/runs/<eval-run-id> \
+    --out paper/figures/training-curve.png
+```
+
+The `--baselines` argument is not optional in practice. Without it the curve
+has no reference lines, and a learning curve without them tells a reader that a
+number went down without telling them whether it went down far enough.
 
 ## On the writing
 

@@ -105,6 +105,19 @@ jobs:
           echo "run_dir=${RUN_DIR%/}" >> "$GITHUB_OUTPUT"
           echo "run_id=$(basename "${RUN_DIR%/}")" >> "$GITHUB_OUTPUT"
 
+      # The curve belongs to the run that produced it. Reconstructing it later
+      # from a downloaded archive is how a figure ends up plotted against the
+      # wrong baselines.
+      - name: Plot the training curve
+        env:
+          PYTHONPATH: src
+          MPLBACKEND: Agg
+        run: |
+          python scripts/plot_training_curve.py \
+            "${{ steps.train.outputs.model_dir }}" \
+            --baselines "${{ steps.eval.outputs.run_dir }}" \
+            --out "${{ steps.eval.outputs.run_dir }}/figures/training-curve.png"
+
       - name: Put the comparison in the job summary
         run: |
           cat "${{ steps.eval.outputs.run_dir }}/report.md" >> "$GITHUB_STEP_SUMMARY"
