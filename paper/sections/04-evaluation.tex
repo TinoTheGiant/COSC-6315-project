@@ -1,147 +1,351 @@
-% STATUS: OUTLINE ONLY. The rubric awards zero points for this section at
-% the midterm, so it exists to show the structure. Every number below is
-% already measured and recorded; what is missing is the prose and the
-% figures, which is Thursday and Friday's work.
-%
-% Every figure listed here has a run directory behind it. Take the number
-% from the run directory, never from this file, and never from memory.
+% STATUS: WRITTEN. Every number in this section is transcribed from
+% results/recorded/*.csv, and every row in those files names the run it came
+% from. Scores under the objective are produced by scripts/score_objective.py
+% rather than by hand, because scoring a learned run against a baseline
+% evaluated at a different migration weight has already happened once in this
+% project and is the easiest way to manufacture a win.
 
 \section{Evaluation}
 
-% ---------------------------------------------------------------------
-\subsection{Questions}
-% Four, in order:
-%   Q1  Does placement matter at all on a real cluster?
-%   Q2  How much does following the traffic beat doing nothing?
-%   Q3  How does that advantage change as the workload moves faster?
-%   Q4  Does a learned policy beat the heuristic?
-% Q4's answer is "not yet", and the section is structured so that is
-% reported rather than buried.
+The evaluation answers four questions, in order. First, does it actually
+matter on real hardware where a shard's leaseholder sits, or is the whole
+premise an artefact of the simulator? Second, is the gain from moving data
+a gain from \emph{choosing} where to move it, rather than from movement by
+itself? Third, how does the room available to a better policy change as the
+workload moves faster? Fourth, does the learned policy use that room.
+
+The first three have clean answers. The fourth has a partial one, and this
+section reports the partial answer rather than the one that would read
+better.
 
 % ---------------------------------------------------------------------
 \subsection{Setup}
-% Six regions, replication factor 3, 256 cells, 200 decision windows per
-% episode, eight seeds. Round-trip matrix stated as a table.
-% Cluster: six CockroachDB nodes in containers, netem latency injection
-% accurate to 0.1 ms across the measured pairs.
-% Hardware: GitHub Actions ubuntu-latest, 2 cores, 7 GB. State this.
+
+The simulated cluster has six regions, one node per region, replication
+factor three, and a keyspace divided into 256 cells that shards are built
+from. An episode is 200 decision windows. At each window the policy sees
+the per-region read and write counts from the window just finished and
+issues one action; the environment then charges it for the latency its
+placement produced and for the data any move had to carry.
+
+Every policy is driven by the same episode loop. The learned policy
+satisfies the same interface as the baselines and is executed by the same
+rollout function, so a difference between two numbers in this section
+cannot be a difference between two pieces of harness code. The baselines
+are static hash partitioning, random relocation, a reactive heuristic that
+follows the traffic, and a per-window bound.
+
+The bound deserves a sentence of its own, because it is easy to misread. It
+is the lowest latency reachable by relocating every lease for free, each
+window, \emph{at the shard boundaries the episode started with}. It is not
+a global optimum. A policy that splits a shard can legitimately score below
+it, so the figures label it ``best per window (fixed shards)'' rather than
+``optimal''.
+
+The agent minimises a single cost, which is the thing it is being judged on
+throughout this section:
+%
+\begin{equation}
+c = \frac{\ell}{100} \;+\; w \cdot \frac{g}{2000} \;+\; 0.10 \cdot b
+\label{eq:objective}
+\end{equation}
+%
+where $\ell$ is mean transaction latency in milliseconds, $g$ is gigabytes
+moved over the episode, $b$ is load imbalance, and $w$ is the migration
+weight. In plain terms: latency is the thing we want low, moving data is
+charged for, and concentrating the whole workload onto one node is charged
+for separately so that a policy cannot win on latency by overloading a
+single region. Migration cost is expressed as a fraction of the dataset
+rather than in bytes, which is deliberate: a 60\,GB simulator and a 1\,GB
+cluster then score the same physical move identically, and a policy trained
+in one can be evaluated in the other without rescaling the reward.
+
+Two seed blocks appear in this section and they are never mixed in one
+table. The volatility sweep uses seeds 0 to 7. The agent evaluations use
+held-out seeds 2000 to 2007, which the training configuration refuses to
+overlap with its training seeds. A sweep number and an agent number are
+therefore not directly comparable, and every table states which block it
+came from.
+
+Each run is identified by the first eight hexadecimal digits of a SHA-256
+digest over its resolved configuration. The digest is reconstructible from
+the parameters alone, which is how the weights behind the runs in
+Table~\ref{tab:agent} were recovered and confirmed without reopening the
+archives.
+
+The cluster experiments use six CockroachDB nodes in containers with
+inter-region round-trip latency injected by \texttt{netem}, accurate to
+0.1\,ms across the measured pairs. Both pilots ran on GitHub Actions
+runners, the first on two cores and the second on four.
 
 % ---------------------------------------------------------------------
-\subsection{Q1: placement changes latency on a real cluster}
-% Source: Cluster pilot #2, 20 October 2026, docs/results-log.md run 2.
-%
-%                        p50      p95      stdev
-%   leases co-located    272.7    275.5    48.8
-%   leases spread       1013.4   1648.0   302.0
-%   p95 gap 1372.5 ms
-%
-% THREE THINGS THAT MUST APPEAR IN THIS SUBSECTION:
-%
-% 1. "Co-located" means the leases, not the data. With replication factor
-%    3 and one node per region, three replicas cannot fit in one region,
-%    so every write pays a cross-region quorum even in the co-located
-%    case. That is why the co-located p50 is 272.7 ms and not single
-%    digits. The experiment isolates the leaseholder effect, which is
-%    exactly what MOVE_LEASE corresponds to.
-% 2. The confidence interval is indicative, not a precision claim. At
-%    N = 200 transactions the p95 is the 190th order statistic, so the
-%    bootstrap interval is degenerate at the top. Report the gap, report
-%    N, say the interval is indicative, and state that choosing N by
-%    measurement is outstanding work.
-% 3. Six database processes shared two cores. Say so.
+\subsection{Q1: placement changes latency on real hardware}
+
+Table~\ref{tab:cluster} and Fig.~\ref{fig:cluster} report two pilots on the
+real cluster. In each one the same transactions run twice: once with the
+leaseholders for the keys involved gathered in the region issuing them, and
+once with those leaseholders spread across regions.
+
+\begin{table}[t]
+\caption{Cluster pilots. Transaction latency with leaseholders co-located
+against spread. Source: \texttt{results/recorded/cluster.csv}.}
+\label{tab:cluster}
+\centering
+\begin{tabular}{llrrr}
+\toprule
+Pilot & Case & p50 (ms) & p95 (ms) & stdev (ms) \\
+\midrule
+$N=200$, 2 cores  & co-located &  272.7 &  275.5 &  48.8 \\
+                  & spread     & 1013.4 & 1648.0 & 302.0 \\
+\addlinespace
+$N=1000$, 4 cores & co-located &  441.5 &  446.6 &  78.4 \\
+                  & spread     & 1015.3 & 1648.7 & 299.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{cluster.png}
+\caption{Co-located against spread leaseholders on the real cluster. The
+difference is large enough that it is not a measurement artefact, which is
+all this experiment is asked to establish.}
+\label{fig:cluster}
+\end{figure}
+
+The p95 gap is 1372.5\,ms in the first pilot and 1202.0\,ms in the second.
+Placement is worth a great deal on real hardware, which is the assumption
+the rest of the work rests on.
+
+Three qualifications belong with that number rather than in a footnote.
+
+First, ``co-located'' means the leases, not the data. With replication
+factor three and one node per region, three replicas cannot fit inside one
+region, so every write still pays a cross-region quorum even in the
+co-located case. That is why the co-located p50 is 272.7\,ms rather than
+single digits. What the experiment isolates is the leaseholder effect,
+which is precisely what the \textsc{move\_lease} action corresponds to.
+
+Second, the interval around p95 is indicative rather than a precision
+claim. At $N=200$ transactions the p95 is the 190th order statistic, so a
+bootstrap interval over it is degenerate at the top. The second pilot
+raised $N$ to 1000 and halved the interval width from 155.2\,ms to
+65.6\,ms, which is the right direction, but choosing $N$ by measurement
+rather than by convenience remains outstanding work.
+
+Third, and least comfortable, the co-located arm became 62\% slower when
+the pilot moved from two cores to four, 272.7\,ms to 441.5\,ms, whilst the
+spread arm barely moved. The co-located case concentrates every lease on
+one node, and on the larger run that node saturated. The simulator cannot
+reproduce this, because its cost model has no notion of a node running out
+of capacity. It is also the clearest evidence in the project that the
+imbalance term in~\eqref{eq:objective} is measuring something real rather
+than something invented to make the reward well behaved.
 
 % ---------------------------------------------------------------------
-\subsection{Q2: following the traffic beats doing nothing}
-% Source: Experiments #1, 20 October 2026, 8 seeds, volatility 1.0.
-%
-%   Static hash                      156.11  [148.92, 164.33]     0.0 GB
-%   Random                           158.02  [150.98, 165.63]   204.8 GB
-%   Follow traffic                    98.66  [ 89.49, 106.58]   785.2 GB
-%   Best per window (fixed shards)    93.66  [ 86.60,  99.63]     0.0 GB
-%
-% 36.8% improvement. Note that random is no better than static despite
-% moving 205 GB, which is the point of including it: the gain comes from
-% choosing where, not from moving.
-%
-% TABLE 1 goes here.
+\subsection{Q2: the gain comes from choosing, not from moving}
+
+\begin{table}[t]
+\caption{Volatility sweep. Mean latency in milliseconds and gigabytes moved
+per episode, eight seeds per value, seed block 0 to 7. Source:
+\texttt{results/recorded/sweep.csv}.}
+\label{tab:sweep}
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+Volatility & Static & Random & Follow & Bound & Follow GB \\
+\midrule
+0.5 & 156.27 & 156.79 &  94.31 & 93.87 &  405.1 \\
+1.0 & 156.11 & 158.02 &  98.66 & 93.66 &  785.2 \\
+2.0 & 155.37 & 158.89 & 125.37 & 89.47 & 1056.6 \\
+4.0 & 155.77 & 160.24 & 139.58 & 82.38 & 1115.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The random baseline exists to separate two explanations that are easy to
+confuse. It relocates shards at the same rate as the heuristic but to
+destinations chosen without looking at the traffic. Across all four
+volatility settings in Table~\ref{tab:sweep} it moves 204.8\,GB and ends up
+between 156.79 and 160.24\,ms, which is no better than doing nothing at
+all. The heuristic, at volatility 1.0, moves 785.2\,GB and reaches
+98.66\,ms, a 36.8\% improvement on static hashing.
+
+So movement by itself buys nothing. Everything in this problem is in the
+choice of destination. That is worth stating plainly because it is the
+reason the problem is a decision problem at all, and therefore the reason a
+learned policy is a sensible thing to attempt.
 
 % ---------------------------------------------------------------------
-\subsection{Q3: the advantage collapses as the workload moves faster}
-% Source: Sweep #1, 20 October 2026, 8 seeds per value.
-% THIS IS THE SECTION THE PAPER IS FOR. Give it the space.
-%
-%   volatility   static   follow   bound    headroom   advantage
-%        0.5     156.27    94.31   93.87     0.44 ms      39.7%
-%        1.0     156.11    98.66   93.66     5.00 ms      36.8%
-%        2.0     155.37   125.37   89.47    35.90 ms      19.3%
-%        4.0     155.77   139.58   82.38    57.20 ms      10.4%
-%
-%   GB moved by follow traffic: 405 -> 785 -> 1057 -> 1115
-%
-% The three observations, in this order:
-%
-%   (a) Static hashing is flat. It does not degrade with volatility
-%       because it was never tracking anything. Say this plainly; it is
-%       the reason the advantage column falls rather than the baseline
-%       rising.
-%   (b) The bound IMPROVES with volatility, 93.87 -> 82.38, because
-%       sharper traffic concentration means a well-chosen placement does
-%       better. So the achievable optimum gets better whilst the
-%       heuristic gets worse. That widening gap is the finding.
-%   (c) The heuristic pays more and gets less: movement rises from
-%       405 GB to 1115 GB whilst its advantage falls from 39.7% to
-%       10.4%. A reactive rule under fast drift is buying churn.
-%
-% The conclusion to draw: the room for a learned policy is largest
-% exactly where the problem is hardest. At volatility 0.5 there is
-% nothing to win. At volatility 4 there is 41% of the heuristic's own
-% latency to win.
-%
-% FIGURE 2 goes here, two panels: latency against volatility, and GB
-% moved against volatility. Source: results/sweeps/volatility/sweep.png.
+\subsection{Q3: the room for a better policy grows with volatility}
+
+Volatility controls how fast the geographic centre of the workload drifts
+between windows. Table~\ref{tab:sweep} and Fig.~\ref{fig:sweep} sweep it
+over a factor of eight. Three things happen at once, and the third is the
+finding.
+
+Static hashing is flat, 155.37 to 156.27\,ms across the whole sweep. It
+does not degrade as the workload moves faster because it was never tracking
+the workload in the first place. Anything it does badly, it does badly at
+every setting.
+
+The bound \emph{improves} as volatility rises, 93.87\,ms down to 82.38\,ms.
+This is initially counter-intuitive and worth a sentence. A more volatile
+workload is a more sharply concentrated one, and a sharply concentrated
+workload is easier to serve well if you put the data in the right place.
+Faster drift therefore makes the problem harder for a policy and easier for
+an oracle.
+
+The heuristic goes the other way. Its latency rises from 94.31 to
+139.58\,ms whilst the data it moves rises from 405.1 to 1115.2\,GB
+(Fig.~\ref{fig:movement}). It pays nearly three times as much and gets
+progressively less for it. A rule that reacts to the window just finished
+is chasing a target that has already moved on, and under fast drift most of
+what it buys with that movement has expired by the time the move lands.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{sweep.png}
+\caption{Left: latency against volatility for static hashing, the reactive
+heuristic, and the per-window bound. Right: how far the heuristic sits
+above the bound. The gap is the room available to a better policy, and it
+opens from 0.44\,ms to 57.20\,ms. Seed block 0 to 7.}
+\label{fig:sweep}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{movement.png}
+\caption{Data moved per episode. The heuristic's bill rises with volatility
+whilst its advantage falls, which is the behaviour a learned policy has to
+improve on.}
+\label{fig:movement}
+\end{figure}
+
+The consequence is the right-hand panel of Fig.~\ref{fig:sweep}. The gap
+between the heuristic and the bound is 0.44\,ms at volatility 0.5 and
+57.20\,ms at volatility 4, which is 41\% of the heuristic's own latency.
+Put simply: under slow drift a reactive rule is already close to the best
+anyone could do, and there is nothing worth learning. Under fast drift
+there is a great deal worth learning. The case for a learned policy is
+conditional on volatility, and that condition is now measured rather than
+assumed.
+
+This also corrects an earlier reading of our own data. From the volatility
+1.0 results alone, where the gap is 5.00\,ms, we concluded that latency was
+not a viable contribution and that the work would have to argue from
+movement cost instead. The sweep shows that conclusion was drawn from a
+single point on a curve that had not been plotted.
 
 % ---------------------------------------------------------------------
-\subsection{Q4: the learned policy does not yet match the heuristic}
-% Sources: Train agent #1 and #2, 20 October 2026, both at volatility 1.0,
-% both evaluated on held-out seeds 2000-2007.
-%
-%   run 1, w_migration = 0.30:   146.55 ms,  53.2 GB moved
-%   run 2, w_migration = 0.00:   135.57 ms, 192.8 GB moved
-%   follow traffic:               90.76 ms, 752.6 GB moved
-%
-% Report this straight. The structure of the argument:
-%
-%   (a) Run 1 learned to sit still: 53 GB against the heuristic's 753.
-%       The migration penalty is immediate and certain whilst the latency
-%       benefit is delayed and spread over later windows, and a Q-function
-%       trained for 1,500 episodes resolves that disagreement by not
-%       moving.
-%   (b) Run 2 removed the penalty entirely. Movement rose to 193 GB and
-%       latency improved by 11 ms, which confirms (a) as a contributing
-%       cause but does not close the gap.
-%   (c) Run 2's held-out evaluation was still improving at the final
-%       training step, 127.66 ms at step 300,000 against run 1's plateau
-%       at 138 ms by step 160,000. The budget ran out before convergence.
-%   (d) Both runs trained at volatility 1.0, where the sweep shows the
-%       available headroom is 5 ms. The agent was asked to win a contest
-%       with almost no prize. Training at volatility 2 to 4 is the
-%       obvious next experiment and is outstanding work.
-%
-% FIGURE 3: training curve, held-out latency against timestep, both runs.
-% Source: eval_history.json in each model directory.
+\subsection{Q4: the learned policy wins at high volatility, narrowly}
+
+Table~\ref{tab:agent} reports five agent runs on held-out seeds 2000 to
+2007, each scored against the baselines under~\eqref{eq:objective} at that
+run's own migration weight. Fig.~\ref{fig:objective} shows the same
+comparison for the $w=0.30$ runs.
+
+\begin{table}[t]
+\caption{Learned policy against the baselines, held-out seeds 2000 to 2007.
+Costs are from~\eqref{eq:objective}, each pair scored at the same $w$.
+Negative means the agent is better. Source:
+\texttt{results/recorded/agent-runs.csv}, scored by
+\texttt{scripts/score\_objective.py}.}
+\label{tab:agent}
+\centering
+\small
+\begin{tabular}{rrrrrrrr}
+\toprule
+Run & Vol & $w$ & Seed & ms & GB & vs follow & vs static \\
+\midrule
+3 & 4.0 & 0.30 & 0 & 139.91 &  62.7 & $-0.068$ & $-0.071$ \\
+7 & 4.0 & 0.30 & 1 & 144.61 &  44.5 & $-0.031$ & $-0.035$ \\
+4 & 4.0 & 0.10 & 0 & 136.94 & 123.7 & $+0.012$ & $-0.100$ \\
+8 & 2.0 & 0.30 & 0 & 129.64 & 177.3 & $+0.003$ & $-0.167$ \\
+6 & 2.0 & 0.00 & 0 & 129.24 & 311.9 & $+0.124$ & $-0.202$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{objective.png}
+\caption{Every policy scored under the full objective at $w=0.30$, not on
+latency alone. At volatility 4 the heuristic's latency advantage is almost
+entirely paid back by the data it moves and the imbalance it creates, and
+the learned policy is below both. The distance still remaining to the bound
+is the honest measure of how much is left to do.}
+\label{fig:objective}
+\end{figure}
+
+The agent beats static hashing in all five runs. At volatility 4 with
+$w=0.30$ it also beats the heuristic, on both learner seeds, by 0.068 and
+0.031 of objective cost. It does so in a way that is easy to describe: it
+reaches 139.91\,ms against the heuristic's 129.04\,ms, so it is slower, but
+it moves 62.7\,GB against 1086.5\,GB and holds imbalance at 0.776 against
+1.0034. It is buying its latency far more cheaply than the heuristic buys
+its own.
+
+Fig.~\ref{fig:objective} shows a second result that falls out of the same
+scoring. At volatility 4 the heuristic and static hashing are
+indistinguishable under the objective, 1.554 against 1.557, despite the
+heuristic being 21\,ms faster. Everything it gains on latency it returns in
+movement and imbalance. The reactive rule has stopped being worth running
+at all by that point, which is a sharper statement of Q3's finding than the
+latency curve alone can make.
+
+Four qualifications, and they are substantial.
+
+\emph{The policy has not converged.} Held-out evaluation was still
+improving at the final training step in every run. The training budget ran
+out before the learning did, so these are lower bounds on what this
+architecture reaches, not its ceiling.
+
+\emph{No claim about the migration weight is supportable from this data.}
+The two learner seeds at volatility 4 differ by 4.70\,ms, whilst changing
+$w$ from 0.30 to 0.10 at a fixed seed changes latency by 2.97\,ms. The
+spread between seeds is larger than the effect of the treatment, so runs 3,
+4 and 7 cannot be read as telling us what $w$ should be. More seeds per
+setting is the fix, and it has not been done.
+
+\emph{Most of the agent's actions do nothing.} Between 80\% and 90\% of the
+actions it selects are inapplicable in the state it selected them in, which
+the environment resolves as a no-op. The random baseline sits at 80.4\% on
+the same measure, so the learned policy is barely better than chance at
+choosing an action that is even legal. It is winning on the actions that do
+land, and it is wasting most of its decisions. This is the single largest
+measured inefficiency in the project.
+
+\emph{The bound is still far away.} At volatility 4 the agent scores 1.486
+against the bound's 0.813. Beating a heuristic that has itself stopped
+working is a much weaker result than closing the gap to what is achievable,
+and Fig.~\ref{fig:objective} is drawn so that the remaining distance is
+visible rather than cropped out.
 
 % ---------------------------------------------------------------------
 \subsection{Threats to validity}
-% - The simulator's cost model is analytic. Q1 validates that placement
-%   matters on real hardware; it does not validate the magnitudes.
-% - Two cores for six database processes adds scheduling noise.
-% - N = 200 transactions was chosen by convenience rather than by
-%   measurement.
-% - The bound holds the starting shard boundaries, so it is not a global
-%   optimum and should not be read as one.
-% - The agent selects inapplicable actions in 80-90% of windows. Cite
-%   \cite{huang2022masking} for why masking matters as the invalid share
-%   grows, and \cite{zahavy2018elimination} for an action-elimination
-%   network built on DQN specifically, which is the closest published fix.
-% - Results at volatility 1.0 should not be generalized to other
-%   volatilities, which is precisely what Q3 demonstrates.
+
+The simulator's cost model is analytic. Q1 establishes that placement
+matters on real hardware; it does not establish that the simulator's
+magnitudes are right, and no claim in this paper should be read as if it
+did.
+
+The two pilots differ in both transaction count and core count, so the
+difference between them cannot be attributed to either one alone. They are
+reported as two separate pilots for that reason.
+
+$N$ was chosen by convenience in the first pilot and raised in the second
+without a power calculation behind either value.
+
+The bound holds the starting shard boundaries fixed, so it is not a global
+optimum and a policy that splits shards may legitimately pass it.
+
+The high rate of inapplicable actions is a known failure mode as the
+invalid share of an action space grows \cite{huang2022masking}, and
+action-elimination networks built on DQN address it directly
+\cite{zahavy2018elimination}. Neither is implemented here.
+
+Results at one volatility should not be generalised to another, which is
+exactly what Q3 demonstrates. The agent results at volatility 4 say nothing
+about volatility 1, and the project's own earlier misreading is the
+cautionary case.

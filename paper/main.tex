@@ -41,10 +41,31 @@ tinokaseke@gmail.com}}
 \maketitle
 
 \begin{abstract}
-% WRITE LAST. Four sentences: the problem, what was built, the main
-% measured result, what it means. Do not write this until the Evaluation
-% section is finished, because an abstract written early commits you to a
-% result you may not have.
+Distributed databases fix their fragmentation schema when the database is
+designed and place the resulting shards with a function of the key, which
+never observes where requests come from. When the geographic centre of a
+workload moves, as it does daily in a multi-region service, the placement
+drifts out of step with the traffic and transaction latency degrades. We
+model continuous re-fragmentation and re-allocation as a Markov decision
+process over a simulated six-region cluster, with a reward in which
+migration cost is a fraction of the dataset rather than a byte count so
+that a policy trained in simulation can be scored on real hardware without
+the reward changing meaning. On a six-node CockroachDB cluster with
+wide-area latency injected between nodes, gathering leaseholders in the
+region issuing the transactions rather than spreading them changes p95
+latency by 1372.5\,ms, which establishes the premise outside simulation.
+Sweeping workload volatility over a factor of eight shows that a reactive
+heuristic sits 0.44\,ms above the achievable bound under slow drift and
+57.20\,ms above it under fast drift, 41\% of its own latency, whilst the
+data it moves rises from 405\,GB to 1115\,GB per episode; scored under the
+full objective at the highest setting it becomes indistinguishable from
+static hashing. A Deep Q-Network trained at that setting beats both
+baselines on held-out seeds, on two independent learner seeds, reaching a
+latency 11\,ms worse than the heuristic whilst moving one twentieth of the
+data. The margin is narrow, the policy had not converged, and between 80\%
+and 90\% of the actions it selects are inapplicable, so the result is best
+read as evidence that the room the sweep identifies is reachable rather
+than as a solved problem.
 \end{abstract}
 
 \begin{IEEEkeywords}

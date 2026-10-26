@@ -1,44 +1,84 @@
-% STATUS: OUTLINE ONLY. Zero points at the midterm. Write it after the
-% Evaluation section, because a conclusion written first tends to describe
-% the result you hoped for.
+% STATUS: WRITTEN. Written after the Evaluation section, deliberately, so
+% that it describes the result that was measured rather than the one that
+% was hoped for.
 
 \section{Conclusion and Future Work}
 
-% ---------------------------------------------------------------------
-% WHAT TO SAY, in about three paragraphs.
-%
-% 1. What was established. The problem stated as an MDP with a measured
-%    action encoding; four baselines; a validated cost assumption on real
-%    hardware; and the measured relationship between workload volatility
-%    and the room available to a smarter policy.
-%
-% 2. The main finding. A reactive heuristic is near-optimal under slow
-%    drift and falls 41% short of the achievable bound under fast drift,
-%    whilst moving nearly three times as much data. The case for learning
-%    is therefore conditional on volatility, and that condition is now
-%    measured rather than assumed.
-%
-% 3. What was not achieved. The agent does not yet beat the heuristic.
-%    Say it in one sentence, without hedging, and then say what the
-%    evidence points at.
+This paper set out to test whether a reinforcement learning agent can act
+as an autonomous database administrator, re-fragmenting and re-allocating
+shards in real time as a workload's geographic centre of gravity moves.
+What has been established is a measured problem statement, a cluster that
+confirms the premise, and a first learned policy that wins where the
+problem is hardest.
+
+The problem is stated as a Markov decision process with an action encoding
+that was measured rather than assumed, four baselines running through one
+shared episode loop, and a reward in which migration cost is a fraction of
+the dataset rather than a byte count, so that a policy trained in the
+simulator can be evaluated on the cluster without the reward changing
+meaning underneath it. On the real cluster, gathering leaseholders in the
+region issuing the transactions against spreading them across regions
+changes p95 latency by 1372.5\,ms. Placement matters, measurably, on
+hardware.
+
+The main result is about when a learned policy is worth having. A reactive
+heuristic that follows the traffic is 0.44\,ms off the achievable bound
+under slow drift and 57.20\,ms off it under fast drift, which is 41\% of
+its own latency, whilst the data it moves rises from 405.1\,GB to
+1115.2\,GB per episode. It pays nearly three times as much and gets
+progressively less. Scored under the full objective at volatility 4 it is
+indistinguishable from static hashing, 1.554 against 1.557, because
+everything it gains on latency it hands back in movement and imbalance. The
+case for learning is therefore conditional on volatility, and this work
+measures the condition instead of asserting it.
+
+Against that heuristic, the learned policy wins at volatility 4 on both
+learner seeds, by 0.068 and 0.031 of objective cost, and beats static
+hashing in every run recorded. It does so by being slower and very much
+cheaper: 139.91\,ms against 129.04\,ms, but 62.7\,GB moved against
+1086.5\,GB. That is a narrow win over a heuristic that has itself stopped
+working, and it should be read as such. The policy sits at 1.486 against a
+bound of 0.813, it had not converged when the training budget ran out, and
+between 80\% and 90\% of the actions it selects are inapplicable in the
+state it selects them in. The agent is winning on the minority of its
+decisions that land.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
-% In the order they should be attempted:
-%
-% 1. Train at volatility 2 to 4, where there is something to win.
-% 2. Action masking or action elimination, \cite{huang2022masking} and
-%    \cite{zahavy2018elimination}. The 80-90% inapplicable rate is the
-%    largest single inefficiency measured, and Zahavy's AE-DQN addresses
-%    exactly it for a DQN.
-% 3. Address credit assignment: n-step returns, as combined in Rainbow
-%    \cite{hessel2018rainbow}, or reward shaping that credits a move with
-%    the latency it saves in later windows rather than charging it
-%    entirely at the moment it is made.
-% 3. Longer training. Run 2 had not converged at 300,000 steps.
-% 4. Fine-tune the pre-trained agent on the real cluster. The apparatus
-%    exists and the parity constraints are satisfied; the harness is not
-%    yet built.
-% 5. Choose N by measurement and re-run the cluster experiment.
-% 6. Add a cost-model rebalancer in the style of Lion as a stronger
-%    baseline than follow traffic.
+
+In the order they should be attempted.
+
+Fix the action space first. An 80\% to 90\% inapplicable rate is the
+largest measured inefficiency in the project, it is a known failure mode as
+the invalid share of an action space grows \cite{huang2022masking}, and
+action-elimination networks built on DQN address exactly it
+\cite{zahavy2018elimination}. Nothing else on this list is likely to matter
+as much.
+
+Run more seeds per setting. The spread between two learner seeds currently
+exceeds the effect of changing the migration weight, which means the
+present data cannot answer how that weight should be set. This is cheap and
+it blocks a question the work already wants to ask.
+
+Address credit assignment. A move is charged in full at the moment it is
+made whilst the latency it buys arrives over later windows, which is a
+disagreement a Q-function has to resolve from a short training budget.
+$n$-step returns, as combined in Rainbow \cite{hessel2018rainbow}, or a
+shaping term that credits a move with the latency it later saves, are the
+two obvious routes.
+
+Train for longer. Every run was still improving at its final step, so the
+reported numbers are a floor rather than a ceiling.
+
+Choose the cluster transaction count by measurement rather than by
+convenience, and separate the transaction count from the core count so that
+the saturation effect seen between the two pilots can be attributed.
+
+Fine-tune the pre-trained agent on the real cluster. The apparatus exists,
+the reward normalisation that makes transfer meaningful is already in
+place, and the harness that would drive it is not yet built.
+
+Add a cost-model rebalancer in the style of Lion \cite{lion2024} as a
+stronger baseline. Following the traffic is a weak opponent at volatility
+4, and the next version of this result should be measured against something
+that is still working.

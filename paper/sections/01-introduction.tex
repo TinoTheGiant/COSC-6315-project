@@ -52,7 +52,11 @@ with workload volatility. I verify on a real six-node CockroachDB cluster, with
 wide-area latency injected between the nodes, that placement changes
 transaction latency by far more than the measurement noise, which is the
 precondition for any of this being learnable outside simulation. Finally I
-train a Deep Q-Network on the simulator and report, honestly, that it does not
-yet match the heuristic, together with the evidence about why.
-
-% TODO once Figure 1 exists: close the paragraph above with a pointer to it.
+train a Deep Q-Network on the simulator and report where it stands: at
+volatility 4 it beats both the heuristic and static hashing on the objective,
+on two independent learner seeds, by moving a twentieth of the data the
+heuristic moves; and it remains a long way from the bound, with most of the
+actions it selects inapplicable in the state it selects them in.
+Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
+cluster fit together, and which three things have to agree between them for a
+policy trained in one to mean anything in the other.
