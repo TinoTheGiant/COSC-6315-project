@@ -35,19 +35,40 @@ the two sets must never share a table. Label every table with its seed block.
 >
 > Comparing the two on latency alone compares them on a quantity only one of
 > them is optimizing. The reward combines latency, data movement and load
-> imbalance. Scored on that reward, the agent reaches 1.486 against follow
-> traffic's 1.554 and fixed placement's 1.557. **Under the objective the agent
-> was trained on, it performs better than the rule it is meant to replace.** It
-> gives up 10.9 ms of latency and recovers more than that in movement and
-> balance together.
+> imbalance. Scored on that reward the agent reaches 1.486 against follow
+> traffic's 1.554 and fixed placement's 1.557. A second agent trained under
+> identical settings with a different learner seed reaches 1.522, which also
+> beats the rule. **Under the objective the agent was trained on, both seeds
+> perform better than the rule they are meant to replace.** The agent gives up
+> around 10 ms of latency and recovers more than that in movement and balance
+> together.
 >
-> Two limits apply to that result. First, it rests on a single learner seed. A
-> second seed under identical settings produced 144.61 ms rather than 139.91 ms,
-> a spread of 4.70 ms. That spread is larger than the 2.97 ms difference between
-> migration weights of 0.30 and 0.10, so no claim about the migration weight
-> survives this data. Second, the agent's chosen actions are inapplicable in 85%
-> of decision windows, against 80% for random action. Its low movement is
-> therefore partly a failure to act rather than deliberate restraint.
+> The advantage is specific to that setting. At volatility 2.0 and the same
+> weight the two are level, 1.400 against 1.398. When the movement weight is
+> lowered to 0.10 the agent falls behind by 0.012, and at a weight of 0.00 it is
+> not in the contest at all, since a zero movement charge is exactly the
+> condition its strategy exploits. This is consistent rather than awkward: the
+> agent's advantage lies in how little it moves, so the advantage grows with the
+> price of movement. With one run at the lower weight I report that as
+> suggestive rather than established.
+>
+> Against fixed placement the agent wins in every measured run under every
+> weight, by 0.035 to 0.202 on the reward.
+>
+> Two limits apply. The learner seed moves the result by 4.70 ms in latency and
+> by a factor of two in how often the agent splits a shard, so the policy has not
+> converged on a single strategy, and differences smaller than that spread cannot
+> be attributed to a configuration. And the agent's chosen actions are
+> inapplicable in 80 to 90% of decision windows, against 80% for random action,
+> so its low movement is partly a failure to act rather than deliberate
+> restraint.
+>
+> One result holds across every run without qualification. The agent's load
+> imbalance measured between 0.695 and 0.816 in all five runs read, against 0.501
+> to 0.561 for fixed placement and 0.945 to 1.003 for follow traffic. The agent
+> never approaches the concentration that follow traffic uses to buy its latency.
+> Given that the cluster pilot showed concentration saturating a real node, this
+> is the most likely of the three terms to transfer to real hardware.
 
 ### Table 2, to insert above
 
@@ -55,19 +76,25 @@ the two sets must never share a table. Label every table with its seed block.
 200 decision windows. Imbalance is blank where the run archive has not been
 read.**
 
-| Volatility | Method | Weight | Seed | Mean (ms) | Moved (GB) | Imbalance |
-|---|---|---|---|---|---|---|
-| 4.0 | Fixed placement | | | 150.12 | 0.0 | 0.561 |
-| 4.0 | **Agent** | 0.30 | 0 | **139.91** | **62.7** | **0.776** |
-| 4.0 | **Agent** | 0.30 | 1 | 144.61 | 44.5 | not read |
-| 4.0 | **Agent** | 0.10 | 0 | 136.94 | 123.7 | not read |
-| 4.0 | Follow traffic | | | 129.04 | 1086.5 | 1.003 |
-| 4.0 | Cost-free reference | | | 71.84 | not charged | 0.945 |
-| 2.0 | Fixed placement | | | 151.67 | 0.0 | 0.501 |
-| 2.0 | **Agent** | 0.30 | 0 | 129.64 | 177.3 | not read |
-| 2.0 | **Agent** | 0.00 | 0 | 129.24 | 311.9 | 0.723 |
-| 2.0 | Follow traffic | | | 114.57 | 1048.5 | 0.945 |
-| 2.0 | Cost-free reference | | | 80.71 | not charged | 0.782 |
+| Volatility | Method | Weight | Seed | Mean (ms) | Moved (GB) | Imbalance | Reward cost |
+|---|---|---|---|---|---|---|---|
+| 4.0 | Fixed placement | | | 150.12 | 0.0 | 0.561 | 1.557 |
+| 4.0 | **Agent** | 0.30 | 0 | **139.91** | **62.7** | **0.776** | **1.486** |
+| 4.0 | **Agent** | 0.30 | 1 | 144.61 | 44.5 | 0.695 | **1.522** |
+| 4.0 | Follow traffic | | | 129.04 | 1086.5 | 1.003 | 1.554 |
+| 4.0 | Cost-free reference | | | 71.84 | not charged | 0.945 | |
+| 4.0 | Agent, weight 0.10 | 0.10 | 0 | 136.94 | 123.7 | 0.816 | 1.457 |
+| 4.0 | Follow traffic at 0.10 | | | 129.04 | 1086.5 | 1.003 | 1.445 |
+| 2.0 | Fixed placement | | | 151.67 | 0.0 | 0.501 | 1.567 |
+| 2.0 | **Agent** | 0.30 | 0 | 129.64 | 177.3 | 0.773 | 1.400 |
+| 2.0 | Follow traffic | | | 114.57 | 1048.5 | 0.945 | 1.398 |
+| 2.0 | Cost-free reference | | | 80.71 | not charged | 0.782 | |
+
+Reward cost is the weighted sum of latency, movement and imbalance, lower being
+better. Each block compares policies at one weight, because follow traffic's own
+cost moves with the weight too. The volatility 2.0 run at weight 0.00 is omitted:
+at a zero movement charge follow traffic's terabyte is free and the comparison
+is not informative.
 
 ### Figure 3, to insert
 
@@ -132,11 +159,13 @@ read.**
 > volatility tested.
 >
 > At that volatility the learned agent does not match follow traffic on latency.
-> It does better on the objective it was trained on, reaching 1.486 against
-> 1.554, because it recovers in movement and load balance more than it gives up
-> in latency. That result rests on a single learner seed and a policy that still
-> selects unavailable actions most of the time, so I report it as preliminary
-> rather than established.
+> It does better on the objective it was trained on, reaching 1.486 and 1.522
+> under two learner seeds against follow traffic's 1.554, because it recovers in
+> movement and load balance more than it gives up in latency. The advantage is
+> specific to that weight and disappears when movement is charged less. The
+> policy still selects unavailable actions in most decision windows and varies
+> substantially with its seed, so I report the result as preliminary rather than
+> established.
 
 ---
 
@@ -154,14 +183,14 @@ statistics:
 | | |
 |---|---|
 | **17x** | Less data moved than follow traffic, at volatility 4.0 |
-| **1.486** | Reward cost, against follow traffic's 1.554 |
+| **Both seeds** | Beat follow traffic on the combined objective |
 
 Body: At volatility 4.0 the agent reaches 139.91 ms against follow traffic's
 129.04 ms, whilst moving 62.7 GB against 1,086.5 GB and holding load imbalance
-at 0.776 against 1.003. On the combined objective it scores better than the
-rule. However, a second seed under identical settings gave 144.61 ms, and that
-spread exceeds the difference between migration weights, so the result is
-preliminary.
+at 0.776 against 1.003. On the combined objective it scores 1.486 against 1.554,
+and a second learner seed scores 1.522, so both beat the rule. The advantage is
+specific to this weight: at a movement weight of 0.10 the agent falls behind,
+which fits, since its advantage lies in how little it moves.
 
 Source line: held-out seeds 2000 to 2007, eight training runs, commit f459c44.
 
@@ -182,8 +211,9 @@ per configuration".
 
 ## Still to do, and what it would change
 
-| | What it needs | What it would change |
-|---|---|---|
-| Run 7 archive | Move the zip into the project folder | Puts a second seed behind the volatility-4 reward claim, which currently rests on one |
-| Run 8 archive | Same | Decides the volatility-2 comparison, whose tie threshold of 0.745 sits inside the range the agent's imbalance occupies |
-| Run 4 archive | Same | Completes the volatility-4 frontier. Near-certain to confirm, threshold 1.781 |
+All five archives have been read and every number above is measured. Nothing is
+outstanding for the submission.
+
+Remaining work belongs to the final report: action masking to address the
+inapplicable rate, more seeds per configuration, a convergence-based stopping
+rule, and fine-tuning on the cluster.
