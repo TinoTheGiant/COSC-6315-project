@@ -27,30 +27,21 @@ arrangement that minimizes it. The result is then installed and the database
 runs with it.
 
 The literature divides the problem in two. Fragmentation asks how to cut the
-data; allocation asks where to put the pieces. Ceri et al.~\cite{ceri1982horizontal}
-treat horizontal fragmentation, dividing a relation by rows, and Navathe et
-al.~\cite{navathe1984vertical} treat vertical fragmentation, dividing it by
-columns so that a fragment matches the attributes a transaction actually uses.
-Both optimize against an expected access pattern supplied in advance. On the
-allocation side, Apers~\cite{apers1988allocation} formalizes the placement of
-fragments across network sites as a cost minimization and analyzes its
-complexity, Sacc{\`a} and Wiederhold~\cite{sacca1985clustering} give a greedy
-construction for a cluster of processors, and March and
-Rho~\cite{march1995allocating} extend the objective to place operations as well
-as data, under capacity constraints. The standard synthesis of this material is
-the textbook treatment of {\"O}zsu and Valduriez~\cite{ozsu2011principles}, and
-the formulation remains current: Niu et al.~\cite{niu2026allocation} state the
-same problem as a balanced-cut optimization.
+data, horizontally by rows or vertically by columns; allocation asks where to
+put the pieces. Both have been studied for decades as optimization problems
+solved before the database runs, and Nashat and Amer~\cite{nashat2018taxonomy}
+give a taxonomy of the techniques in each. The formulation remains current: Amer
+et al.~\cite{amer2017optimized} solve fragmentation and allocation together as
+one heuristic optimization, and Niu et al.~\cite{niu2026allocation} state the
+allocation problem as a balanced cut.
 
-A second tradition avoids the optimization entirely. Consistent
-hashing~\cite{karger1997consistent} assigns a key to a node through a function
-of the key alone, so that adding or removing a node moves only a small share of
-the data and no central directory is needed. CRUSH~\cite{weil2006crush} extends
-that to replicated data under user-defined failure domains, and a recent survey
-compares the family~\cite{coluzzi2023hashing}. This is what the static baseline
-in this paper is, and it is what most production systems use. It is also the
-root of the problem studied here: a function of the key cannot observe where a
-request came from.
+A second tradition avoids the optimization entirely. Consistent hashing assigns
+a key to a node through a function of the key alone, so that adding or removing
+a node moves only a small share of the data and no central directory is needed;
+Coluzzi et al.~\cite{coluzzi2023hashing} survey the family and compare its
+members empirically. This is what the static baseline in this paper is, and it
+is what most production systems use. It is also the root of the problem studied
+here: a function of the key cannot observe where a request came from.
 
 The weakness is in the word once. A solved-once answer is correct for the
 workload it was solved against and degrades as the real workload departs from
@@ -62,19 +53,17 @@ workload changes.
 \subsection{Adapting placement to a moving workload}
 
 A line of work makes the partitioning decision from the observed workload
-rather than from a design-time estimate. Schism~\cite{curino2010schism} builds a
-graph in which tuples accessed by the same transaction are joined by an edge,
-then partitions that graph to minimize distributed transactions whilst keeping
-partitions balanced. Pavlo et al.~\cite{pavlo2012skew} search the design space
-with an analytical cost model that accounts for skew as well as coordination
-cost. E-Store~\cite{taft2014estore} addresses the case where a small number of
-tuples carry most of the traffic, placing hot ranges individually whilst
-distributing cold data in large chunks. Clay~\cite{serafini2016clay} removes the
-restriction to hierarchical schemas, migrating blocks built around hot tuples
-together with the tuples co-accessed with them.
-Promi~\cite{ding2025promi} addresses the migration itself rather than the
-decision, moving data at a finer granularity so that rebalancing does not stop
-transactions.
+rather than from a design-time estimate, typically by building a graph in which
+tuples accessed by the same transaction are joined by an edge and then cutting
+that graph to minimize distributed transactions. Clay~\cite{serafini2016clay}
+applies this to arbitrary schemas, migrating blocks built around hot tuples
+together with the tuples co-accessed with them, and reports throughput an order
+of magnitude above earlier approaches. Kamal et al.~\cite{kamal2016repartitioning}
+make the repartitioning incremental, recutting only the sub-graph that distributed
+transactions touch so that the scheme can be refreshed as the workload drifts
+rather than recomputed. Promi~\cite{ding2025promi} addresses the migration
+itself rather than the decision, moving data at a finer granularity so that
+rebalancing does not stop transactions.
 
 A related line treats placement and replication as one problem rather than two
 stages. Atrey et al.~\cite{atrey2019unifying} make that argument directly for

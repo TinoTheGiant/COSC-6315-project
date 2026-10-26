@@ -211,3 +211,67 @@ A bibliography is judged on its weakest entry as much as its strongest. Adding a
 paper from a discontinued or delisted venue costs more credibility than the
 citation gains, and a reader who recognizes one of them will wonder what else
 was added without being checked.
+
+---
+
+## Recency constraint applied, 26 October 2026
+
+**Nothing published before 2015.** Fourteen entries were removed. The
+bibliography now spans 2015 to 2026, 33 entries, every one verified against
+Crossref or, where the venue registers no DOIs, against its arXiv page.
+
+### What was removed, and what each loss costs
+
+| Removed | Year | What it was supporting | How that argument now stands |
+|---|---|---|---|
+| Ceri et al. | 1982 | horizontal fragmentation | Nashat and Amer 2018, an ACM Computing Surveys taxonomy that surveys all five |
+| Navathe et al. | 1984 | vertical fragmentation | same |
+| Saccà and Wiederhold | 1985 | allocation by greedy construction | same |
+| Apers | 1988 | allocation as cost minimization | same |
+| March and Rho | 1995 | placing operations as well as data | same |
+| Özsu and Valduriez | 2011 | the textbook synthesis | same |
+| Karger et al. | 1997 | consistent hashing | Coluzzi et al. 2023, a survey of the family |
+| Weil et al. | 2006 | CRUSH | same |
+| Curino et al., Schism | 2010 | workload-driven graph partitioning | Clay 2016 and Kamal et al. 2016 carry the method |
+| Pavlo et al. | 2012 | skew-aware design search | **lost.** Nothing post-2015 found that covers it |
+| Taft et al., E-Store | 2014 | fine-grained elastic repartitioning | partly Clay 2016, partly lost |
+| Cooper et al., YCSB | 2010 | the workload's shape | **sentence rewritten** to describe the conventions without naming the benchmark |
+| Corbett et al., Spanner | 2013 | geo-distributed production systems | CockroachDB 2020 alone |
+| Efron | 1979 | the percentile bootstrap | **sentence rewritten.** The method is described rather than cited |
+
+Three entries were added: **Nashat and Amer 2018** (ACM Computing Surveys),
+**Amer et al. 2017** (Heliyon), **Kamal et al. 2016** (Future Generation
+Computer Systems).
+
+### What this costs, stated plainly
+
+Two arguments are weaker than they were.
+
+**Schism, E-Store and the Pavlo partitioner are the direct ancestors of this
+work** and are no longer cited. Clay and Kamal et al. carry the method, and both
+are post-2015, so the Related Work section still describes what the approach is
+and why it does not learn. But a reader who knows the field will notice that the
+three papers which established workload-driven repartitioning are absent, and
+the honest reason is a date rule rather than a judgment about relevance.
+
+**Consistent hashing is now cited only through a survey.** The static baseline
+in this paper *is* consistent hashing, and the primary source for it is 1997. A
+survey is a weaker citation for a claim about what the baseline is.
+
+Where no post-2015 source carried an argument, the sentence was rewritten to
+stop making it rather than propped up with a citation that does not fit. That
+applies to the YCSB sentence and the bootstrap sentence, both of which now
+describe the method without naming a source.
+
+### A near miss worth recording
+
+One entry added in this pass, Amer et al. 2017, was first written with an author
+list reconstructed from memory rather than copied: "Ali A. Amer and Hassan I.
+Abdalla". The Crossref record gives **Ali A. Amer, Adel A. Sewisy and Taha M. A.
+Elgendy**. The DOI was right and the authors were wrong, which is the harder
+error to catch, because a reader checking the DOI lands on the correct paper and
+has no reason to look at the names.
+
+It was caught by verifying rather than by proofreading. The rule it breaks is
+the one about reconstructing fields, and it is recorded here because the same
+mistake in a submitted bibliography would be invisible until someone cited it.
