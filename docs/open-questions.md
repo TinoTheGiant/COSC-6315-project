@@ -518,3 +518,79 @@ outperformed; it is an agent that has not settled.
    property of the result rather than a step count. Runs 4, 6, 7 and 8 all
    recorded their best evaluation well before the budget ran out.
 4. Longer training at volatility 2, where the agent is already strongest.
+
+---
+
+## The two verifications, 26 October 2026
+
+### Migration weights on runs 4 and 6: settled
+
+Recovered without opening the artifacts, by reconstructing the configuration
+digest from candidate parameters and matching it against the digest each run
+recorded. Every one of the six digests resolves uniquely:
+
+| Digest | Volatility | Migration weight |
+|---|---|---|
+| `caf3851b` | 1.0 | 0.30 |
+| `c5251ea9` | 1.0 | 0.00 |
+| `68ac0947` | 2.0 | 0.30 |
+| `803933af` | 2.0 | **0.00** |
+| `60276db3` | 4.0 | 0.30 |
+| `1690898f` | 4.0 | **0.10** |
+
+So run 4 is volatility 4.0 at weight 0.10 and run 6 is volatility 2.0 at weight
+0.00. This is stronger evidence than reading the config files would have been,
+because it also demonstrates that the digest is reproducible from the stated
+parameters, which is what makes it usable as a run identifier at all.
+
+Note what it does to the frontier. At volatility 4 there is no zero-weight run,
+only 0.10 and 0.30. At volatility 2 there is no 0.10 run, only 0.00 and 0.30.
+The frontier is two points at each volatility, not three, and they are not the
+same two.
+
+### Load imbalance: baselines measured, agent still outstanding
+
+Re-ran the baselines locally at volatility 2.0 and 4.0 on the same held-out
+seeds 2000 to 2007. The digests and every latency reproduce the CI runs exactly,
+so this is the same measurement rather than a similar one.
+
+| Volatility | | Latency | Load imbalance |
+|---|---|---|---|
+| 2.0 | static hash | 151.67 | 0.501 |
+| | random | 152.20 | 0.648 |
+| | follow traffic | 114.57 | **0.945** |
+| | bound | 80.71 | 0.782 |
+| 4.0 | static hash | 150.12 | 0.561 |
+| | random | 151.64 | 0.709 |
+| | follow traffic | 129.04 | **1.003** |
+| | bound | 71.84 | 0.945 |
+
+**Follow traffic has roughly twice the load imbalance of static hashing.** It
+buys its latency by concentrating work, which is precisely the behaviour the
+imbalance term was put in the reward to penalize, and precisely what cluster
+pilot 3 caught happening on real hardware when the co-located arm saturated.
+Three independent things now agree: the reward's design, the simulator's
+measurement, and the cluster's timing.
+
+That is reportable on its own and it needs no agent data.
+
+The agent's own imbalance is not yet measured, so the reward comparison stays
+open. What can be stated is the threshold at which each agent run would tie
+follow traffic on total reward cost, holding the measured baselines fixed:
+
+| Run | Volatility | Weight | Ties follow traffic at imbalance |
+|---|---|---|---|
+| 3 | 4.0 | 0.30 | 1.452 |
+| 7 | 4.0 | 0.30 | 1.009 |
+| 4 | 4.0 | 0.10 | 1.781 |
+| 8 | 2.0 | 0.30 | 0.745 |
+| 6 | 2.0 | 0.00 | 1.051 |
+
+Every observed imbalance in this project falls between 0.50 and 1.01. So runs 3,
+4 and 6 would need an imbalance beyond anything yet measured in order to lose,
+whilst runs 7 and 8 sit inside the observed range and genuinely could go either
+way.
+
+**Do not make a reward-based claim until the agent's imbalance is read from each
+run's `summary.csv`.** The latency-and-movement framing recorded above needs
+none of this and should carry the paper regardless.
