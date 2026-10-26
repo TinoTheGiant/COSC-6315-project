@@ -1,0 +1,31 @@
+\section{Conclusion}
+
+This paper tested whether a reinforcement learning agent can act as an
+autonomous database administrator, moving shards in real time as the
+geographic centre of a workload moves. Three things are established. Placement
+changes 95th percentile latency on a real six-node cluster by 1372.5\,ms, so
+the premise holds outside simulation. The room available to a better policy
+grows with how fast the workload moves, from 0.44\,ms under slow drift to
+57.20\,ms under fast drift, and at the fastest setting the reactive rule stops
+beating fixed placement on the combined cost at all. And a Deep Q-Network
+trained at that setting beats both baselines on held-out seeds, on two
+independent training seeds, by moving one twentieth of the data the rule
+moves.
+
+The win is narrow, over an opponent that has itself stopped working, with a
+policy that had not converged and that wastes most of its decisions on
+inapplicable actions. It should be read as evidence that the room identified
+by the sweep is reachable, not as a solved problem. The remaining distance to
+the cost-free reference is larger than the distance already closed.
+
+\section*{Disclosure of AI Use}
+
+Claude, by Anthropic, was used throughout this project as a coding and writing
+assistant. It helped implement the simulator, the baselines and the experiment
+scripts, drafted and revised sections of this paper, and checked the
+arithmetic in the result tables. All experiments were specified, dispatched
+and reviewed by the author. Every number reported here was transcribed from a
+recorded run directory, each recorded row names the run it came from, and the
+cost arithmetic in Table~\ref{tab:agent} is reproduced by a script in the
+project repository rather than computed by hand. The author is responsible for
+the content and the claims made.

@@ -1,27 +1,24 @@
 % Reinforcement Learning for Dynamic Data Fragmentation and Allocation.
-%
-% A Deep Q-Network agent that continuously re-fragments and re-allocates
-% database shards under geographically migrating workloads.
-%
-% COSC 6315, University of Texas Permian Basin.
+% COSC 6315, University of Texas Permian Basin. Midterm draft.
 %
 % Build:  pdflatex main && bibtex main && pdflatex main && pdflatex main
 %
-% Section files live in sections/. Each one says at the top whether it is
-% written or still an outline, so the state of the draft is visible without
-% reading the whole thing.
+% IEEEtran.cls is vendored in this directory; paper/README.md says why and
+% records the one byte sequence that had to be repaired in it.
+%
+% The longer versions of these sections, written for the final paper, are kept
+% under sections/full/. This draft is deliberately shorter and plainer: the
+% target is five pages and a reader who knows computer science but not
+% distributed databases.
 
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 
 \usepackage{cite}
 \usepackage{amsmath,amssymb}
-\usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{booktabs}
-\usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,calc}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
 
@@ -30,42 +27,36 @@
 \begin{document}
 
 \title{Reinforcement Learning for Dynamic Data\\
-Fragmentation and Allocation}
+Fragmentation and Allocation\\
+\large\textit{Midterm Draft}}
 
-\author{\IEEEauthorblockN{Tinotenda Kaseke}
+\author{\IEEEauthorblockN{Tino Kaseke}
 \IEEEauthorblockA{\textit{Department of Computer Science} \\
 \textit{University of Texas Permian Basin}\\
-Odessa, TX, USA \\
-tinokaseke@gmail.com}}
+Odessa, Texas, USA \\
+kaseke\_t87479@utpb.edu}}
 
 \maketitle
 
 \begin{abstract}
-Distributed databases fix their fragmentation schema when the database is
-designed and place the resulting shards with a function of the key, which
-never observes where requests come from. When the geographic centre of a
-workload moves, as it does daily in a multi-region service, the placement
-drifts out of step with the traffic and transaction latency degrades. We
-model continuous re-fragmentation and re-allocation as a Markov decision
-process over a simulated six-region cluster, with a reward in which
-migration cost is a fraction of the dataset rather than a byte count so
-that a policy trained in simulation can be scored on real hardware without
-the reward changing meaning. On a six-node CockroachDB cluster with
-wide-area latency injected between nodes, gathering leaseholders in the
-region issuing the transactions rather than spreading them changes p95
-latency by 1372.5\,ms, which establishes the premise outside simulation.
-Sweeping workload volatility over a factor of eight shows that a reactive
-heuristic sits 0.44\,ms above the achievable bound under slow drift and
-57.20\,ms above it under fast drift, 41\% of its own latency, whilst the
-data it moves rises from 405\,GB to 1115\,GB per episode; scored under the
-full objective at the highest setting it becomes indistinguishable from
-static hashing. A Deep Q-Network trained at that setting beats both
-baselines on held-out seeds, on two independent learner seeds, reaching a
-latency 11\,ms worse than the heuristic whilst moving one twentieth of the
-data. The margin is narrow, the policy had not converged, and between 80\%
-and 90\% of the actions it selects are inapplicable, so the result is best
-read as evidence that the room the sweep identifies is reachable rather
-than as a solved problem.
+Distributed databases decide how to split their data and where to put the
+pieces once, when the database is designed, using a function of the key that
+never sees where requests come from. When the geographic centre of a workload
+moves, as it does daily in a service spread across regions, that placement
+drifts out of step with the traffic and transactions get slower. This paper
+states continuous re-splitting and re-placement as a reinforcement learning
+problem over a simulated six-region cluster. On a real six-node CockroachDB
+cluster, gathering primary copies in the region issuing the transactions
+rather than spreading them changes 95th percentile latency by 1372.5\,ms, so
+the premise holds outside simulation. Sweeping how fast the workload moves
+shows a simple reactive rule 0.44\,ms above the best available placement under
+slow drift and 57.20\,ms above it under fast drift, which is 41\% of its own
+latency; at that setting the rule stops beating fixed placement at all once
+movement and imbalance are counted. A Deep Q-Network trained there beats both
+baselines on held-out seeds, on two training seeds, by moving one twentieth of
+the data the rule moves. The margin is narrow and the policy had not
+converged, so this is evidence that the room the sweep identifies is
+reachable, not that the problem is solved.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -76,13 +67,15 @@ learning, deep Q-networks, geo-distributed transactions
 \input{sections/01-introduction}
 \input{sections/02-related-work}
 \input{sections/03-system-model}
-\input{sections/04-evaluation}
-\input{sections/05-conclusion}
+\input{sections/04-experimental-method}
+\input{sections/05-results}
+\input{sections/06-discussion}
+\input{sections/07-limitations}
+\input{sections/08-conclusion}
 
-% IEEEtran.bst is not obtainable in this environment (CTAN is blocked and
-% texlive-publishers has no installation candidate), so the build uses
-% ieeetr, which ships with texlive base and produces IEEE numbered
-% references. On Overleaf, change this one line back to IEEEtran.
+% IEEEtran.bst is not obtainable in this environment, so the build uses
+% ieeetr, which ships with texlive base and gives IEEE numbered references.
+% On Overleaf, change this one line back to IEEEtran.
 \bibliographystyle{ieeetr}
 \bibliography{references}
 

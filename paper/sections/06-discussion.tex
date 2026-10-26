@@ -1,0 +1,21 @@
+\section{Discussion}
+
+The measurements support one claim, and it is narrower than the project's
+original question. Whether a learned policy is worth having depends on how
+fast the workload moves, and that condition is now measured rather than
+assumed. A learned policy is worth building under fast drift and is a waste of
+effort under slow drift.
+
+The win over the rule is real but narrow, and it is a win over an opponent
+that has itself stopped working. The agent reaches it by being slower and much
+cheaper, which is what the combined cost was written to reward, so this is the
+objective working as intended rather than a surprise. It is not evidence that
+the agent has learned to place data well. The cost-free reference sits at
+0.813 against the agent's 1.486, and that distance, not the distance to the
+rule, is the measure of what is left.
+
+One methodological point generalises beyond this project. Comparing a learned
+policy with a heuristic on latency alone compares them on something only one
+of them is optimising. Reporting latency alone would make the agent look worse
+than it is, and reporting movement alone would make it look better. Report the
+two together, or report the combined cost.

@@ -1,62 +1,43 @@
-% STATUS: written, 20 October 2026. Needs a figure reference in paragraph 4
-% once Figure 1 exists.
-
 \section{Introduction}
 
 A distributed database splits its data into pieces and spreads those pieces
-across machines in different places. The pieces are usually called shards, or
-fragments, and the two decisions that matter are where the boundaries between
-them fall and which machine holds each one. Both decisions are made once, when
-the database is designed. The boundaries are fixed by a schema, and the
-placement is decided by a function of the key, such as a hash, which maps a
-record to a machine without ever considering where the requests for that record
-come from.
+across machines in different places. The pieces are called shards. Two
+decisions matter. The first is where the boundaries between shards fall. The
+second is which machine holds each shard. Both are normally made once, when
+the database is designed, and the placement is then decided by a function of
+the key, such as a hash. A hash does not know where requests come from.
 
-That arrangement works whilst the traffic stays where the designer expected it.
-In a service with users on several continents, served by a database spread
-across regions in the manner of Spanner~\cite{corbett2013spanner} or
-CockroachDB~\cite{taft2020cockroachdb}, it does not. The geographic
-centre of the workload moves across the day as one region wakes and another
-sleeps, and it moves abruptly when something local draws attention to one
-region. A placement chosen for the morning is wrong by the evening. Every
-request that has to cross an ocean to reach its data pays the round-trip time
-of that ocean, and a transaction touching several shards held in several
-regions pays it repeatedly, because the protocol that keeps such a transaction
-atomic requires more than one round of agreement between the machines
-involved. The result is that latency degrades steadily as the mismatch between
-placement and traffic grows.
+That is fine whilst the traffic stays where the designer expected. It is not
+fine in a service with users on several continents, served by a database
+spread across regions in the manner of Spanner~\cite{corbett2013spanner} or
+CockroachDB~\cite{taft2020cockroachdb}. The geographic centre of the traffic
+moves across the day as one region wakes and another sleeps, so a placement
+chosen for the morning is wrong by the evening. Every request that crosses an
+ocean to reach its data pays that ocean's round-trip time, and a transaction
+touching shards in several regions pays it more than once, because keeping
+such a transaction atomic needs more than one round of agreement between the
+machines holding those shards.
 
-The obvious response is to move the data when the traffic moves. A simple rule
-does this: each decision window, find the shard whose placement costs the most
-and move it towards the region reading it. I implement that rule as a baseline
-and call it \emph{follow traffic}. The question this paper asks is whether
-anything is gained by replacing it with a policy learned from experience, and
-the answer turns out to depend entirely on how fast the workload moves. When
-drift is slow, the simple rule is within half a millisecond of the best
-placement that moving shards can achieve, and there is nothing worth learning.
-When drift is fast, the same rule falls 57\,ms short of that bound, which is
-41\% of its own latency, because it reacts one window behind a target that has
-already moved again. The room for a learned policy is therefore largest exactly
-where the problem is hardest, and that is a measured observation rather than an
-assumption.
+The obvious response is to move the data when the traffic moves. A simple
+rule does this: every decision window, find the shard whose placement is
+costing the most and move it towards the region reading it. I implement that
+rule as a baseline and call it \emph{follow traffic}.
 
-This paper reports the following. I build a simulator of a six-region cluster
-with a workload whose geographic centre drifts on a daily cycle and spikes
-locally, and I define the placement problem on it as a Markov decision process
-with a flat action space of 261 declarative actions. I establish four reference
-points against which any learned policy must be judged: static hash
-partitioning, which is what production systems do today; a random control; the
-follow-traffic heuristic; and a per-window bound on what lease movement alone
-can achieve. I measure how the gap between the heuristic and that bound widens
-with workload volatility. I verify on a real six-node CockroachDB cluster, with
-wide-area latency injected between the nodes, that placement changes
-transaction latency by far more than the measurement noise, which is the
-precondition for any of this being learnable outside simulation. Finally I
-train a Deep Q-Network on the simulator and report where it stands: at
-volatility 4 it beats both the heuristic and static hashing on the objective,
-on two independent learner seeds, by moving a twentieth of the data the
-heuristic moves; and it remains a long way from the bound, with most of the
-actions it selects inapplicable in the state it selects them in.
-Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
-cluster fit together, and which three things have to agree between them for a
-policy trained in one to mean anything in the other.
+This paper asks whether a policy learned from experience does better than
+that rule. The answer turns out to depend on how fast the traffic moves. When
+the drift is slow, the simple rule is within half a millisecond of the best
+placement that moving shards can reach, so there is nothing worth learning.
+When the drift is fast, the same rule falls 57\,ms short of that reference,
+which is 41\% of its own latency, because it always reacts one window behind a
+target that has already moved again. The room for a learned policy is largest
+exactly where the problem is hardest.
+
+The paper builds a simulator of a six-region cluster whose traffic drifts on
+a daily cycle and spikes locally, states placement on it as a reinforcement
+learning problem with 261 possible actions, and measures four reference
+points against it: fixed hash placement, random movement, the follow traffic
+rule, and a cost-free reference showing what good placement is worth when
+movement is not charged for. It checks on a real six-node CockroachDB cluster
+that placement changes measured latency by far more than the measurement
+noise. It then trains a Deep Q-Network at the fastest drift setting, where it
+beats both the rule and fixed placement on the combined cost.

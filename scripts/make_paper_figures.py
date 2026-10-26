@@ -137,7 +137,7 @@ def objective_figure(plt) -> None:
 
     W = 0.30
     vols = [2.0, 4.0]
-    fig, ax = plt.subplots(figsize=viz.FIG_1COL_TALL)
+    fig, ax = plt.subplots(figsize=viz.FIG_1COL)
 
     width = 0.26
     for off, key in ((-width, "static"), (0.0, "follow")):
@@ -184,7 +184,7 @@ def objective_figure(plt) -> None:
     ax.set_xticks(range(len(vols)))
     ax.set_xticklabels([f"volatility {v:g}" for v in vols])
     ax.set_ylabel("objective cost (lower is better)")
-    ax.set_ylim(0.70, 1.95)
+    ax.set_ylim(0.70, 2.02)
     ax.set_xlim(-0.58, len(vols) - 1 + 0.78)
     ax.legend(frameon=False, fontsize=6.0, loc="upper left", ncol=2,
               columnspacing=1.0, handlelength=1.6)

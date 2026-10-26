@@ -1,0 +1,64 @@
+\section{Experimental Method}
+
+\begin{table}[t]
+\caption{Simulator and training configuration}
+\label{tab:config}
+\centering
+\footnotesize
+\begin{tabular}{ll}
+\toprule
+Item & Setting \\
+\midrule
+Regions   & 6, one node each, 3 copies per shard \\
+Keyspace  & 256 cells, 6 starting shards, 20 shard cap, 60\,GB \\
+Episode   & 200 decision windows; 96-window day \\
+Per window & 8{,}000 single-key requests, 2{,}000 three-key \\
+          & transactions, 80\% reads \\
+Agent     & Deep Q-Network, two 256-unit layers, 261 actions \\
+Training  & 300{,}000 to 1{,}000{,}000 steps, 64 seeds \\
+Seeds     & sweep 0 to 7; agent 2000 to 2007, held out \\
+Cluster   & 6 CockroachDB nodes, delays set with netem \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What is compared}
+
+Four reference points are measured against the agent. \emph{Fixed placement}
+assigns shards round-robin at the start and never changes, which is what
+production systems do today. \emph{Random} moves shards at the same rate as
+the heuristic but picks destinations without looking at the traffic.
+\emph{Follow traffic} is the reactive rule from Section~I. The \emph{cost-free
+reference} independently picks the best placement for the current window and
+is not charged for movement at all.
+
+The reference is easy to overread. It keeps the shard boundaries the episode
+started with, so it is not a global best, and a policy that splits a shard can
+legitimately score below it. Every policy is driven by the same episode loop,
+the learned one included, so a difference between two numbers in this paper
+cannot be a difference between two pieces of harness.
+
+\subsection{Seeds and reporting}
+
+Two separate seed blocks appear, and they are never mixed in one table. The
+volatility sweep uses seeds 0 to 7. The agent evaluations use held-out seeds
+2000 to 2007, which the training configuration refuses to overlap with its
+training seeds. A sweep number and an agent number are therefore not directly
+comparable.
+
+Results are the mean over eight seeds. Every run writes one
+self-contained directory holding the resolved configuration, the seed list,
+the commit, the package versions, the machine, the raw per-window record and
+the command that reproduces it, and runs execute on hosted continuous
+integration rather than on a personal machine.
+
+\subsection{The real cluster}
+
+The simulator's cost model is an assumption, and the assumption is testable.
+I deploy six CockroachDB nodes in containers on one host, one per simulated
+region, with wide-area round-trip times injected between them by the Linux
+kernel's traffic control facility. CockroachDB was chosen on one criterion: it
+offers a statement that relocates a shard's primary copy and does not return
+until the move has actually happened. If a placement command returned early,
+the cost measured after an action would belong to a state the action did not
+produce, and the decision problem would stop being well defined.

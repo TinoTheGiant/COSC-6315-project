@@ -1,0 +1,33 @@
+\section{Limitations and Remaining Work}
+
+The simulator's cost model is a set of formulas over synthetic demand, without
+protocol, storage or queueing delays. The cluster pilots establish that
+placement matters on real hardware; they do not establish that the simulator's
+numbers are right. The two pilots also changed the transaction count and the
+core count together, so the difference between them cannot be attributed to
+either alone, and that count was chosen by convenience rather than by a power
+calculation.
+
+Three limitations sit on the learning side and they are the substantial ones.
+No run had converged: held-out evaluation was still improving at the final
+training step in every case, so the reported numbers are a floor rather than a
+ceiling. Nothing can yet be claimed about the movement weight, because the
+spread between two training seeds at the fastest setting is 4.70\,ms whilst
+changing the weight from 0.30 to 0.10 at a fixed seed changes latency by
+2.97\,ms, so the difference between seeds is larger than the effect being
+studied. And between 79.9\% and 89.8\% of the actions the agent selects are
+inapplicable in the state it selected them in, against 80.4\% for the random
+baseline, so it is winning on the minority of its decisions that land.
+
+That last figure is the largest measured inefficiency in the project and the
+first thing to fix. It is a known failure mode as the illegal share of an
+action list grows~\cite{huang2022masking}, and action-elimination networks
+built on this kind of agent address it directly~\cite{zahavy2018elimination}.
+After that, in order: more seeds per setting, which is cheap and unblocks the
+movement-weight question; better credit assignment, since a move is charged in
+full when it is made whilst the latency it buys arrives over later windows,
+which $n$-step returns~\cite{hessel2018rainbow} would address; longer
+training; separating the transaction count from the core count; building the
+harness that would let the trained agent act on the real cluster, which does
+not exist yet; and adding a cost-model rebalancer in the style of
+Lion~\cite{lion2024} as a stronger opponent.
