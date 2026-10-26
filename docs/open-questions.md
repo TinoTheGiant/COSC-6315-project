@@ -594,3 +594,50 @@ way.
 **Do not make a reward-based claim until the agent's imbalance is read from each
 run's `summary.csv`.** The latency-and-movement framing recorded above needs
 none of this and should carry the paper regardless.
+
+### Agent imbalance, runs 3 and 6 measured
+
+Read from the uploaded artifacts.
+
+| Run | Volatility | Weight | Agent latency | Agent GB | **Agent imbalance** |
+|---|---|---|---|---|---|
+| 3 | 4.0 | 0.30 | 139.91 | 62.7 | **0.776** |
+| 6 | 2.0 | 0.00 | 129.24 | 311.9 | **0.723** |
+
+Both sit between static hashing (0.50 to 0.56) and follow traffic (0.95 to
+1.00), and well below the thresholds at which either would have lost. **The
+agent does not buy its latency by concentrating load, and follow traffic does.**
+That is a third axis on which the two differ, and the one the cluster showed
+has teeth.
+
+Reward cost, with every term measured rather than assumed:
+
+| Volatility 4.0, weight 0.30 | latency | movement | imbalance | total |
+|---|---|---|---|---|
+| **Agent, run 3** | 1.3991 | 0.0094 | 0.0776 | **1.4860** |
+| Follow traffic | 1.2904 | 0.1630 | 0.1003 | 1.5537 |
+| Static hash | 1.5012 | 0.0000 | 0.0561 | 1.5573 |
+
+**At volatility 4, under the project's own objective, the learned policy beats
+the reactive heuristic**, by 0.068, and beats static hashing by 0.071. It gives
+up 10.9 ms of latency and recovers more than that in movement and balance
+together.
+
+Run 6 is a different question and should not be read as a counter-example. It
+trained at weight 0.00, so scoring it on its own objective charges follow
+traffic nothing for 1,048 GB of movement, and follow traffic wins 1.2402 to
+1.3647 as it must. Scored instead under the stated objective of 0.30, run 6's
+policy comes to 1.4115 against follow traffic's 1.3975, losing by 0.014, which
+is close enough to call a draw and is not the run the comparison should rest on.
+The matching run at volatility 2 and weight 0.30 is run 8.
+
+**Still outstanding: runs 4, 7 and 8.** Run 7 is the seed replicate of run 3 and
+decides whether the volatility-4 result survives a change of seed. Run 8 is the
+volatility-2 run at the stated weight, and its threshold of 0.745 sits exactly
+inside the range the agent's imbalance has been observed to occupy, so it is a
+genuine coin toss until measured. Run 4 would need an imbalance of 1.781 to
+lose and is close to certain, but it is the second point on the volatility-4
+frontier and should be read rather than assumed.
+
+Until run 7 is read, the volatility-4 claim rests on one seed, and this file has
+already recorded that one seed is not enough.
