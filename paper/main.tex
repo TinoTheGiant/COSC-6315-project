@@ -79,7 +79,11 @@ learning, deep Q-networks, geo-distributed transactions
 \input{sections/04-evaluation}
 \input{sections/05-conclusion}
 
-\bibliographystyle{IEEEtran}
+% IEEEtran.bst is not obtainable in this environment (CTAN is blocked and
+% texlive-publishers has no installation candidate), so the build uses
+% ieeetr, which ships with texlive base and produces IEEE numbered
+% references. On Overleaf, change this one line back to IEEEtran.
+\bibliographystyle{ieeetr}
 \bibliography{references}
 
 \end{document}

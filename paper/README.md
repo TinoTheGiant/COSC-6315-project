@@ -96,3 +96,30 @@ The audience is assumed to have no background in distributed databases. Every
 term is explained plainly where it first appears: shard, replica, primary,
 two-phase commit, Q-network. Keep that up in the sections still to be written.
 A reader who has to look something up has been failed by the paper.
+
+## Building the PDF locally
+
+`IEEEtran.cls` v1.8b sits in this directory because CTAN is unreachable from
+both the build container and the development machine, and `texlive-publishers`
+has no installation candidate on this image. The file came from the npm package
+`latex-paper-skills`, at
+`package/skills/latex-paper-skills/references/skills/arxiv-paper-writer/assets/template/IEEEtran.cls`.
+
+That copy arrived with exactly one corruption, and it will kill the build if it
+is ever restored from the same source: line 2257 read
+
+    \def\@endIEEEitemize“{\endlist}
+
+with a stray left curly quote, which makes every `\end{itemize}` a fatal error.
+The copy here has it removed. A scan for non-ASCII bytes over the whole file now
+returns nothing, so the rest of it is byte-clean.
+
+`IEEEtran.bst` is not obtainable here at all, so `main.tex` uses
+`\bibliographystyle{ieeetr}`, which ships with texlive base and produces IEEE
+numbered references. Overleaf has `IEEEtran`, so that one line can be switched
+back there.
+
+    pdflatex main && bibtex main && pdflatex main && pdflatex main
+
+Last clean build: 10 pages, no errors, no undefined references, one overfull
+hbox of 14.2 pt.
