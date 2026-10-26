@@ -14,8 +14,8 @@ come from.
 
 That arrangement works whilst the traffic stays where the designer expected it.
 In a service with users on several continents, served by a database spread
-across regions in the manner of CockroachDB~\cite{taft2020cockroachdb}, it does
-not. The geographic
+across regions in the manner of Spanner~\cite{corbett2013spanner} or
+CockroachDB~\cite{taft2020cockroachdb}, it does not. The geographic
 centre of the workload moves across the day as one region wakes and another
 sleeps, and it moves abruptly when something local draws attention to one
 region. A placement chosen for the morning is wrong by the evening. Every

@@ -45,15 +45,79 @@
 
 % ------------------------------- fragmentation and allocation as optimization
 
+@article{navathe1984vertical,
+  author  = {Shamkant Navathe and Stefano Ceri and Gio Wiederhold and Jinglie Dou},
+  title   = {Vertical partitioning algorithms for database design},
+  journal = {ACM Transactions on Database Systems},
+  volume  = {9}, number = {4}, pages = {680--710}, year = {1984},
+  doi     = {10.1145/1994.2209}
+}
 
+@inproceedings{ceri1982horizontal,
+  author    = {Stefano Ceri and Mauro Negri and Giuseppe Pelagatti},
+  title     = {Horizontal data partitioning in database design},
+  booktitle = {Proceedings of the 1982 ACM SIGMOD International Conference on
+               Management of Data},
+  pages     = {128--136}, year = {1982},
+  doi       = {10.1145/582353.582376}
+}
 
+@article{sacca1985clustering,
+  author  = {Domenico Sacc{\`a} and Gio Wiederhold},
+  title   = {Database partitioning in a cluster of processors},
+  journal = {ACM Transactions on Database Systems},
+  volume  = {10}, number = {1}, pages = {29--56}, year = {1985},
+  doi     = {10.1145/3148.3161}
+}
 
+@article{apers1988allocation,
+  author  = {Peter M. G. Apers},
+  title   = {Data allocation in distributed database systems},
+  journal = {ACM Transactions on Database Systems},
+  volume  = {13}, number = {3}, pages = {263--304}, year = {1988},
+  doi     = {10.1145/44498.45063}
+}
 
+@article{march1995allocating,
+  author  = {Salvatore T. March and Sangkyu Rho},
+  title   = {Allocating data and operations to nodes in distributed database
+             design},
+  journal = {IEEE Transactions on Knowledge and Data Engineering},
+  volume  = {7}, number = {2}, pages = {305--317}, year = {1995},
+  doi     = {10.1109/69.382299}
+}
 
 % ------------------------------- adapting placement to a workload that moves
 
+@article{curino2010schism,
+  author  = {Carlo Curino and Evan Jones and Yang Zhang and Sam Madden},
+  title   = {Schism: a workload-driven approach to database replication and
+             partitioning},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {3}, number = {1--2}, pages = {48--57}, year = {2010},
+  doi     = {10.14778/1920841.1920853}
+}
 
+@inproceedings{pavlo2012skew,
+  author    = {Andrew Pavlo and Carlo Curino and Stanley Zdonik},
+  title     = {Skew-aware automatic database partitioning in shared-nothing,
+               parallel {OLTP} systems},
+  booktitle = {Proceedings of the 2012 ACM SIGMOD International Conference on
+               Management of Data},
+  pages     = {61--72}, year = {2012},
+  doi       = {10.1145/2213836.2213844}
+}
 
+@article{taft2014estore,
+  author  = {Rebecca Taft and Essam Mansour and Marco Serafini and
+             Jennie Duggan and Aaron J. Elmore and Ashraf Aboulnaga and
+             Andrew Pavlo and Michael Stonebraker},
+  title   = {{E-Store}: Fine-Grained Elastic Partitioning for Distributed
+             Transaction Processing},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {8}, number = {3}, pages = {245--256}, year = {2014},
+  doi     = {10.14778/2735508.2735514}
+}
 
 @article{serafini2016clay,
   author  = {Marco Serafini and Rebecca Taft and Aaron J. Elmore and
@@ -187,6 +251,20 @@
   doi       = {10.1145/3318464.3386134}
 }
 
+@article{corbett2013spanner,
+  author  = {James C. Corbett and Jeffrey Dean and Michael Epstein and
+             Andrew Fikes and Christopher Frost and J. J. Furman and
+             Sanjay Ghemawat and Andrey Gubarev and Christopher Heiser and
+             Peter Hochschild and Wilson Hsieh and Sebastian Kanthak and
+             Eugene Kogan and Hongyi Li and Alexander Lloyd and Sergey Melnik
+             and David Mwaura and David Nagle and Sean Quinlan and Rajesh Rao
+             and Lindsay Rolig and Yasushi Saito and Michal Szymaniak and
+             Christopher Taylor and Ruth Wang and Dale Woodford},
+  title   = {Spanner: Google's globally distributed database},
+  journal = {ACM Transactions on Computer Systems},
+  volume  = {31}, number = {3}, pages = {1--22}, year = {2013},
+  doi     = {10.1145/2491245}
+}
 
 @article{mnih2015dqn,
   author  = {Volodymyr Mnih and Koray Kavukcuoglu and David Silver and
@@ -214,6 +292,15 @@
              landing page}
 }
 
+@book{ozsu2011principles,
+  author    = {M. Tamer {\"O}zsu and Patrick Valduriez},
+  title     = {Principles of Distributed Database Systems},
+  edition   = {3}, publisher = {Springer}, year = {2011},
+  doi       = {10.1007/978-1-4419-8834-8},
+  note      = {Crossref's bibliographic query did not surface the monograph
+               record; the DOI is the Springer book DOI and was not confirmed
+               against a Crossref work record}
+}
 
 % =====================================================================
 % Second batch, verified 26 October 2026. These cover design decisions
@@ -226,7 +313,29 @@
 
 % ------------------------------------------- what the static baseline is
 
+@inproceedings{karger1997consistent,
+  author    = {David Karger and Eric Lehman and Tom Leighton and
+               Rina Panigrahy and Matthew Levine and Daniel Lewin},
+  title     = {Consistent hashing and random trees: distributed caching
+               protocols for relieving hot spots on the World Wide Web},
+  booktitle = {Proceedings of the Twenty-Ninth Annual ACM Symposium on Theory
+               of Computing (STOC)},
+  pages     = {654--663}, year = {1997},
+  doi       = {10.1145/258533.258660},
+  note      = {Crossref's title field holds only "Consistent hashing and
+               random trees"; the subtitle here is from the published paper}
+}
 
+@inproceedings{weil2006crush,
+  author    = {Sage Weil and Scott Brandt and Ethan Miller and Carlos Maltzahn},
+  title     = {{CRUSH}: Controlled, Scalable, Decentralized Placement of
+               Replicated Data},
+  booktitle = {ACM/IEEE SC 2006 Conference (SC'06)},
+  pages     = {31}, year = {2006},
+  doi       = {10.1109/SC.2006.19},
+  note      = {A duplicate ACM record exists under 10.1145/1188455.1188582
+               with a mangled title; the IEEE record is used}
+}
 
 @inproceedings{coluzzi2023hashing,
   author    = {Massimo Coluzzi and Amos Brocco and Patrizio Contu and
@@ -240,6 +349,14 @@
 
 % --------------------------------------------------- the workload generator
 
+@inproceedings{cooper2010ycsb,
+  author    = {Brian F. Cooper and Adam Silberstein and Erwin Tam and
+               Raghu Ramakrishnan and Russell Sears},
+  title     = {Benchmarking cloud serving systems with {YCSB}},
+  booktitle = {Proceedings of the 1st ACM Symposium on Cloud Computing (SoCC)},
+  pages     = {143--154}, year = {2010},
+  doi       = {10.1145/1807128.1807152}
+}
 
 % ------------------------------------------------- the learner and its variants
 
@@ -332,6 +449,13 @@
 
 % ---------------------------------------------------------- the interval method
 
+@article{efron1979bootstrap,
+  author  = {B. Efron},
+  title   = {Bootstrap Methods: Another Look at the Jackknife},
+  journal = {The Annals of Statistics},
+  volume  = {7}, number = {1}, pages = {1--26}, year = {1979},
+  doi     = {10.1214/aos/1176344552}
+}
 
 % =====================================================================
 % From the Semantic Scholar export supplied 26 October 2026.
@@ -399,18 +523,10 @@
 }
 
 % =====================================================================
-% Recency constraint, 26 October 2026: nothing published before 2015.
-%
-% Fourteen entries were removed to meet it. The classical fragmentation
-% and allocation literature of 1982 to 1995, consistent hashing and CRUSH,
-% Schism, Pavlo's partitioner, E-Store, YCSB, Spanner, the Ozsu and
-% Valduriez textbook, and Efron's bootstrap paper are all pre-2015.
-%
-% Three were added so that the arguments those citations supported still
-% have something behind them. Where no post-2015 source carries an
-% argument, the sentence was rewritten to stop making it rather than
-% propped up with a citation that does not fit. docs/literature-log.md
-% lists what was dropped and what each loss costs.
+% Added 26 October 2026 alongside the foundational entries, not in place
+% of them. A modern survey of the classical literature, a recent instance
+% of the same formulation, and the incremental form of workload-driven
+% repartitioning. Verified against Crossref. Abstract level only.
 % =====================================================================
 
 @article{nashat2018taxonomy,
@@ -419,9 +535,7 @@
              Techniques in Distributed Database Design},
   journal = {ACM Computing Surveys},
   volume  = {51}, number = {1}, pages = {1--25}, year = {2018},
-  doi     = {10.1145/3150223},
-  note    = {Surveys the classical fragmentation and allocation literature
-             this paper would otherwise cite directly}
+  doi     = {10.1145/3150223}
 }
 
 @article{amer2017optimized,

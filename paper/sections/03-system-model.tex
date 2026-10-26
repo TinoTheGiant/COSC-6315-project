@@ -45,10 +45,10 @@ sit near its angle. The whole angular field rotates over a daily period, which
 is what makes a placement chosen at one time wrong at a later one. Cell
 popularity follows a Zipf distribution, so a minority of cells carry most of
 the traffic, and localized spikes arrive as a Poisson process, multiplying one
-region's traffic for a short burst. The read and write mix and the Zipf skew
-parameter follow the conventions of the standard key-value benchmarks, so the
-workload is recognizable rather than invented, with geographic origin of a
-request added as the dimension those benchmarks do not model.
+region's traffic for a short burst. The read and write mix and the skew
+parameter follow the YCSB conventions~\cite{cooper2010ycsb}, so the workload is
+recognizable rather than invented, with geographic origin added as the dimension
+YCSB does not model.
 
 Adjacent cells are given correlated but not identical angular positions by a
 random walk. This is the detail that makes splitting worthwhile: a wide shard
@@ -109,7 +109,7 @@ Four reference points. Three are policies and one is a bound.
 
 \begin{itemize}
 \item \textbf{Static hash} never moves anything. The initial placement is what
-a consistent-hash partitioner~\cite{coluzzi2023hashing} produces, and it is
+a consistent-hash partitioner~\cite{karger1997consistent} produces, and it is
 held for the whole episode.
 This is what a production database does today and it is the thing to beat.
 \item \textbf{Random} selects a legal action uniformly. It is a control: it
@@ -175,7 +175,8 @@ work onto one region, which is not a real improvement.
 \end{itemize}
 
 Results are reported as the mean over eight seeds with a 95\% percentile
-bootstrap confidence interval computed over those seeds. The bootstrap is used rather than a $t$ interval because eight is a small
+bootstrap~\cite{efron1979bootstrap} confidence interval computed over those
+seeds. The bootstrap is used rather than a $t$ interval because eight is a small
 sample and nothing guarantees the per-seed means are normally distributed.
 
 \subsection{Experimental apparatus}

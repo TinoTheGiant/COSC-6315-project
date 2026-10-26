@@ -214,64 +214,50 @@ was added without being checked.
 
 ---
 
-## Recency constraint applied, 26 October 2026
+## Recency: the cutoff was applied and then reversed, 26 October 2026
 
-**Nothing published before 2015.** Fourteen entries were removed. The
-bibliography now spans 2015 to 2026, 33 entries, every one verified against
-Crossref or, where the venue registers no DOIs, against its arXiv page.
+A rule of "nothing older than 2015" was applied, removing fourteen entries, and
+then reversed when it turned out to govern the **base papers** rather than every
+citation. The base papers, Lion 2024 and GeoTP 2025, satisfy it comfortably.
 
-### What was removed, and what each loss costs
-
-| Removed | Year | What it was supporting | How that argument now stands |
-|---|---|---|---|
-| Ceri et al. | 1982 | horizontal fragmentation | Nashat and Amer 2018, an ACM Computing Surveys taxonomy that surveys all five |
-| Navathe et al. | 1984 | vertical fragmentation | same |
-| Saccà and Wiederhold | 1985 | allocation by greedy construction | same |
-| Apers | 1988 | allocation as cost minimization | same |
-| March and Rho | 1995 | placing operations as well as data | same |
-| Özsu and Valduriez | 2011 | the textbook synthesis | same |
-| Karger et al. | 1997 | consistent hashing | Coluzzi et al. 2023, a survey of the family |
-| Weil et al. | 2006 | CRUSH | same |
-| Curino et al., Schism | 2010 | workload-driven graph partitioning | Clay 2016 and Kamal et al. 2016 carry the method |
-| Pavlo et al. | 2012 | skew-aware design search | **lost.** Nothing post-2015 found that covers it |
-| Taft et al., E-Store | 2014 | fine-grained elastic repartitioning | partly Clay 2016, partly lost |
-| Cooper et al., YCSB | 2010 | the workload's shape | **sentence rewritten** to describe the conventions without naming the benchmark |
-| Corbett et al., Spanner | 2013 | geo-distributed production systems | CockroachDB 2020 alone |
-| Efron | 1979 | the percentile bootstrap | **sentence rewritten.** The method is described rather than cited |
-
-Three entries were added: **Nashat and Amer 2018** (ACM Computing Surveys),
-**Amer et al. 2017** (Heliyon), **Kamal et al. 2016** (Future Generation
-Computer Systems).
-
-### What this costs, stated plainly
-
-Two arguments are weaker than they were.
+The reversal is the right call and the reasoning is worth keeping, because the
+removal made clear what the foundational work is doing in this bibliography.
 
 **Schism, E-Store and the Pavlo partitioner are the direct ancestors of this
-work** and are no longer cited. Clay and Kamal et al. carry the method, and both
-are post-2015, so the Related Work section still describes what the approach is
-and why it does not learn. But a reader who knows the field will notice that the
-three papers which established workload-driven repartitioning are absent, and
-the honest reason is a date rule rather than a judgment about relevance.
+project.** The premise this paper argues from, that placement should follow the
+workload rather than be fixed at design time, is theirs. Removing them left a
+Related Work section that described graph-cut repartitioning as though it had no
+origin, which a reader in this field would notice immediately and read as either
+ignorance of the area or evasion of it. Neither is a good look, and the
+alternative on offer was a sentence explaining that a publication window
+excluded them, which reads oddly in a conference paper.
 
-**Consistent hashing is now cited only through a survey.** The static baseline
-in this paper *is* consistent hashing, and the primary source for it is 1997. A
-survey is a weaker citation for a claim about what the baseline is.
+**Consistent hashing has the same problem in miniature.** The static baseline in
+this paper *is* consistent hashing. Citing a 2023 survey for what the baseline
+is, rather than the 1997 paper that defined it, is a weaker citation for a
+stronger claim.
 
-Where no post-2015 source carried an argument, the sentence was rewritten to
-stop making it rather than propped up with a citation that does not fit. That
-applies to the YCSB sentence and the bootstrap sentence, both of which now
-describe the method without naming a source.
+Three entries found while the cutoff was in force were kept, because they are
+good additions in their own right rather than substitutes:
+
+- **Nashat and Amer 2018**, ACM Computing Surveys. A taxonomy of the
+  fragmentation and allocation techniques that followed the classical papers.
+  It now sits alongside them rather than in place of them.
+- **Amer et al. 2017**, Heliyon. Fragmentation and allocation solved together.
+- **Kamal et al. 2016**, Future Generation Computer Systems. The incremental
+  form of workload-driven repartitioning, which fills the gap between Schism's
+  one-shot cut and Clay's block migration.
+
+The bibliography now spans 1979 to 2026, 47 entries.
 
 ### A near miss worth recording
 
-One entry added in this pass, Amer et al. 2017, was first written with an author
-list reconstructed from memory rather than copied: "Ali A. Amer and Hassan I.
-Abdalla". The Crossref record gives **Ali A. Amer, Adel A. Sewisy and Taha M. A.
-Elgendy**. The DOI was right and the authors were wrong, which is the harder
-error to catch, because a reader checking the DOI lands on the correct paper and
-has no reason to look at the names.
+One entry added during this pass, Amer et al. 2017, was first written with an
+author list reconstructed from memory rather than copied: "Ali A. Amer and
+Hassan I. Abdalla". The Crossref record gives **Ali A. Amer, Adel A. Sewisy and
+Taha M. A. Elgendy**. The DOI was right and the authors were wrong.
 
-It was caught by verifying rather than by proofreading. The rule it breaks is
-the one about reconstructing fields, and it is recorded here because the same
-mistake in a submitted bibliography would be invisible until someone cited it.
+That is the harder error to catch, because a reader checking the DOI lands on
+the correct paper and has no reason to look at the names. It was caught by
+verifying rather than by proofreading, and it breaks the rule about
+reconstructing fields rather than copying them.
