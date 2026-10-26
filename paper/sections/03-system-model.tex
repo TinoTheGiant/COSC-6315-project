@@ -130,8 +130,8 @@ The agent is a Deep Q-Network. A Q-network is a function that, given the
 current state, estimates the long-run value of each available action; the
 policy is then to take the action with the highest estimate. The network here
 has two hidden layers of 256 units and is trained with the standard
-Stable-Baselines3 implementation~\cite{sb3}, following Mnih et
-al.~\cite{dqn2015}.
+Stable-Baselines3 implementation~\cite{raffin2021sb3}, following Mnih et
+al.~\cite{mnih2015dqn}.
 
 Two choices in the training setup are worth stating because they are easy to
 get wrong. Training resets onto a rotating set of 64 workload seeds rather than
@@ -179,10 +179,10 @@ configuration that produced it cannot be defended.
 \subsection{Validation on a real cluster}
 
 The simulator's cost model is an assumption, and the assumption is testable.
-I deploy six CockroachDB nodes, one per simulated region, in containers on a
-single host, with wide-area round-trip times injected between them using the
-Linux kernel's traffic control facility. CockroachDB was selected over sixteen
-other candidate systems on one criterion: it exposes a \emph{synchronous}
+I deploy six CockroachDB~\cite{taft2020cockroachdb} nodes, one per simulated
+region, in containers on a single host, with wide-area round-trip times injected
+between them using the Linux kernel's traffic control facility. CockroachDB was
+selected over sixteen other candidate systems on one criterion: it exposes a \emph{synchronous}
 statement for relocating a shard's lease and its replicas. Synchrony is
 essential rather than convenient. If a placement command returns before the
 placement has changed, the reward observed after an action belongs to a state

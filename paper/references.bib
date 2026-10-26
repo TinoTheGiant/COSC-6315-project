@@ -1,71 +1,303 @@
 % References.
 %
-% RULE: do not add an entry for a paper you have not opened. An invented
-% citation is the fastest way to lose a reader's trust, and it is checkable
-% in seconds.
+% PROVENANCE. Every entry below was located through a Consensus search of
+% peer-reviewed indexes and then verified against the Crossref REST API on
+% 26 October 2026. DOI, year, venue, volume and pages are copied from the
+% Crossref record. Two entries carry no DOI and say why.
 %
-% Entries marked VERIFY are correct in author, title, venue and year, taken
-% from the paper itself, but need page numbers and a DOI from the publisher
-% before submission.
+% HOW FAR EACH WAS READ. Unless a note says otherwise, these are background
+% citations read at ABSTRACT level only, through the Consensus index. The two
+% base papers, lion2024 and geotp2025, were read from their PDFs. Nothing in
+% this file was read in full. Do not write a sentence that depends on a
+% passage none of us has opened.
+%
+% Crossref returns short-form titles for several conference records
+% ("Schism", "E-store", "QTune", "Neo", "Sibyl", "Spanner", "UDO"). The full
+% titles below come from the papers' own title pages as indexed by Consensus,
+% not from Crossref.
+
+% ---------------------------------------------------------------- base papers
 
 @inproceedings{lion2024,
   author    = {Qiushi Zheng and Zhanhao Zhao and Wei Lu and Chang Yao and
                Yuxing Chen and Anqun Pan and Xiaoyong Du},
-  title     = {Lion: Minimizing Distributed Transactions through Adaptive
+  title     = {Lion: Minimizing Distributed Transactions Through Adaptive
                Replica Provision},
-  booktitle = {Proc. IEEE 40th International Conference on Data Engineering
-               (ICDE)},
+  booktitle = {2024 IEEE 40th International Conference on Data Engineering (ICDE)},
+  pages     = {2012--2025},
   year      = {2024},
-  note      = {Extended version: arXiv:2403.11221}
-  % VERIFY: pages, DOI.
+  doi       = {10.1109/ICDE60146.2024.00161},
+  note      = {Read from the PDF. Extended version: arXiv:2403.11221}
 }
 
 @inproceedings{geotp2025,
   author    = {Qiyu Zhuang and Xinyue Shi and Shuang Liu and Wei Lu and
                Zhanhao Zhao and Yuxing Chen and Tong Li and Anqun Pan and
                Xiaoyong Du},
-  title     = {{GeoTP}: Latency-aware Geo-Distributed Transaction Processing
+  title     = {{GeoTP}: Latency-Aware Geo-Distributed Transaction Processing
                in Database Middlewares},
-  booktitle = {Proc. IEEE 41st International Conference on Data Engineering
-               (ICDE)},
-  year      = {2025}
-  % VERIFY: pages, DOI.
+  booktitle = {2025 IEEE 41st International Conference on Data Engineering (ICDE)},
+  pages     = {433--445},
+  year      = {2025},
+  doi       = {10.1109/ICDE65448.2025.00039},
+  note      = {Read from the PDF}
 }
 
-@article{dqn2015,
+% ------------------------------- fragmentation and allocation as optimization
+
+@article{navathe1984vertical,
+  author  = {Shamkant Navathe and Stefano Ceri and Gio Wiederhold and Jinglie Dou},
+  title   = {Vertical partitioning algorithms for database design},
+  journal = {ACM Transactions on Database Systems},
+  volume  = {9}, number = {4}, pages = {680--710}, year = {1984},
+  doi     = {10.1145/1994.2209}
+}
+
+@inproceedings{ceri1982horizontal,
+  author    = {Stefano Ceri and Mauro Negri and Giuseppe Pelagatti},
+  title     = {Horizontal data partitioning in database design},
+  booktitle = {Proceedings of the 1982 ACM SIGMOD International Conference on
+               Management of Data},
+  pages     = {128--136}, year = {1982},
+  doi       = {10.1145/582353.582376}
+}
+
+@article{sacca1985clustering,
+  author  = {Domenico Sacc{\`a} and Gio Wiederhold},
+  title   = {Database partitioning in a cluster of processors},
+  journal = {ACM Transactions on Database Systems},
+  volume  = {10}, number = {1}, pages = {29--56}, year = {1985},
+  doi     = {10.1145/3148.3161}
+}
+
+@article{apers1988allocation,
+  author  = {Peter M. G. Apers},
+  title   = {Data allocation in distributed database systems},
+  journal = {ACM Transactions on Database Systems},
+  volume  = {13}, number = {3}, pages = {263--304}, year = {1988},
+  doi     = {10.1145/44498.45063}
+}
+
+@article{march1995allocating,
+  author  = {Salvatore T. March and Sangkyu Rho},
+  title   = {Allocating data and operations to nodes in distributed database
+             design},
+  journal = {IEEE Transactions on Knowledge and Data Engineering},
+  volume  = {7}, number = {2}, pages = {305--317}, year = {1995},
+  doi     = {10.1109/69.382299}
+}
+
+% ------------------------------- adapting placement to a workload that moves
+
+@article{curino2010schism,
+  author  = {Carlo Curino and Evan Jones and Yang Zhang and Sam Madden},
+  title   = {Schism: a workload-driven approach to database replication and
+             partitioning},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {3}, number = {1--2}, pages = {48--57}, year = {2010},
+  doi     = {10.14778/1920841.1920853}
+}
+
+@inproceedings{pavlo2012skew,
+  author    = {Andrew Pavlo and Carlo Curino and Stanley Zdonik},
+  title     = {Skew-aware automatic database partitioning in shared-nothing,
+               parallel {OLTP} systems},
+  booktitle = {Proceedings of the 2012 ACM SIGMOD International Conference on
+               Management of Data},
+  pages     = {61--72}, year = {2012},
+  doi       = {10.1145/2213836.2213844}
+}
+
+@article{taft2014estore,
+  author  = {Rebecca Taft and Essam Mansour and Marco Serafini and
+             Jennie Duggan and Aaron J. Elmore and Ashraf Aboulnaga and
+             Andrew Pavlo and Michael Stonebraker},
+  title   = {{E-Store}: Fine-Grained Elastic Partitioning for Distributed
+             Transaction Processing},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {8}, number = {3}, pages = {245--256}, year = {2014},
+  doi     = {10.14778/2735508.2735514}
+}
+
+@article{serafini2016clay,
+  author  = {Marco Serafini and Rebecca Taft and Aaron J. Elmore and
+             Andrew Pavlo and Ashraf Aboulnaga and Michael Stonebraker},
+  title   = {Clay: Fine-Grained Adaptive Partitioning for General Database
+             Schemas},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {10}, number = {4}, pages = {445--456}, year = {2016},
+  doi     = {10.14778/3025111.3025125}
+}
+
+@inproceedings{ding2025promi,
+  author    = {Zhenghao Ding and Xinyi Zhang and Wei Lu and Wenlong Ma and
+               Wenliang Zhang and Xiaoyong Du},
+  title     = {Promi: Progressive Live Migration in Distributed Database Systems},
+  booktitle = {2025 IEEE 41st International Conference on Data Engineering (ICDE)},
+  pages     = {349--362}, year = {2025},
+  doi       = {10.1109/ICDE65448.2025.00033}
+}
+
+% ----------------------------------------- reinforcement learning for placement
+
+@inproceedings{lu2022rlrp,
+  author    = {Kai Lu and Nannan Zhao and Jiguang Wan and Changhong Fei and
+               Wei Zhao and Tongliang Deng},
+  title     = {{RLRP}: High-Efficient Data Placement with Reinforcement Learning
+               for Modern Distributed Storage Systems},
+  booktitle = {2022 IEEE International Parallel and Distributed Processing
+               Symposium (IPDPS)},
+  pages     = {595--605}, year = {2022},
+  doi       = {10.1109/IPDPS53621.2022.00064}
+}
+
+@inproceedings{singh2022sibyl,
+  author    = {Gagandeep Singh and Rakesh Nadig and Jisung Park and Rahul Bera
+               and Nastaran Hajinazar and David Novo and Juan G{\'o}mez-Luna
+               and Sander Stuijk and Henk Corporaal and Onur Mutlu},
+  title     = {Sibyl: adaptive and extensible data placement in hybrid storage
+               systems using online reinforcement learning},
+  booktitle = {Proceedings of the 49th Annual International Symposium on
+               Computer Architecture (ISCA)},
+  pages     = {320--336}, year = {2022},
+  doi       = {10.1145/3470496.3527442}
+}
+
+@inproceedings{nadig2026harmonia,
+  author    = {Rakesh Nadig and Vamanan Arulchelvan and Rahul Bera and
+               Taha Shahroodi and Gagandeep Singh and
+               Andreas Kosmas Kakolyris and {\.I}smail Emir Y{\"u}ksel and
+               Mohammad Sadrosadati and Jisung Park and Onur Mutlu},
+  title     = {Harmonia: Enhancing Data Placement and Migration in Hybrid
+               Storage Systems via Multi-Agent Reinforcement Learning},
+  booktitle = {Proceedings of the 40th ACM International Conference on
+               Supercomputing (ICS)},
+  pages     = {251--271}, year = {2026},
+  doi       = {10.1145/3797905.3800507},
+  note      = {Crossref records 2026; the Consensus index lists 2025. The
+               Crossref year is used here}
+}
+
+@article{zheng2024replica,
+  author  = {Mengke Zheng and Xin Du and Zhihui Lu and Qiang Duan},
+  title   = {A balanced and reliable data replica placement scheme based on
+             reinforcement learning in edge--cloud environments},
+  journal = {Future Generation Computer Systems},
+  volume  = {155}, pages = {132--145}, year = {2024},
+  doi     = {10.1016/j.future.2024.02.004}
+}
+
+% -------------------------------------------------- learned database administration
+
+@inproceedings{zhang2019cdbtune,
+  author    = {Ji Zhang and Yu Liu and Ke Zhou and Guoliang Li and Zhili Xiao
+               and Bin Cheng and Jiashu Xing and Yangtao Wang and
+               Tianheng Cheng and Li Liu and Minwei Ran and Zekang Li},
+  title     = {An End-to-End Automatic Cloud Database Tuning System Using Deep
+               Reinforcement Learning},
+  booktitle = {Proceedings of the 2019 International Conference on Management
+               of Data (SIGMOD)},
+  pages     = {415--432}, year = {2019},
+  doi       = {10.1145/3299869.3300085}
+}
+
+@article{li2019qtune,
+  author  = {Guoliang Li and Xuanhe Zhou and Shifu Li and Bo Gao},
+  title   = {{QTune}: A Query-Aware Database Tuning System with Deep
+             Reinforcement Learning},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {12}, number = {12}, pages = {2118--2130}, year = {2019},
+  doi     = {10.14778/3352063.3352129}
+}
+
+@article{marcus2019neo,
+  author  = {Ryan Marcus and Parimarjan Negi and Hongzi Mao and Chi Zhang and
+             Mohammad Alizadeh and Tim Kraska and Olga Papaemmanouil and
+             Nesime Tatbul},
+  title   = {Neo: A Learned Query Optimizer},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {12}, number = {11}, pages = {1705--1718}, year = {2019},
+  doi     = {10.14778/3342263.3342644}
+}
+
+@article{wang2021udo,
+  author  = {Junxiong Wang and Immanuel Trummer and Debabrota Basu},
+  title   = {{UDO}: Universal Database Optimization using Reinforcement Learning},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {14}, number = {13}, pages = {3402--3414}, year = {2021},
+  doi     = {10.14778/3484224.3484236}
+}
+
+@article{zhao2023knob,
+  author  = {Xinyang Zhao and Xuanhe Zhou and Guoliang Li},
+  title   = {Automatic Database Knob Tuning: A Survey},
+  journal = {IEEE Transactions on Knowledge and Data Engineering},
+  volume  = {35}, number = {12}, pages = {12470--12490}, year = {2023},
+  doi     = {10.1109/TKDE.2023.3266893}
+}
+
+% ---------------------------------------------------------- systems and methods
+
+@inproceedings{taft2020cockroachdb,
+  author    = {Rebecca Taft and Irfan Sharif and Andrei Matei and
+               Nathan VanBenschoten and Jordan Lewis and Tobias Grieger and
+               Kai Niemi and Andy Woods and Anne Birzin and Raphael Poss and
+               Paul Bardea and Amruta Ranade and Ben Darnell and Bram Gruneir
+               and Justin Jaffray and Lucy Zhang and Peter Mattis},
+  title     = {{CockroachDB}: The Resilient Geo-Distributed {SQL} Database},
+  booktitle = {Proceedings of the 2020 ACM SIGMOD International Conference on
+               Management of Data},
+  pages     = {1493--1509}, year = {2020},
+  doi       = {10.1145/3318464.3386134}
+}
+
+@article{corbett2013spanner,
+  author  = {James C. Corbett and Jeffrey Dean and Michael Epstein and
+             Andrew Fikes and Christopher Frost and J. J. Furman and
+             Sanjay Ghemawat and Andrey Gubarev and Christopher Heiser and
+             Peter Hochschild and Wilson Hsieh and Sebastian Kanthak and
+             Eugene Kogan and Hongyi Li and Alexander Lloyd and Sergey Melnik
+             and David Mwaura and David Nagle and Sean Quinlan and Rajesh Rao
+             and Lindsay Rolig and Yasushi Saito and Michal Szymaniak and
+             Christopher Taylor and Ruth Wang and Dale Woodford},
+  title   = {Spanner: Google's globally distributed database},
+  journal = {ACM Transactions on Computer Systems},
+  volume  = {31}, number = {3}, pages = {1--22}, year = {2013},
+  doi     = {10.1145/2491245}
+}
+
+@article{mnih2015dqn,
   author  = {Volodymyr Mnih and Koray Kavukcuoglu and David Silver and
              Andrei A. Rusu and Joel Veness and Marc G. Bellemare and
              Alex Graves and Martin Riedmiller and Andreas K. Fidjeland and
-             Georg Ostrovski and others},
+             Georg Ostrovski and Stig Petersen and Charles Beattie and
+             Amir Sadik and Ioannis Antonoglou and Helen King and
+             Dharshan Kumaran and Daan Wierstra and Shane Legg and
+             Demis Hassabis},
   title   = {Human-level control through deep reinforcement learning},
   journal = {Nature},
-  volume  = {518},
-  number  = {7540},
-  pages   = {529--533},
-  year    = {2015}
-  % VERIFY: DOI.
+  volume  = {518}, number = {7540}, pages = {529--533}, year = {2015},
+  doi     = {10.1038/nature14236}
 }
 
-@article{sb3,
+@article{raffin2021sb3,
   author  = {Antonin Raffin and Ashley Hill and Adam Gleave and
              Anssi Kanervisto and Maximilian Ernestus and Noah Dormann},
-  title   = {Stable-Baselines3: Reliable Reinforcement Learning
-             Implementations},
+  title   = {Stable-Baselines3: Reliable Reinforcement Learning Implementations},
   journal = {Journal of Machine Learning Research},
-  volume  = {22},
-  number  = {268},
-  pages   = {1--8},
-  year    = {2021}
+  volume  = {22}, number = {268}, pages = {1--8}, year = {2021},
+  url     = {https://jmlr.org/papers/v22/20-1364.html},
+  note    = {No DOI. JMLR does not register Crossref DOIs, so this entry could
+             not be verified against Crossref. Metadata taken from the JMLR
+             landing page}
 }
 
-% ---------------------------------------------------------------------
-% TO ADD. Each needs reading first.
-%
-% - Two or three classical treatments of fragmentation and allocation as
-%   an optimization problem, for Related Work section A.
-% - One representative paper each from learned index selection, learned
-%   knob tuning and learned query optimization, for Related Work section C.
-% - CockroachDB, for the system used in validation. The SIGMOD 2020 paper
-%   by Taft et al. is the usual citation; open it and confirm before use.
-% - Spanner and TiDB, if the Introduction names them as examples of
-%   production multi-region databases. Only cite them if you name them.
+@book{ozsu2011principles,
+  author    = {M. Tamer {\"O}zsu and Patrick Valduriez},
+  title     = {Principles of Distributed Database Systems},
+  edition   = {3}, publisher = {Springer}, year = {2011},
+  doi       = {10.1007/978-1-4419-8834-8},
+  note      = {Crossref's bibliographic query did not surface the monograph
+               record; the DOI is the Springer book DOI and was not confirmed
+               against a Crossref work record}
+}

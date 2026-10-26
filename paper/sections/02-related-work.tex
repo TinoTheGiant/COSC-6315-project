@@ -1,10 +1,14 @@
-% STATUS: written, 20 October 2026.
+% STATUS: written 20 October, expanded 26 October 2026.
 %
-% Every citation below points at a source I have read. Before submission,
-% fill the entries marked VERIFY in references.bib with page numbers and
-% DOIs from the publisher, and add any further related work in the three
-% groups the section already sets up. Do not add a citation you have not
-% opened.
+% HOW FAR EACH SOURCE WAS READ. lion2024 and geotp2025 were read from their
+% PDFs. EVERY OTHER CITATION IN THIS SECTION WAS READ AT ABSTRACT LEVEL ONLY,
+% through the Consensus index, and verified against Crossref. docs/literature-log.md
+% records the searches, what was blocked, and the two entries Crossref does not
+% index.
+%
+% That limit governs what may be written here. A sentence summarizing a paper's
+% abstract is supportable. A sentence about its internals, its baselines or its
+% failure modes is not, unless the paper is opened first. Do not add one.
 
 \section{Related Work}
 
@@ -22,6 +26,20 @@ arrangement against an expected workload, and a solver searches for the
 arrangement that minimizes it. The result is then installed and the database
 runs with it.
 
+The literature divides the problem in two. Fragmentation asks how to cut the
+data; allocation asks where to put the pieces. Ceri et al.~\cite{ceri1982horizontal}
+treat horizontal fragmentation, dividing a relation by rows, and Navathe et
+al.~\cite{navathe1984vertical} treat vertical fragmentation, dividing it by
+columns so that a fragment matches the attributes a transaction actually uses.
+Both optimize against an expected access pattern supplied in advance. On the
+allocation side, Apers~\cite{apers1988allocation} formalizes the placement of
+fragments across network sites as a cost minimization and analyzes its
+complexity, Sacc{\`a} and Wiederhold~\cite{sacca1985clustering} give a greedy
+construction for a cluster of processors, and March and
+Rho~\cite{march1995allocating} extend the objective to place operations as well
+as data, under capacity constraints. The standard synthesis of this material is
+the textbook treatment of {\"O}zsu and Valduriez~\cite{ozsu2011principles}.
+
 The weakness is in the word once. A solved-once answer is correct for the
 workload it was solved against and degrades as the real workload departs from
 it. Where the departure is slow this is tolerable, and where the workload has a
@@ -29,11 +47,29 @@ geographic centre that moves on a daily cycle it is not. That observation
 motivates the systems in the next group, which re-solve the problem as the
 workload changes.
 
-% TODO: cite two or three classical treatments here. Candidates to read:
-% vertical and horizontal partitioning in distributed database design, and
-% the allocation problem as stated in the standard textbook treatment.
-
 \subsection{Adapting placement to a moving workload}
+
+A line of work makes the partitioning decision from the observed workload
+rather than from a design-time estimate. Schism~\cite{curino2010schism} builds a
+graph in which tuples accessed by the same transaction are joined by an edge,
+then partitions that graph to minimize distributed transactions whilst keeping
+partitions balanced. Pavlo et al.~\cite{pavlo2012skew} search the design space
+with an analytical cost model that accounts for skew as well as coordination
+cost. E-Store~\cite{taft2014estore} addresses the case where a small number of
+tuples carry most of the traffic, placing hot ranges individually whilst
+distributing cold data in large chunks. Clay~\cite{serafini2016clay} removes the
+restriction to hierarchical schemas, migrating blocks built around hot tuples
+together with the tuples co-accessed with them.
+Promi~\cite{ding2025promi} addresses the migration itself rather than the
+decision, moving data at a finer granularity so that rebalancing does not stop
+transactions.
+
+These systems share the premise of this work, that placement should follow the
+workload, and they share a limitation. Each re-solves an optimization problem
+when a trigger fires, using a cost model written by hand. None improves from the
+outcomes of its own past decisions, and none of their cost models carries a term
+for geographic distance, because they were designed for clusters in one data
+centre where the distance between any two nodes is much the same.
 
 Lion~\cite{lion2024} is the closest system to this work in intent. It observes
 that a transaction is slow mainly because it spans machines, and it therefore
@@ -81,32 +117,61 @@ seeing geography, GeoTP sees geography without adapting placement.
 \subsection{Learning to administer a database}
 
 A separate line of work replaces hand-written database administration with
-learned policies, in index selection, in configuration tuning, and in query
-optimization. The common argument is that these decisions are made repeatedly
-against a changing workload, that the quality of a decision is measurable after
-the fact, and that a system able to learn from its own outcomes should
-eventually beat a fixed rule written by a person who could not anticipate every
-workload.
+learned policies. In configuration tuning, CDBTune~\cite{zhang2019cdbtune} treats
+the setting of database knobs as a reinforcement learning problem and learns
+from measured performance rather than from a regression over collected samples,
+and QTune~\cite{li2019qtune} extends that to tune per query rather than per
+workload; the survey of Zhao et al.~\cite{zhao2023knob} covers the area. In query
+optimization, Neo~\cite{marcus2019neo} learns to produce execution plans and
+improves from the plans it has run. UDO~\cite{wang2021udo} spans both, tuning
+index selection and system parameters together and distinguishing parameters
+that are expensive to change from those that are cheap, which is the same
+distinction this work draws between moving a lease and moving a replica.
 
-Placement is a natural member of that family and has received less attention
-than the others, which is the opportunity this work takes up.
+The common argument across these systems is that the decision is made
+repeatedly against a changing workload, that its quality is measurable after the
+fact, and that a system able to learn from its own outcomes should eventually
+beat a fixed rule written by someone who could not anticipate every workload.
 
-% TODO: cite representative learned index selection, knob tuning and query
-% optimization work. Read at least one from each before citing it.
+Placement has received less attention within this family than tuning or
+optimization. RLRP~\cite{lu2022rlrp} applies a Deep Q-Network to replica
+placement and migration in object storage, addressing heterogeneous nodes and
+balancing load against movement. Sibyl~\cite{singh2022sibyl} places data across
+hybrid storage devices with online reinforcement learning, and
+Harmonia~\cite{nadig2026harmonia} extends that to coordinate placement and
+migration as two agents. Zheng et al.~\cite{zheng2024replica} place replicas in
+an edge--cloud setting where geography does enter the objective, alongside
+reliability and load.
+
+Each of these places data across \emph{devices or tiers} that differ in speed,
+or across edge nodes that differ in capacity. None addresses a transactional
+workload whose geographic centre moves, and none changes the boundaries between
+the units it places.
 
 \subsection{What is new here}
 
 This work learns fragmentation and geographic placement \emph{jointly}, as one
-policy, for transactional workloads. Lion learns neither and adapts only
-replica placement. GeoTP optimizes execution rather than placement. The learned
-administration literature addresses other decisions. Stating the contribution
-precisely: the agent chooses, in one action space, where a shard's primary copy
-sits, where its replicas sit, and where the boundary between two shards falls,
-and it is rewarded on a cost that combines transaction latency, the volume of
-data moved, and load imbalance.
+policy, for transactional workloads. The workload-driven partitioners re-solve a
+hand-written cost model and do not learn from their own outcomes. Lion learns a
+forecast but not a policy, and its cost model is denominated in bytes rather
+than in distance. GeoTP optimizes execution against a fixed placement. The
+learned administration systems address knobs, plans and indexes. The learned
+placement systems address storage tiers and edge nodes, not a transactional
+workload whose centre of gravity moves, and they hold the unit of placement
+fixed.
 
-I state one limitation of the contribution up front, because the evaluation
-reports it. The agent described here is wired, trained and measured, and it
-does not yet outperform the hand-written heuristic it is meant to replace.
-What this paper establishes is the problem, the measurement apparatus, the
-baselines, and the conditions under which a learned policy has room to win.
+Stating the contribution precisely: the agent chooses, in one action space,
+where a shard's primary copy sits, where its replicas sit, and where the
+boundary between two shards falls, and it is rewarded on a cost that combines
+transaction latency, the volume of data moved, and load imbalance.
+
+Two statements about that contribution, both deliberate. First, it is not
+claimed to be new. Searches of the indexes listed in
+\texttt{docs/literature-log.md} returned no paper that learns fragmentation and
+geographic placement jointly for transactional workloads; IEEE Xplore and the
+ACM Digital Library were reached only through aggregators, so the search does
+not reach as far as a novelty claim would require. Second, the agent described
+here is trained and measured, and on latency alone it does not outperform the
+hand-written heuristic it is meant to replace. What this paper establishes is
+the problem, the measurement apparatus, the baselines, and the conditions under
+which a learned policy has room to win.

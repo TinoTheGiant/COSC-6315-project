@@ -231,6 +231,10 @@ follow traffic            110.54    474.84      759.8    32.9%    6.0
 | **Follow traffic** | Each window, finds the single worst-placed fragment and moves its primary towards the region reading it. | The obvious hand-written heuristic. It looks only at the current window, so it reacts but never anticipates. |
 | **Best per window** | Not a policy. The lowest latency reachable in each window if migration were free and instant. | A ceiling drawn on the figures. No real policy can reach it, so the gap to it measures how much is left on the table. |
 
+These are one-episode figures from a single seed, printed so you can see the
+tool works. **The results the paper quotes are in [Status](#status) below**, over
+eight seeds with confidence intervals.
+
 **Reading that.** "Static hash", which is what a normal database does, averages
 157 ms. A simple policy that just follows the traffic gets to 110 ms, a 30%
 improvement, but pays by shifting 760 GB over the episode. Closing that gap at a
@@ -483,26 +487,101 @@ Full formal treatment: [docs/mdp-specification.md](docs/mdp-specification.md).
 
 ## Status
 
-Day 27 of 57. The simulator half is complete and tested. The real-cluster half is
-written but has never been executed.
+**26 October 2026, midterm submission day.** Both halves run. Everything below
+is measured and traceable to a GitHub Actions run; nothing is estimated.
 
-**Done:** simulator, workload model, cost model, action and observation spaces,
-Gymnasium wrapper, seeded reproducibility, reference policies, dashboards, the
-figure design system, eleven ADRs, ~150 tests.
+**Done.** Simulator, workload model, cost model, action and observation spaces,
+Gymnasium wrapper, seeded reproducibility, four reference policies, the DQN and
+its training loop, four unattended workflows, twelve ADRs, 152 tests. Three
+cluster pilots and eight training runs executed.
 
-**Next:** dispatch the cluster pilot, get past the gate, wire up the DQN. See
-[docs/roadmap.md](docs/roadmap.md), which is honest about what has been cut.
+**Not done.** The cluster harness, fine-tuning on the cluster, characterization
+tests for the reference policies, and a Lion-style cost-model rebalancer. All
+four are for the final submission.
 
-**Measured results so far, all from the simulator and labelled as such:** a
-traffic-following policy beats static hashing 94 ms against 157 ms whilst moving
-451 GB per episode; traffic concentration is 53% per cell against an even split
-of 16.7%, but only 41% per shard, and that gap is exactly what splitting
-recovers.
+---
 
-> **Read [docs/open-questions.md](docs/open-questions.md) before trusting any
-> number here.** It records what is unsettled, including that the volatility
-> sweep does not move the static baseline, for a reason that turns out to be
-> structural rather than a bug.
+### Simulation results
+
+**Baselines, eight seeds, 200 decision windows, seed block 0 to 7.** The
+advantage of following the traffic collapses as the workload moves faster,
+whilst the data it moves to achieve that rises by a factor of 2.75.
+
+| Volatility | Static hash | Random | Follow traffic | Bound | Headroom | Follow's movement |
+|---|---|---|---|---|---|---|
+| 0.5 | 156.27 | 156.79 | 94.31 | 93.87 | 0.44 ms | 405 GB |
+| 1.0 | 156.11 | 158.02 | 98.66 | 93.66 | 5.00 ms | 785 GB |
+| 2.0 | 155.37 | 158.89 | 125.37 | 89.47 | 35.90 ms | 1057 GB |
+| 4.0 | 155.77 | 160.24 | 139.58 | 82.38 | **57.20 ms** | 1115 GB |
+
+Static hashing is flat across the sweep, because it was never tracking anything.
+The bound *improves* with volatility, since sharper traffic concentration means a
+well-chosen placement does better. So the reachable optimum rises whilst the
+reactive heuristic falls, and the widening gap between them is where a learned
+policy has room.
+
+**The learned agent, eight held-out seeds, seed block 2000 to 2007.** These
+baselines differ from the table above because the seed block differs. The two
+must never share a table.
+
+| Volatility | Weight | Seed | Agent latency | Agent GB | Agent imbalance | Reward cost |
+|---|---|---|---|---|---|---|
+| 4.0 | 0.30 | 0 | 139.91 | 62.7 | 0.776 | **1.486** |
+| 4.0 | 0.30 | 1 | 144.61 | 44.5 | 0.695 | **1.522** |
+| 4.0 | 0.10 | 0 | 136.94 | 123.7 | 0.816 | 1.457 |
+| 2.0 | 0.30 | 0 | 129.64 | 177.3 | 0.773 | 1.400 |
+| 2.0 | 0.00 | 0 | 129.24 | 311.9 | 0.723 | 1.365 |
+
+At volatility 4 and weight 0.30, follow traffic costs 1.554 and static hashing
+1.557. **Both learner seeds beat the heuristic on the objective the agent was
+trained on**, whilst moving 4 to 6 percent of the data it moves. The agent gives
+up around 10 ms of latency and takes back more than that in movement and load
+balance together.
+
+Three honest qualifications, all of them in the paper:
+
+- **The win is specific.** It holds at volatility 4 and weight 0.30. At
+  volatility 2 and the same weight the two are level, 1.400 against 1.398. At
+  weight 0.10 the agent falls behind by 0.012. This is consistent rather than
+  awkward: the agent's advantage is in how little it moves, so it grows with the
+  price of moving.
+- **The policy has not converged.** Two seeds under identical settings differ by
+  4.70 ms and by a factor of two in how often they split a shard. Differences
+  smaller than that spread cannot be attributed to a configuration.
+- **The agent flails.** Its chosen action is inapplicable in 80 to 90 percent of
+  windows, against 80 percent for random action. Its low movement is partly a
+  failure to act rather than restraint.
+
+One result holds everywhere without qualification. The agent's load imbalance
+measured between 0.695 and 0.816 in all five runs read, against 0.501 to 0.561
+for static hashing and 0.945 to 1.003 for follow traffic. **Follow traffic buys
+its latency by concentrating work. The agent does not.**
+
+### Cluster results
+
+Three pilots, all on GitHub-hosted runners.
+
+| Run | N | Cores | Co-located p50 / p95 | Spread p50 / p95 | p95 gap |
+|---|---|---|---|---|---|
+| 2 | 200 | 2 | 272.7 / 275.5 | 1013.4 / 1648.0 | 1372.5 ms |
+| 3 | 1000 | 4 | **441.5** / 446.6 | 1015.3 / 1648.7 | 1202.0 ms |
+
+Placement changes transaction latency on real hardware by far more than the
+measurement noise, which is the precondition for any of this being learnable
+outside simulation. Quadrupling the sample narrowed the confidence interval from
+155.2 ms wide to 65.6 ms.
+
+**The finding is in the co-located arm.** The spread case is unchanged to within
+two milliseconds, whilst the co-located case got 62 percent slower on twice the
+cores. More cores and a slower result rules out processor contention. Putting
+every lease in one region routes every write through one node, and at a thousand
+transactions it saturates. That is the load-imbalance term in the reward,
+observed on real hardware, and the simulator cannot reproduce it because its
+cost model has no queueing.
+
+> **Read [docs/open-questions.md](docs/open-questions.md) before quoting any
+> number here.** It records every finding that changed the plan, including two
+> readings that were withdrawn once more evidence arrived.
 
 ---
 
@@ -519,16 +598,20 @@ recovers.
 | What is rotting | [docs/tech-debt.md](docs/tech-debt.md) |
 | What is unsettled | [docs/open-questions.md](docs/open-questions.md) |
 | How to make a figure that matches | [docs/figure-design-system.md](docs/figure-design-system.md) |
+| Which papers were searched, and what was blocked | [docs/literature-log.md](docs/literature-log.md) |
+| What to do between now and submission | [docs/midterm-checklist.md](docs/midterm-checklist.md) |
 
 The decision history is worth reading in order if you want to understand the
 project: the database choice was made, corrected on a factual error, reversed
 after a screen of twenty-one systems, and reversed again once sim-to-real
-pre-training was approved. ADRs 0007 through 0011 record all of it, including the
+pre-training was approved. ADRs 0007 through 0012 record all of it, including the
 mistakes.
 
 ---
 
-## Base papers
+## Literature
+
+**The two base papers**, both read from their PDFs:
 
 1. Q. Zheng et al., "Lion: Minimizing Distributed Transactions Through Adaptive
    Replica Provision," ICDE 2024, pp. 2012-2025. Adapts replica placement so
@@ -537,6 +620,24 @@ mistakes.
 2. Q. Zhuang et al., "GeoTP: Latency-Aware Geo-Distributed Transaction Processing
    in Database Middlewares," ICDE 2025, pp. 433-445. Treats wide-area latency as
    a first-class target, but optimizes execution over a layout it never changes.
+
+**Twenty more**, in `paper/references.bib`, grouped as the Related Work section
+groups them: five classical treatments of fragmentation and allocation from 1982
+to 1995; five workload-driven repartitioners including Schism, Clay and E-Store,
+which are the direct ancestors of this work; five learned-administration systems
+covering knob tuning, query optimization and index selection; and four systems
+that apply reinforcement learning to placement across storage tiers or edge
+nodes.
+
+Every DOI, year, volume and page range was verified against Crossref on 26
+October 2026. **All twenty were read at abstract level only.** Two could not be
+verified and say so in the file: Stable-Baselines3, because JMLR registers no
+Crossref DOIs, and the Özsu and Valduriez monograph, whose record the
+bibliographic query did not surface.
+
+[docs/literature-log.md](docs/literature-log.md) records the queries, what
+loaded, what was blocked, and the two dates the verification corrected. No
+novelty claim anywhere in the paper rests on those searches.
 
 **The gap this project occupies:** a learned policy jointly controlling
 fragmentation and geographic allocation, optimizing transaction latency net of
