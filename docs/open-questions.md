@@ -387,3 +387,134 @@ headroom exists at all.
 
 The next experiment is therefore not another tuning pass. It is training at
 volatility 2 to 4, for longer, and that is post-midterm work.
+
+---
+
+## All eight training runs, 23 October 2026
+
+Every run at commit `f459c44`, 200 windows, evaluated on held-out seeds 2000 to
+2007. The six long runs used 1,000,000 steps; runs 1 and 2 used 300,000.
+
+| # | Volatility | Migration weight | Learner seed | Agent latency (ms) | Agent GB | Inapplicable | Split share |
+|---|---|---|---|---|---|---|---|
+| 1 | 1.0 | 0.30 | 0 | 146.55 | 53.2 | not recorded | not recorded |
+| 2 | 1.0 | 0.00 | 0 | 135.57 | 192.8 | not recorded | not recorded |
+| 3 | 4.0 | 0.30 | 0 | 139.91 | 62.7 | 84.7% | 11.6% |
+| 4 | 4.0 | below 0.30 | 0 | 136.94 | 123.7 | 82.8% | 11.4% |
+| 5 | 4.0 | 0.30 | 0 | 139.91 | 62.7 | 84.7% | 11.6% |
+| 6 | 2.0 | below 0.30 | 0 | 129.24 | 311.9 | 79.9% | 16.8% |
+| 7 | 4.0 | 0.30 | **1** | 144.61 | 44.5 | 89.8% | 21.7% |
+| 8 | 2.0 | 0.30 | 0 | 129.64 | 177.3 | 85.4% | 5.4% |
+
+Reference points, for the three volatilities:
+
+| Volatility | Static hash | Follow traffic | Follow's movement | Fixed-shard bound |
+|---|---|---|---|---|
+| 1.0 | 151.19 | 90.76 | 752.6 GB | 85.77 |
+| 2.0 | 151.67 | 114.57 | 1048.5 GB | 80.71 |
+| 4.0 | 150.12 | 129.04 | 1086.5 GB | 71.84 |
+
+Runs 4 and 6 carry a migration weight below 0.30 that is recorded in their
+`config.json` and has not been transcribed here. Do not quote a weight for them
+from memory.
+
+### Run 5 is a duplicate, and that is a reproducibility result
+
+Runs 3 and 5 share the environment digest `60276db3` and agree to every printed
+decimal, including the training evaluation at `136.5997700938358`. The learner
+seed did not change between them, so run 5 repeated run 3 rather than
+replicating it.
+
+It cost 83 minutes and it establishes something worth one sentence in the paper:
+**training is bit-reproducible.** The same configuration and the same seed give
+an identical model. Most papers assert reproducibility; this demonstrates it.
+
+### The learner seed matters more than the migration weight
+
+Runs 3 and 7 differ in the learner seed alone.
+
+| | Latency | GB moved | Split share |
+|---|---|---|---|
+| seed 0 | 139.91 | 62.7 | 11.6% |
+| seed 1 | 144.61 | 44.5 | 21.7% |
+
+**4.70 ms of spread from the seed**, and the share of windows spent splitting
+nearly doubles. Set that against the difference between runs 3 and 4, which is
+2.97 ms and is the only evidence available for an effect of the migration
+weight at volatility 4.
+
+**The seed spread exceeds the weight effect, so no claim about the migration
+weight at volatility 4 survives this data.** Without run 7 that claim would have
+been made, and it would have been wrong. The paper should say so plainly: it is
+the single clearest argument for the experimental method used here, and the
+nearest comparable work, RLRP, never repeats a configuration at all.
+
+Two seeds is still two. The honest statement is that the spread is at least this
+large, not that it is exactly 4.70 ms.
+
+### The framing that survives the evidence
+
+An earlier entry in this file argued from the volatility-1.0 runs that the
+contribution had to move from latency to movement cost, and a later reading of
+run 3 alone suggested the agent beat follow traffic on the reward. **Both are
+withdrawn.** The first was drawn from one volatility; the second does not
+survive run 7, and it also omitted the load-imbalance term, which is the same
+order as the gap it claimed.
+
+What survives rests only on measured quantities, with no reward weighting
+required of the reader. Express the agent's result as the share of the available
+latency improvement it captures, where available means the distance from static
+hashing to follow traffic, against the share of follow traffic's movement it
+pays for that.
+
+At the stated objective, migration weight 0.30:
+
+| Volatility | Share of the gain captured | Share of the movement paid |
+|---|---|---|
+| 1.0 | 7.7% | 7.1% |
+| 2.0 | **59.4%** | 16.9% |
+| 4.0 | 26.1 to 48.4% | 4.1 to 5.8% |
+
+At the lower weight:
+
+| Volatility | Share of the gain captured | Share of the movement paid |
+|---|---|---|
+| 1.0 | 25.8% | 25.6% |
+| 2.0 | 60.5% | 29.7% |
+| 4.0 | **62.5%** | 11.4% |
+
+Two things to read off these.
+
+**The agent is a low-movement policy, consistently.** Every run pays a smaller
+share of the movement than the share of the improvement it captures, except at
+volatility 1.0 where the two are equal and the improvement is small anyway. That
+is the characterization to report, and it is what the reward asks for.
+
+**The agent does best at volatility 2, not at 4.** The pattern is not monotone:
+volatility 1.0 offers almost nothing to win, volatility 4.0 appears too chaotic
+to learn in a million steps, and 2.0 sits between them. A monotone story would
+have been tidier and is not what the data says.
+
+### The caveat that goes with all of it
+
+The agent's chosen actions are inapplicable in 80 to 90% of windows across every
+run. Random's figure is 80.4%. So the agent's low movement is substantially a
+failure to act rather than restraint, and the policy has not learned which
+actions are legal in which state.
+
+Combined with the seed spread, the position to take is that the policy has not
+converged on a strategy. Two seeds under identical settings differ by a factor
+of two in how often they split a shard. That is not a tuned agent being
+outperformed; it is an agent that has not settled.
+
+### What would be tried next, in order
+
+1. **Action masking or an applicability-shaped penalty.** Eighty percent waste
+   is the largest single inefficiency on the board.
+2. **More seeds per configuration**, since two is enough to show the spread
+   exists and not enough to size it.
+3. **A convergence-based stopping rule** rather than a fixed step budget. RLRP
+   trains until the placement is balanced enough, repeatedly, which is a
+   property of the result rather than a step count. Runs 4, 6, 7 and 8 all
+   recorded their best evaluation well before the budget ran out.
+4. Longer training at volatility 2, where the agent is already strongest.

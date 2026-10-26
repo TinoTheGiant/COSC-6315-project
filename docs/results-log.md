@@ -176,3 +176,56 @@ measurements rather than after.
 The gate is cleared properly. Placement measurably changes transaction latency on
 a real six-region cluster, so the reward signal exists and the sim-to-real half of
 the project is unblocked.
+
+---
+
+## Run 3 — Cluster pilot #3, 22 October 2026
+
+**Commit** `f459c44`. GitHub Actions, `ubuntu-latest`, repository now **public**, so
+a **4-core / 15 GB** runner. Total duration 27m 56s. Six nodes, replication
+factor 3, **N = 1000 transactions per case**, up from 200.
+
+Dispatched to settle the sample-size question the previous two runs left open.
+
+### The gate still passes, and the interval halved
+
+| | p50 (ms) | p95 (ms) | stdev (ms) |
+|---|---|---|---|
+| leaseholders co-located in us-east-1 | 441.5 | 446.6 | 78.4 |
+| leaseholders spread across all six regions | 1015.3 | 1648.7 | 299.9 |
+
+**p95 gap 1202.0 ms**, 95% bootstrap CI [1136.8, 1202.4].
+
+Against run 2 at N = 200: the interval width fell from 155.2 ms to **65.6 ms**,
+so quadrupling the sample more than halved it. That is the measurement the
+limitations section of the midterm report promised and it can now be reported as
+a methods result rather than as outstanding work. The point estimate still sits
+at the interval's upper bound, so the degeneracy at the top is reduced rather
+than removed: a difference of p95s remains a statistic whose upper tail resamples
+poorly.
+
+Latency injection accurate to 0.1 ms. Store mapping was again not the
+configuration order (`us-west-2` came back as store 4 this time, store 2 last
+time), which is the third run in a row confirming that node IDs follow join
+order and must be resolved from the cluster.
+
+### The finding is in the co-located arm, not the gap
+
+The spread case is unchanged to within two milliseconds of run 2 on both
+percentiles, 1015.3 against 1013.4 and 1648.7 against 1648.0. **The co-located
+case got 62% slower**, 272.7 ms to 441.5 ms, despite twice the cores.
+
+More cores and a slower result rules out CPU contention as the cause. What
+changed is the offered load against one node: putting every lease in us-east-1
+puts every write through one leaseholder, and at a thousand transactions that
+node saturates in a way it did not at two hundred.
+
+**This is the load-imbalance term in the reward, observed in a real system.**
+Until now that term was justified by argument alone, namely that a policy could
+cheat by piling all the work into one region. The cluster has now demonstrated
+the cheat failing. It is a better result than the gap it was measured alongside
+and it belongs in the paper ahead of it.
+
+It also qualifies the simulator, whose analytic cost model has no queueing and
+therefore cannot produce this effect. The simulator will understate the cost of
+extreme concentration. Recorded in the threats to validity.
