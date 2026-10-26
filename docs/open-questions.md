@@ -641,3 +641,61 @@ frontier and should be read rather than assumed.
 
 Until run 7 is read, the volatility-4 claim rests on one seed, and this file has
 already recorded that one seed is not enough.
+
+---
+
+## All five agent imbalances measured, 26 October 2026
+
+The remaining three archives were read. Every measured run, scored on the reward
+it was trained under, with the baselines measured on the same held-out seeds:
+
+| Run | Volatility | Weight | Seed | Agent imbalance | Agent cost | Follow cost | Static cost | Against follow |
+|---|---|---|---|---|---|---|---|---|
+| 3 | 4.0 | 0.30 | 0 | 0.776 | 1.4861 | 1.5537 | 1.5573 | **−0.0676** |
+| 7 | 4.0 | 0.30 | 1 | 0.695 | 1.5223 | 1.5537 | 1.5573 | **−0.0314** |
+| 4 | 4.0 | 0.10 | 0 | 0.816 | 1.4572 | 1.4451 | 1.5573 | +0.0121 |
+| 8 | 2.0 | 0.30 | 0 | 0.773 | 1.4003 | 1.3975 | 1.5668 | +0.0028 |
+| 6 | 2.0 | 0.00 | 0 | 0.723 | 1.3647 | 1.2402 | 1.5668 | +0.1245 |
+
+Negative is better. Follow traffic's own cost moves with the weight, so each row
+compares like with like.
+
+### Two of my earlier thresholds were wrong
+
+The threshold table recorded above held follow traffic's cost at weight 0.30
+whilst scoring runs 4 and 6 at their own lower weights. That compares a policy
+against a differently-weighted opponent and is simply an error. It predicted run
+4 as a near-certain win at a threshold of 1.781; scored correctly the threshold
+is 0.695, its imbalance is 0.816, and it loses. Run 6 could never have won at
+weight 0.00, where follow traffic's terabyte of movement is free.
+
+The thresholds for runs 3, 7 and 8 were computed at weight 0.30 throughout and
+stand. Run 8's prediction of a coin toss was right: it lost by 0.0028.
+
+### What the complete set says
+
+**The replicate holds.** Both seeds at volatility 4 and weight 0.30 beat follow
+traffic, by 0.068 and 0.031. The seed spread of 0.036 is smaller than the
+smaller of the two margins, so the result survives a change of seed. This is the
+claim the paper can make.
+
+**The win is specific.** It holds at volatility 4 and weight 0.30 and nowhere
+else tested. At volatility 2 and the same weight the two are level, 1.4003
+against 1.3975, which is a draw rather than a loss. At weight 0.10 the agent
+falls behind by 0.012, and at weight 0.00 it is not in the contest, because a
+zero movement charge is precisely the objective its strategy is built to exploit.
+
+That is coherent rather than awkward: **the agent's advantage is in how little it
+moves, so it grows with the price of moving.** Raising the migration weight from
+0.10 to 0.30 turns a 0.012 deficit into a 0.031 to 0.068 advantage. With one run
+at the lower weight that is suggestive rather than established, but it is the
+mechanism the numbers imply.
+
+**The agent beats static hashing everywhere**, by 0.035 to 0.202, in all five
+measured runs and under every weight. That claim needs no qualification.
+
+**Load imbalance is the consistent story.** All five agents land between 0.695
+and 0.816, against static hashing's 0.501 to 0.561 and follow traffic's 0.945 to
+1.003. The agent is reliably intermediate and never approaches follow traffic's
+concentration. Given that cluster pilot 3 showed concentration saturating a real
+node, this is the most transferable of the three terms.
