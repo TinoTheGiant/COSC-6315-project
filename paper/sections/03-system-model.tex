@@ -45,7 +45,10 @@ sit near its angle. The whole angular field rotates over a daily period, which
 is what makes a placement chosen at one time wrong at a later one. Cell
 popularity follows a Zipf distribution, so a minority of cells carry most of
 the traffic, and localized spikes arrive as a Poisson process, multiplying one
-region's traffic for a short burst.
+region's traffic for a short burst. The read and write mix and the skew
+parameter follow the YCSB conventions~\cite{cooper2010ycsb}, so the workload is
+recognizable rather than invented, with geographic origin added as the dimension
+YCSB does not model.
 
 Adjacent cells are given correlated but not identical angular positions by a
 random walk. This is the detail that makes splitting worthwhile: a wide shard
@@ -106,7 +109,8 @@ Four reference points. Three are policies and one is a bound.
 
 \begin{itemize}
 \item \textbf{Static hash} never moves anything. The initial placement is what
-a consistent-hash partitioner produces, and it is held for the whole episode.
+a consistent-hash partitioner~\cite{karger1997consistent} produces, and it is
+held for the whole episode.
 This is what a production database does today and it is the thing to beat.
 \item \textbf{Random} selects a legal action uniformly. It is a control: it
 proves that any gain comes from choosing \emph{where} to move data rather than
@@ -130,8 +134,18 @@ The agent is a Deep Q-Network. A Q-network is a function that, given the
 current state, estimates the long-run value of each available action; the
 policy is then to take the action with the highest estimate. The network here
 has two hidden layers of 256 units and is trained with the standard
-Stable-Baselines3 implementation~\cite{raffin2021sb3}, following Mnih et
+Stable-Baselines3 implementation~\cite{raffin2021sb3} against a Gymnasium
+environment~\cite{towers2025gymnasium}, following Mnih et
 al.~\cite{mnih2015dqn}.
+
+The plain form is used deliberately, without the extensions that
+Rainbow~\cite{hessel2018rainbow} combines: double Q-learning to correct
+overestimation~\cite{vanhasselt2016double}, a dueling
+head~\cite{wang2016dueling}, or prioritized replay~\cite{schaul2016per}. The
+question here is whether the problem is learnable at all, and establishing that
+with the simplest agent makes any later improvement attributable to the
+extension rather than to the combination. The evaluation reports where that
+choice costs something.
 
 Two choices in the training setup are worth stating because they are easy to
 get wrong. Training resets onto a rotating set of 64 workload seeds rather than
@@ -161,9 +175,9 @@ work onto one region, which is not a real improvement.
 \end{itemize}
 
 Results are reported as the mean over eight seeds with a 95\% percentile
-bootstrap confidence interval computed over those seeds. The bootstrap is used
-rather than a $t$ interval because eight is a small sample and nothing
-guarantees the per-seed means are normally distributed.
+bootstrap~\cite{efron1979bootstrap} confidence interval computed over those
+seeds. The bootstrap is used rather than a $t$ interval because eight is a small
+sample and nothing guarantees the per-seed means are normally distributed.
 
 \subsection{Experimental apparatus}
 
@@ -177,6 +191,14 @@ because it is part of the method: a number that cannot be traced to the
 configuration that produced it cannot be defended.
 
 \subsection{Validation on a real cluster}
+
+The structure of pre-training in a cheap simulator and fine-tuning on expensive
+real hardware is borrowed from robotics, where it is standard and where the gap
+between the two is the central difficulty~\cite{tobin2017domain}. The difference
+here is that the gap is narrower and more checkable: the simulator and the
+cluster can be made to agree on the observation space, the action space and the
+cost structure by construction, which is why the database was chosen for that
+property.
 
 The simulator's cost model is an assumption, and the assumption is testable.
 I deploy six CockroachDB~\cite{taft2020cockroachdb} nodes, one per simulated

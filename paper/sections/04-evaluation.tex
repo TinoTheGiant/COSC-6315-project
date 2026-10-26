@@ -139,5 +139,9 @@
 %   measurement.
 % - The bound holds the starting shard boundaries, so it is not a global
 %   optimum and should not be read as one.
+% - The agent selects inapplicable actions in 80-90% of windows. Cite
+%   \cite{huang2022masking} for why masking matters as the invalid share
+%   grows, and \cite{zahavy2018elimination} for an action-elimination
+%   network built on DQN specifically, which is the closest published fix.
 % - Results at volatility 1.0 should not be generalized to other
 %   volatilities, which is precisely what Q3 demonstrates.

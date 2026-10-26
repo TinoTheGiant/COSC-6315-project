@@ -108,3 +108,106 @@ learns fragmentation and geographic placement jointly for transactional
 workloads. IEEE Xplore and the ACM Digital Library were not searched directly,
 only through aggregators, and api.crossref.org was reachable only through one
 channel.
+
+---
+
+## Second session, 26 October 2026: design decisions that had no citation
+
+The first pass filled the Related Work groups. This pass asks a different
+question: which decisions does the paper already make that nothing in the
+bibliography supports? A Related Work section is strong when every choice has
+something behind it, not when it has more papers in it.
+
+Eight were uncited and now are.
+
+| Decision already in the paper | Was supported by | Now cited |
+|---|---|---|
+| The static hash baseline *is* consistent hashing | nothing | Karger et al. 1997; Weil et al. 2006 (CRUSH); Coluzzi et al. 2023 survey |
+| The workload generator is YCSB-shaped | nothing | Cooper et al. 2010 |
+| A plain DQN was chosen over its variants | Mnih 2015 only | van Hasselt 2016 (Double); Wang 2015 (Dueling); Schaul 2015 (PER); Hessel 2018 (Rainbow) |
+| The environment is a Gymnasium environment | nothing | Towers et al. 2025 |
+| 80 to 90% of chosen actions are inapplicable | nothing | Huang and Ontañón 2022; Zahavy et al. 2018 |
+| Pre-train in simulation, fine-tune on the cluster | nothing | Tobin et al. 2017 |
+| Confidence intervals are percentile bootstrap | nothing | Efron 1979 |
+
+Two of these change what the paper can say. The inapplicable action rate was
+written up as an unexplained weakness; Zahavy et al. address exactly it, for a
+DQN, with an action-elimination network, so the future-work item becomes a named
+technique instead of a wish. And the DQN variants matter because the paper
+already proposes n-step returns in future work without citing where that idea
+comes from.
+
+### Verification method, and a defect found in it
+
+```
+Query: Crossref REST API, 14 bibliographic lookups
+Date:  2026-10-26
+Opened: 10 resolved to a matching record
+Blocked: none. api.crossref.org refuses direct connections from both machines
+         (proxy CONNECT 403), so WebFetch was again the only route.
+Stopped: no
+```
+
+**A defect in the method, recorded because it could have produced wrong
+citations.** The `query.bibliographic=` parameter was being silently stripped by
+the fetch layer on some calls. Crossref then received no query at all and
+returned a default sample of its corpus, which looks like a normal response. Two
+early calls came back with unrelated works, one on veterinary dentistry. The
+tell is `message.query.search-terms: null` together with a total-results count in
+the millions.
+
+The fix was a short undotted `query=` string, with the returned
+`search-terms` checked on every call. The first batch of twenty was re-examined
+against this: every entry there returned a title matching the one requested,
+which a corpus sample cannot do, so those entries stand.
+
+**Four have no Crossref record**, which is expected rather than a failure.
+PMLR, ICLR and NeurIPS proceedings do not carry DOIs, so Dueling Networks,
+Prioritized Experience Replay and the Zahavy action-elimination paper are cited
+by arXiv identifier, each confirmed against its arXiv abstract page. Sutton and
+Barto's second edition has no Crossref record either; Crossref holds only
+reviews of the 1998 first edition, so **it is not cited** rather than cited from
+a record that describes a different edition.
+
+Three dates in the second batch do not match the years these works are usually
+cited with, and the Crossref year is used in each case: Huang and Ontañón is
+recorded at FLAIRS 2022, Gymnasium at 2025 rather than the 2023 the Farama
+release is often given, and Dueling Networks carries its 2015 arXiv year rather
+than ICML 2016.
+
+### The supplied Semantic Scholar export
+
+Ten papers were supplied as a BibTeX and Markdown export. The export carried no
+DOIs, only Semantic Scholar corpus identifiers, which is not enough for an IEEE
+bibliography.
+
+**Five were taken**, each verified against Crossref and each filling a real gap:
+
+- **Atrey et al. 2019**, CLOSER. Treats data placement and replication as one
+  joint optimization in geo-distributed clouds, rather than placement followed
+  by replication. That is the same joint framing this work uses, arrived at
+  without learning, and it is the closest non-learned analogue.
+- **Mahmoud et al. 2025**, IJICIS. Q-learning for fragment allocation and
+  replication, stated as an MDP. Topically the closest work to this project
+  after RLRP. A regional journal, but a real indexed one with a DOI.
+- **Adnan et al. 2025**, Journal of Grid Computing. Network-aware placement
+  across geo-distributed clouds.
+- **Liao et al. 2019**, IEEE Access. Deep learning for placement against a
+  latency objective.
+- **Niu et al. 2026**, arXiv. A current instance of the classical allocation
+  formulation. Cited as a preprint and labelled as not peer reviewed.
+
+**Five were left out, and the reason matters more than the omission.**
+
+| Left out | Reason |
+|---|---|
+| Sirimalla 2021, *Intelligent Workload Placement and Sharding...* | The venue shows several markers associated with predatory publishing, and the title is set in full capitals in the record itself. Citing it invites a question about how the bibliography was assembled |
+| *An Adaptive Data Placement Architecture in Multicloud Environments*, Scientific Programming 2020 | That journal was discontinued by its publisher following research-integrity concerns |
+| Shankar and Chitra 2022, *Computer Systems Science and Engineering* | The journal was removed from the major indexes in 2023 |
+| *Cloud-Based Replication Models Using AI Techniques*, IJACSA 2026 | Weak venue, and the abstract does not describe anything this paper's argument needs |
+| Danach et al. 2024, *Applied Sciences* | Legitimate venue, but the method is a support vector machine with a genetic allocator rather than a learned policy, and geography does not enter it. It would pad the related work without strengthening it |
+
+A bibliography is judged on its weakest entry as much as its strongest. Adding a
+paper from a discontinued or delisted venue costs more credibility than the
+citation gains, and a reader who recognizes one of them will wonder what else
+was added without being checked.

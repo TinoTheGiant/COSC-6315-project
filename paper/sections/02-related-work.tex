@@ -38,7 +38,19 @@ complexity, Sacc{\`a} and Wiederhold~\cite{sacca1985clustering} give a greedy
 construction for a cluster of processors, and March and
 Rho~\cite{march1995allocating} extend the objective to place operations as well
 as data, under capacity constraints. The standard synthesis of this material is
-the textbook treatment of {\"O}zsu and Valduriez~\cite{ozsu2011principles}.
+the textbook treatment of {\"O}zsu and Valduriez~\cite{ozsu2011principles}, and
+the formulation remains current: Niu et al.~\cite{niu2026allocation} state the
+same problem as a balanced-cut optimization.
+
+A second tradition avoids the optimization entirely. Consistent
+hashing~\cite{karger1997consistent} assigns a key to a node through a function
+of the key alone, so that adding or removing a node moves only a small share of
+the data and no central directory is needed. CRUSH~\cite{weil2006crush} extends
+that to replicated data under user-defined failure domains, and a recent survey
+compares the family~\cite{coluzzi2023hashing}. This is what the static baseline
+in this paper is, and it is what most production systems use. It is also the
+root of the problem studied here: a function of the key cannot observe where a
+request came from.
 
 The weakness is in the word once. A solved-once answer is correct for the
 workload it was solved against and degrades as the real workload departs from
@@ -63,6 +75,13 @@ together with the tuples co-accessed with them.
 Promi~\cite{ding2025promi} addresses the migration itself rather than the
 decision, moving data at a finer granularity so that rebalancing does not stop
 transactions.
+
+A related line treats placement and replication as one problem rather than two
+stages. Atrey et al.~\cite{atrey2019unifying} make that argument directly for
+geo-distributed clouds, solving placement and replication jointly by overlapping
+correlation clustering, and Adnan et al.~\cite{adnan2025network} optimize
+placement against network cost in the same setting. Both reach the joint framing
+this work uses, and both reach it with a solver rather than a learned policy.
 
 These systems share the premise of this work, that placement should follow the
 workload, and they share a limitation. Each re-solves an optimization problem
@@ -141,12 +160,20 @@ hybrid storage devices with online reinforcement learning, and
 Harmonia~\cite{nadig2026harmonia} extends that to coordinate placement and
 migration as two agents. Zheng et al.~\cite{zheng2024replica} place replicas in
 an edge--cloud setting where geography does enter the objective, alongside
-reliability and load.
+reliability and load, and Liao et al.~\cite{liao2019deep} learn placement
+against a latency objective inside a data centre. Closest of all in problem
+statement, Mahmoud et al.~\cite{mahmoud2025rlfawm} formulate fragment allocation
+and replication as a Markov decision process and solve it with tabular
+Q-learning, driven by read, write and co-access matrices.
 
-Each of these places data across \emph{devices or tiers} that differ in speed,
-or across edge nodes that differ in capacity. None addresses a transactional
-workload whose geographic centre moves, and none changes the boundaries between
-the units it places.
+These differ from the present work in one or both of two ways. Most place data
+across \emph{devices or tiers} that differ in speed, or across edge nodes that
+differ in capacity, rather than across regions that differ in distance from the
+traffic. And all of them hold the unit of placement fixed: a fragment, an object
+or a block is placed, never split. Mahmoud et al.~\cite{mahmoud2025rlfawm} come
+closest on the first axis and still treat fragments as given, and a tabular
+Q-function does not extend to the state space a six-region cluster with twenty
+shards produces.
 
 \subsection{What is new here}
 

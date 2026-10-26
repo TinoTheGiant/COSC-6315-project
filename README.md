@@ -621,19 +621,28 @@ mistakes.
    in Database Middlewares," ICDE 2025, pp. 433-445. Treats wide-area latency as
    a first-class target, but optimizes execution over a layout it never changes.
 
-**Twenty more**, in `paper/references.bib`, grouped as the Related Work section
-groups them: five classical treatments of fragmentation and allocation from 1982
-to 1995; five workload-driven repartitioners including Schism, Clay and E-Store,
-which are the direct ancestors of this work; five learned-administration systems
-covering knob tuning, query optimization and index selection; and four systems
-that apply reinforcement learning to placement across storage tiers or edge
-nodes.
+**Forty-two more**, in `paper/references.bib`, in two groups.
+
+*Related work*, organized as the Related Work section organizes it: classical
+treatments of fragmentation and allocation from 1982 to 1995; the consistent
+hashing lineage, which is what the static baseline actually is; workload-driven
+repartitioners including Schism, Clay and E-Store, the direct ancestors of this
+work; learned-administration systems covering knob tuning, query optimization
+and index selection; and systems applying reinforcement learning to placement
+across storage tiers, edge nodes and cloud regions.
+
+*Method*, covering decisions the paper already makes: YCSB for the workload
+shape, the DQN variants deliberately not used, invalid-action masking for the
+measured 80 to 90 percent inapplicable rate, domain randomization for the
+pre-train-then-fine-tune structure, and Efron for the bootstrap interval.
 
 Every DOI, year, volume and page range was verified against Crossref on 26
-October 2026. **All twenty were read at abstract level only.** Two could not be
-verified and say so in the file: Stable-Baselines3, because JMLR registers no
-Crossref DOIs, and the Özsu and Valduriez monograph, whose record the
-bibliographic query did not surface.
+October 2026, and two dates the search index had wrong were corrected in the
+process. **All forty-two were read at abstract level only.** Six could not be
+verified against Crossref and each says why in its entry: PMLR, ICLR and NeurIPS
+register no DOIs, JMLR registers none either, and two monograph records did not
+surface. Sutton and Barto is deliberately absent rather than cited from a record
+that describes a different edition.
 
 [docs/literature-log.md](docs/literature-log.md) records the queries, what
 loaded, what was blocked, and the two dates the verification corrected. No

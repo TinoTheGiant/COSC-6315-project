@@ -27,9 +27,14 @@
 % In the order they should be attempted:
 %
 % 1. Train at volatility 2 to 4, where there is something to win.
-% 2. Address credit assignment: n-step returns, or reward shaping that
-%    credits a move with the latency it saves in later windows rather
-%    than charging it entirely at the moment it is made.
+% 2. Action masking or action elimination, \cite{huang2022masking} and
+%    \cite{zahavy2018elimination}. The 80-90% inapplicable rate is the
+%    largest single inefficiency measured, and Zahavy's AE-DQN addresses
+%    exactly it for a DQN.
+% 3. Address credit assignment: n-step returns, as combined in Rainbow
+%    \cite{hessel2018rainbow}, or reward shaping that credits a move with
+%    the latency it saves in later windows rather than charging it
+%    entirely at the moment it is made.
 % 3. Longer training. Run 2 had not converged at 300,000 steps.
 % 4. Fine-tune the pre-trained agent on the real cluster. The apparatus
 %    exists and the parity constraints are satisfied; the harness is not
