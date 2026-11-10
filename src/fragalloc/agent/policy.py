@@ -39,16 +39,21 @@ class LearnedPolicy:
         model_path: str | Path,
         config: FragAllocConfig,
         deterministic: bool = True,
+        mask: bool = True,
     ) -> None:
-        from stable_baselines3 import DQN  # deferred: torch is a heavy import
+        # deferred: torch is a heavy import. MaskedDQN.load also reads archives
+        # written by a plain DQN, so models trained before masking still load.
+        from fragalloc.agent.masked_dqn import MaskedDQN
 
         self.config = config
         self.deterministic = deterministic
+        #: Set False to reproduce numbers recorded before masking existed.
+        self.mask = mask
         # ``DQN.load`` validates the observation and action spaces against the
         # ones recorded in the archive and raises on a mismatch. That check is
         # the mechanism ADR-0009's parity requirement is enforced by, so the
         # exception is allowed to propagate rather than being caught here.
-        self.model = DQN.load(str(model_path), device="cpu")
+        self.model = MaskedDQN.load(str(model_path), device="cpu")
         self._encoder: ObservationEncoder | None = None
         self._encoder_for: int | None = None
 
@@ -60,7 +65,9 @@ class LearnedPolicy:
 
     def act(self, sim: ClusterSimulator) -> int:
         obs = observe(self._encoder_for_sim(sim), sim)
-        action, _ = self.model.predict(obs, deterministic=self.deterministic)
+        masks = sim.action_space.applicable_mask(sim.catalog) if self.mask else None
+        action, _ = self.model.predict(obs, deterministic=self.deterministic,
+                                       action_masks=masks)
         return int(action)
 
     def reset(self) -> None:
@@ -74,4 +81,5 @@ class LearnedPolicy:
             "n_actions": int(self.model.action_space.n),
             "policy_class": type(self.model.policy).__name__,
             "deterministic": self.deterministic,
+            "action_masking": self.mask,
         }

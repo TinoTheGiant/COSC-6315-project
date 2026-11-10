@@ -1,8 +1,12 @@
 """The flat, declarative action space.
 
-DQN estimates a value for every action in a fixed discrete set and offers no
-mechanism for masking the ones that do not apply. Two consequences follow, and
-both shape the design here.
+DQN estimates a value for every action in a fixed discrete set and, as shipped
+in Stable-Baselines3, offers no mechanism for masking the ones that do not
+apply. Two consequences follow, and both shape the design here. (The space is
+now masked anyway: :meth:`ActionSpace.applicable_mask` supplies the mask and
+:class:`fragalloc.agent.masked_dqn.MaskedDQN` applies it, because 80 to 90% of
+the unmasked agent's chosen actions were inapplicable. The declarative
+semantics stay, so an unmasked policy still runs.)
 
 First, the space must be flat. A factored action -- choose a fragment, then an
 operation, then a target -- would need either an architecture that DQN does not
@@ -188,3 +192,39 @@ class ActionSpace:
     @property
     def noop_index(self) -> int:
         return self._noop
+
+    # ------------------------------------------------------------ masking
+
+    def applicable_mask(self, catalog: FragmentCatalog) -> np.ndarray:
+        """Boolean vector, one entry per action: True where :meth:`apply` would
+        change the catalogue.
+
+        The rules restate the refusals in :class:`FragmentCatalog` without
+        mutating anything, so the mask costs a few array operations per step
+        rather than 261 trial copies. ``tests/test_action_mask.py`` checks the
+        two against each other over many states, so the restatement cannot
+        drift from the mutators unnoticed. NOOP is always True, which
+        guarantees every state has at least one legal action.
+        """
+        F, R, n = self.max_fragments, self.n_regions, catalog.n_fragments
+        mask = np.zeros(self.n, dtype=bool)
+
+        replicas = np.zeros((F, R), dtype=bool)
+        replicas[:n] = catalog.replicas[:n]
+        exists = np.zeros((F, 1), dtype=bool)
+        exists[:n] = True
+        is_primary = np.zeros((F, R), dtype=bool)
+        is_primary[np.arange(n), catalog.primary[:n]] = True
+
+        lease = exists & replicas & ~is_primary          # move_lease refusals
+        replica = exists & ~replicas                     # move_replica_to refusals
+        mask[:self._placement_block] = lease.ravel()
+        mask[self._placement_block:self._split_base] = replica.ravel()
+
+        if n < catalog.cfg.max_fragments:                # split refusals
+            splittable = np.zeros(F, dtype=bool)
+            splittable[:n] = catalog.sizes_cells[:n] >= 2
+            mask[self._split_base:self._noop] = splittable
+
+        mask[self._noop] = True
+        return mask

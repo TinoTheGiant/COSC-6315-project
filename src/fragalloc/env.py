@@ -99,6 +99,14 @@ class FragAllocEnv(gym.Env):
         reward = self._reward(result)
         return self._observe(), reward, False, bool(result.done), self._info(result, reward)
 
+    def action_masks(self) -> np.ndarray:
+        """True for every action that would change the catalogue right now.
+
+        Named to match the sb3-contrib ``MaskablePPO`` convention, so either
+        learner can read it.
+        """
+        return self.sim.action_space.applicable_mask(self.sim.catalog)
+
     def render(self) -> str | None:
         text = self._render_text()
         if self.render_mode == "human":

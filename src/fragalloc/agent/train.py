@@ -81,7 +81,9 @@ def evaluate_greedy(
             self.encoder = encoder
 
         def act(self, sim: ClusterSimulator) -> int:
-            action, _ = model.predict(observe(self.encoder, sim), deterministic=True)
+            masks = sim.action_space.applicable_mask(sim.catalog)
+            action, _ = model.predict(observe(self.encoder, sim), deterministic=True,
+                                      action_masks=masks)
             return int(action)
 
         def reset(self) -> None:
@@ -150,7 +152,7 @@ def train(
     tensorboard: bool = True,
 ) -> Path:
     """Run one training job. Returns the directory holding its artefacts."""
-    from stable_baselines3 import DQN
+    from fragalloc.agent.masked_dqn import MaskedDQN
 
     agent_config = agent_config or DQNConfig()
     env_config = env_config or FragAllocConfig()
@@ -163,7 +165,7 @@ def train(
     env_config.save(outdir / "env_config.json")
 
     env = SeedRotatingEnv(env_config, list(range(agent_config.train_seeds)))
-    model = DQN(
+    model = MaskedDQN(
         "MlpPolicy", env,
         tensorboard_log=str(outdir / "tensorboard") if tensorboard else None,
         verbose=0,

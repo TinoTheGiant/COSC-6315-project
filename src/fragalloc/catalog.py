@@ -12,7 +12,9 @@ All five mutators are *declarative*: each names a desired end state rather than
 an operation, and each is defined in every state. When the requested end state
 already holds, or a limit forbids it, the mutator reports ``applied=False`` and
 changes nothing. The environment charges a small fixed cost for that outcome.
-This is what removes the need for action masking, which DQN does not provide.
+This lets an unmasked policy run safely. The agent is now masked as well
+(``ActionSpace.applicable_mask``), because the fixed cost alone left 80 to 90%
+of its chosen actions inapplicable.
 """
 
 from __future__ import annotations

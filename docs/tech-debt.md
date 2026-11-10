@@ -194,3 +194,15 @@ together they cost under half an hour.
 
 **Push the repository to GitHub today.** Everything else on this list is
 recoverable.
+
+## Action masking stops at selection; the bootstrap target is unmasked (10 Nov 2026)
+
+`MaskedDQN` masks the greedy argmax and the exploration sample, so the agent
+never takes an inapplicable action. SB3's `train` still computes
+`max_a' Q_target(s', a')` over all 261 actions, because the replay buffer holds
+no next-state mask. Actions the agent never takes are never updated, and their
+values can drift upward into that max. **Fix before reporting the next training
+run:** store `action_masks()` of the next state with each transition (a
+`ReplayBuffer` subclass) and mask the max in an overridden `train`. Measured
+context: 22.7% of the 261 actions are applicable on average (1,000 states,
+random play, default config).
