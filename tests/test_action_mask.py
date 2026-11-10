@@ -100,3 +100,88 @@ def test_every_action_taken_during_training_is_in_the_mask(tiny_config) -> None:
     model.learn(total_timesteps=300)
     assert len(env.in_mask) == 300
     assert all(env.in_mask)
+
+
+# ------------------------------------------------------- the bootstrap target
+
+
+class _PostStepMaskEnv(FragAllocEnv):
+    """Records the mask of every state reached, in step order."""
+
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.reached: list[np.ndarray] = []
+
+    def step(self, action):
+        out = super().step(action)
+        self.reached.append(self.action_masks())
+        return out
+
+
+def _small_model(env, steps: int = 120):
+    from fragalloc.agent.masked_dqn import MaskedDQN
+
+    model = MaskedDQN("MlpPolicy", env, learning_starts=40, buffer_size=1000,
+                      batch_size=16, seed=2, device="cpu")
+    model.learn(total_timesteps=steps)
+    return model
+
+
+def test_buffer_stores_the_mask_of_each_next_state(tiny_config) -> None:
+    pytest.importorskip("stable_baselines3")
+    from fragalloc.agent.masked_dqn import MaskedReplayBuffer
+
+    env = _PostStepMaskEnv(tiny_config)
+    model = _small_model(env)
+    assert isinstance(model.replay_buffer, MaskedReplayBuffer)
+    n = model.replay_buffer.size()
+    assert n == len(env.reached) == 120
+    stored = model.replay_buffer.next_action_masks[:n, 0]
+    assert np.array_equal(stored, np.stack(env.reached))
+
+
+def test_target_max_ignores_masked_actions(tiny_config) -> None:
+    """Give one action an enormous target value; it must count only when allowed."""
+    pytest.importorskip("stable_baselines3")
+    import torch as th
+
+    env = FragAllocEnv(tiny_config)
+    model = _small_model(env)
+    batch = model.replay_buffer.sample(16)
+    bait = 0                                     # MOVE_LEASE(f0, r0)
+    with th.no_grad():
+        model.q_net_target.q_net[-1].bias[bait] = 1e6
+
+    masks = th.ones_like(batch.next_action_masks, dtype=th.bool)
+    assert (model._masked_next_q(batch.next_observations, masks) > 1e5).all()
+    masks[:, bait] = False
+    assert (model._masked_next_q(batch.next_observations, masks) < 1e5).all()
+
+
+def test_train_uses_the_stored_next_state_masks(tiny_config, monkeypatch) -> None:
+    pytest.importorskip("stable_baselines3")
+    env = FragAllocEnv(tiny_config)
+    model = _small_model(env)
+    seen = []
+    real = model._masked_next_q
+
+    def spy(next_obs, masks):
+        seen.append(masks.clone())
+        return real(next_obs, masks)
+
+    monkeypatch.setattr(model, "_masked_next_q", spy)
+    model.train(gradient_steps=2, batch_size=8)
+    assert len(seen) == 2
+    assert all(m.shape == (8, env.action_space.n) and not m.all() for m in seen)
+
+
+def test_a_plain_dqn_archive_loads_with_the_masked_buffer(tiny_config, tmp_path) -> None:
+    pytest.importorskip("stable_baselines3")
+    from stable_baselines3 import DQN
+
+    from fragalloc.agent.masked_dqn import MaskedDQN, MaskedReplayBuffer
+
+    env = FragAllocEnv(tiny_config)
+    DQN("MlpPolicy", env, buffer_size=100, device="cpu").save(tmp_path / "plain")
+    loaded = MaskedDQN.load(tmp_path / "plain", env=env, device="cpu")
+    assert isinstance(loaded.replay_buffer, MaskedReplayBuffer)

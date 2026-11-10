@@ -97,7 +97,12 @@ class FragAllocEnv(gym.Env):
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         result = self.sim.step(int(action))
         reward = self._reward(result)
-        return self._observe(), reward, False, bool(result.done), self._info(result, reward)
+        info = self._info(result, reward)
+        # The mask of the state just reached. MaskedReplayBuffer stores it with
+        # the transition so the bootstrap target can be masked. Computed before
+        # any vectorized auto-reset, so it belongs to the terminal observation.
+        info["action_mask"] = self.action_masks()
+        return self._observe(), reward, False, bool(result.done), info
 
     def action_masks(self) -> np.ndarray:
         """True for every action that would change the catalogue right now.
