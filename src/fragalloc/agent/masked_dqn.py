@@ -26,6 +26,33 @@ Masks come from the environment's ``action_masks()`` during training and are
 passed explicitly as ``action_masks=`` at evaluation, where the caller holds a
 simulator rather than an environment. Without ``action_masks`` ``predict``
 behaves exactly as ``stable_baselines3.DQN``.
+
+Evaluation must match training
+------------------------------
+A model is only valid together with the action rule it was trained under, and
+getting this wrong is silent in both directions (three-way review, 10 Nov 2026):
+
+* a masked model evaluated **without** the mask chose an inapplicable action
+  100% of the time and scored exactly as static hashing, because its values
+  for never-taken actions are untrained and sit about 30 points too high;
+* an unmasked model evaluated **with** the mask moved 520.7 GB instead of
+  3.4 GB, because its argmax was mostly an inapplicable action that meant
+  "stay put", and the mask forced it onto a real move.
+
+So every ``MaskedDQN`` records ``trained_with_mask`` in its archive, and
+:func:`resolve_eval_mode` picks the evaluation mode from it and refuses a
+mismatch. The modes:
+
+``"mask"``      masked argmax; the only mode for a masked-trained model.
+``"none"``      the unmasked argmax, exactly as the model was trained; the
+                default for an unmasked model, so recorded numbers reproduce.
+``"collapse"``  the unmasked argmax, relabelled NOOP when it is inapplicable.
+                For an unmasked model this gives the identical trajectory
+                (an inapplicable action already behaves as NOOP) while only
+                ever emitting legal actions, which is what a real cluster
+                needs. The reward is also identical only while NOOP and
+                inapplicable actions carry the same ``inapplicable_action_cost``.
+``"auto"``      ``"mask"`` or ``"none"``, from ``trained_with_mask``.
 """
 
 from __future__ import annotations
@@ -91,6 +118,19 @@ class MaskedReplayBuffer(ReplayBuffer):
 
 class MaskedDQN(DQN):
     """``stable_baselines3.DQN`` with action masking at selection and in the target."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        # A model built to train is a masked model. One being loaded is built
+        # with _init_setup_model=False and then takes the archived value, so an
+        # archive written by a plain DQN, which has no such field, reads False.
+        self.trained_with_mask = bool(kwargs.get("_init_setup_model", True))
+        super().__init__(*args, **kwargs)
+
+    def learn(self, *args: Any, **kwargs: Any):
+        # Any masked training at all, including fine-tuning a plain-DQN
+        # archive, leaves never-taken actions untrained, so the flag is set.
+        self.trained_with_mask = True
+        return super().learn(*args, **kwargs)
 
     def _setup_model(self) -> None:
         # Also runs on load, so archives written by a plain DQN get the masked
@@ -193,3 +233,54 @@ class MaskedDQN(DQN):
         self._n_updates += gradient_steps
         self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
         self.logger.record("train/loss", np.mean(losses))
+
+
+# ---------------------------------------------------------------- evaluation
+
+EVAL_MODES = ("auto", "mask", "none", "collapse")
+
+
+def trained_with_mask(model: Any) -> bool:
+    """True if ``model`` was trained with masked selection. Plain DQN: False."""
+    return bool(getattr(model, "trained_with_mask", False))
+
+
+def resolve_eval_mode(model: Any, requested: str | bool = "auto") -> str:
+    """Turn a requested evaluation mode into a concrete one, refusing mismatches.
+
+    ``True`` and ``False`` are accepted for the earlier boolean ``mask=``
+    argument and mean ``"mask"`` and ``"none"``.
+    """
+    if requested is True:
+        requested = "mask"
+    elif requested is False:
+        requested = "none"
+    if requested not in EVAL_MODES:
+        raise ValueError(f"evaluation mode must be one of {EVAL_MODES}, got {requested!r}")
+
+    masked = trained_with_mask(model)
+    if requested == "auto":
+        return "mask" if masked else "none"
+    if masked and requested != "mask":
+        raise ValueError(
+            f"this model was trained with action masking; evaluating it with "
+            f"mode {requested!r} reports a do-nothing policy. Use 'mask' or 'auto'.")
+    if not masked and requested == "mask":
+        raise ValueError(
+            "this model was trained without action masking; masking its argmax "
+            "turns its 'stay put' choices into real moves. Use 'none', "
+            "'collapse' or 'auto'.")
+    return requested
+
+
+def select_action(model: Any, obs: np.ndarray, mask: np.ndarray, noop_index: int,
+                  mode: str, deterministic: bool = True) -> int:
+    """One action from ``model`` under a mode already checked by :func:`resolve_eval_mode`."""
+    if mode == "mask":
+        action, _ = model.predict(obs, deterministic=deterministic, action_masks=mask)
+        return int(action)
+    action, _ = model.predict(obs, deterministic=deterministic)
+    action = int(action)
+    if mode == "collapse" and not mask[action]:
+        return int(noop_index)
+    return action

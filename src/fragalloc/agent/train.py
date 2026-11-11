@@ -63,14 +63,18 @@ class SeedRotatingEnv(FragAllocEnv):
 
 
 def evaluate_greedy(
-    model, env_config: FragAllocConfig, seeds: list[int],
+    model, env_config: FragAllocConfig, seeds: list[int], mode: str | bool = "auto",
 ) -> dict[str, float]:
     """Score the greedy policy induced by ``model`` on held-out seeds.
 
     Runs through ``fragalloc.policies.rollout``, the same function the baselines
     use, so the agent's number and the baselines' numbers are produced by one
     loop. Returns the quantities the paper reports.
+
+    ``mode`` is an evaluation mode from :mod:`fragalloc.agent.masked_dqn`; the
+    default follows how ``model`` was trained, and a mismatch raises.
     """
+    from fragalloc.agent.masked_dqn import resolve_eval_mode, select_action
     from fragalloc.observation import ObservationEncoder
     from fragalloc.policies import rollout
     from fragalloc.simulator import ClusterSimulator
@@ -81,14 +85,14 @@ def evaluate_greedy(
             self.encoder = encoder
 
         def act(self, sim: ClusterSimulator) -> int:
-            masks = sim.action_space.applicable_mask(sim.catalog)
-            action, _ = model.predict(observe(self.encoder, sim), deterministic=True,
-                                      action_masks=masks)
-            return int(action)
+            return select_action(model, observe(self.encoder, sim),
+                                 sim.action_space.applicable_mask(sim.catalog),
+                                 sim.action_space.noop_index, eval_mode, True)
 
         def reset(self) -> None:
             return None
 
+    eval_mode = resolve_eval_mode(model, mode)
     latencies, tails, moved = [], [], []
     for seed in seeds:
         sim = ClusterSimulator(env_config)

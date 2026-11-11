@@ -373,6 +373,10 @@ def main() -> None:
                         help="a trained model (.zip) to evaluate as the 'agent' policy")
     parser.add_argument("--stochastic", action="store_true",
                         help="sample from the learned policy instead of acting greedily")
+    parser.add_argument("--eval-mode", default="auto",
+                        choices=["auto", "mask", "none", "collapse"],
+                        help="action rule for --model; 'auto' follows how the model "
+                             "was trained, and a mismatch is refused")
     parser.add_argument("--label", default="", help="short tag folded into the run id")
     parser.add_argument("--outdir", type=Path, default=Path("results/runs"))
     parser.add_argument("--figures", action="store_true",
@@ -405,7 +409,8 @@ def main() -> None:
     if args.model is not None:
         from fragalloc.agent.policy import LearnedPolicy
 
-        learned = LearnedPolicy(args.model, cfg, deterministic=not args.stochastic)
+        learned = LearnedPolicy(args.model, cfg, deterministic=not args.stochastic,
+                                mask=args.eval_mode)
         POLICY_FACTORIES["agent"] = lambda space, seed: learned
         model_dir = Path(args.model).resolve().parent
         train_manifest = model_dir / "manifest.json"

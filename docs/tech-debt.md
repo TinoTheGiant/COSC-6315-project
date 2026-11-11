@@ -204,3 +204,15 @@ only. Tests in `tests/test_action_mask.py` fail if the target ignores the mask,
 if `train` bypasses it, or if the buffer stores a mask one slot out of step.
 Measured context: 22.7% of the 261 actions are applicable on average (1,000
 states, random play, default config).
+
+## Evaluation mode was not tied to how a model was trained (10 Nov 2026) - RESOLVED
+
+Found by a three-way review of the masking change. A masked model evaluated
+without the mask scored exactly as static hashing; an unmasked model evaluated
+with the mask moved 520.7 GB instead of 3.4 GB. `MaskedDQN` now records
+`trained_with_mask` in its archive (plain DQN archives read False), and
+`resolve_eval_mode` picks `"mask"` or `"none"` from it and refuses a mismatch.
+`"collapse"` evaluates an unmasked model with legal actions only and an
+identical trajectory. `LearnedPolicy`, `evaluate_greedy` and
+`scripts/run_experiment.py --eval-mode` all go through it.
+Tests: `tests/test_eval_mode.py`; each of four deliberate breaks fails one.
