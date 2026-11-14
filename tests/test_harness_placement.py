@@ -87,7 +87,7 @@ def rf3_catalog() -> FragmentCatalog:
 def test_the_harness_never_imports_the_cost_model_or_simulator() -> None:
     """docs/harness-architecture.md section 3: measured, never modelled."""
     src = Path(__file__).resolve().parents[1] / "src"
-    code = ("import sys, fragalloc.harness.placement; "
+    code = ("import sys, fragalloc.harness.placement, fragalloc.harness.executor; "
             "print(sorted(m for m in sys.modules "
             "if m in ('fragalloc.cost', 'fragalloc.simulator')))")
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,

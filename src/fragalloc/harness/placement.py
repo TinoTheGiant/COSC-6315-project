@@ -27,8 +27,9 @@ cluster. ``scripts/placement_check.py`` exercises them against a real one.
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
-from typing import Any, Protocol, Sequence
+from typing import Any, Callable, Protocol, Sequence
 
 import numpy as np
 
@@ -268,6 +269,40 @@ def read_back(sql: Sql, stores: StoreMap, layout: TableLayout,
               cfg: FragAllocConfig) -> FragmentCatalog:
     """Resolve the harness table's current placement. Step 4 of the protocol."""
     return observed_catalog(read_ranges(sql, layout), stores, cfg)
+
+
+def settle(sql: Sql, stores: StoreMap, layout: TableLayout, cfg: FragAllocConfig,
+           expected: "FragmentCatalog | None" = None, tries: int = 15,
+           wait_s: float = 1.0,
+           sleep: Callable[[float], None] = time.sleep,
+           ) -> "tuple[FragmentCatalog, list[Divergence]]":
+    """Read back until the cluster matches ``expected``, or give up.
+
+    The CockroachDB docs do not say whether ``ALTER RANGE ... RELOCATE`` waits
+    for the move to finish, and a lease can be briefly absent mid-transfer, so
+    one read straight after a statement proves nothing. Returns the last
+    read-back and its divergences from ``expected`` (empty once they agree, or
+    always empty when ``expected`` is None). Raises the last
+    :class:`PlacementError` if no read ever succeeded.
+    """
+    observed: FragmentCatalog | None = None
+    found: list[Divergence] = []
+    last_error: PlacementError | None = None
+    for attempt in range(max(1, tries)):
+        if attempt:
+            sleep(wait_s)
+        try:
+            observed = read_back(sql, stores, layout, cfg)
+        except PlacementError as exc:      # e.g. a range with no leaseholder yet
+            last_error = exc
+            continue
+        found = compare(expected, observed) if expected is not None else []
+        if not found:
+            return observed, []
+    if observed is None:
+        assert last_error is not None
+        raise last_error
+    return observed, found
 
 
 # ----------------------------------------------------------- reconciling
