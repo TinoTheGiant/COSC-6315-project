@@ -46,6 +46,7 @@ from fragalloc.config import FragAllocConfig  # noqa: E402
 from fragalloc.cost import evaluate  # noqa: E402
 from fragalloc.policies import (  # noqa: E402
     FollowTrafficPolicy,
+    LionStylePolicy,
     RandomPolicy,
     StaticHashPolicy,
 )
@@ -58,6 +59,7 @@ POLICY_FACTORIES = {
     "static": lambda space, seed: StaticHashPolicy(space),
     "random": lambda space, seed: RandomPolicy(space, seed=seed),
     "follow": lambda space, seed: FollowTrafficPolicy(space),
+    "lion": lambda space, seed: LionStylePolicy(space),
     "best": None,
     # ``agent`` is filled in at startup from --model. It is listed here so the
     # argument parser accepts it and so the trained policy is driven by exactly
@@ -277,8 +279,9 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
         "|---|---|---|---|---|---|",
     ]
     present = set(summary["policy"])
-    order = [p for p in ("agent", *DEFAULT_POLICIES) if p in present]
+    order = [p for p in ("agent", *DEFAULT_POLICIES, "lion") if p in present]
     label = {"static": "Static hash", "random": "Random", "follow": "Follow traffic",
+             "lion": "Lion-style co-location",
              "best": "Best per window (fixed shards)", "agent": "Learned policy"}
     tail_col = f"p{tail_percentile:g}_latency_ms"
     for policy in order:

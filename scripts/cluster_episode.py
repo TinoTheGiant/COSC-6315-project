@@ -2,7 +2,8 @@
 
 The same policies as the simulator's evaluation, on CockroachDB: static
 (never acts), random (uniform over the legal actions), follow (the
-traffic-following heuristic, unchanged), or agent (a saved model, loaded with
+traffic-following heuristic, unchanged), lion (the Lion-style co-location
+rebalancer, unchanged), or agent (a saved model, loaded with
 the simulator's own spaces and selection rule). One row per step: the action,
 the executor's outcome, measured latency, data moved, imbalance, reward, and
 how long the step took, which is what decides whether 200-window episodes fit
@@ -31,7 +32,7 @@ from fragalloc.config import FragAllocConfig                     # noqa: E402
 from fragalloc.harness.driver import port_connector               # noqa: E402
 from fragalloc.harness.env import ClusterFragAllocEnv             # noqa: E402
 from fragalloc.harness.placement import PsycopgSql, resolve_stores  # noqa: E402
-from fragalloc.policies import FollowTrafficPolicy                # noqa: E402
+from fragalloc.policies import FollowTrafficPolicy, LionStylePolicy  # noqa: E402
 
 
 def chooser(name: str, env: ClusterFragAllocEnv, model_path: str | None, seed: int):
@@ -48,6 +49,11 @@ def chooser(name: str, env: ClusterFragAllocEnv, model_path: str | None, seed: i
         return lambda obs: follow.act(SimpleNamespace(
             catalog=env.catalog, topology=env.topology,
             last=SimpleNamespace(window=env._window)))
+    if name == "lion":
+        lion = LionStylePolicy(space)
+        return lambda obs: lion.act(SimpleNamespace(
+            catalog=env.catalog, generator=env.generator,
+            last=SimpleNamespace(window=env._window)))
     if name == "agent":
         from fragalloc.agent.masked_dqn import MaskedDQN, resolve_eval_mode, select_action
         if not model_path:
@@ -63,7 +69,7 @@ def chooser(name: str, env: ClusterFragAllocEnv, model_path: str | None, seed: i
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--policy", choices=("static", "random", "follow", "agent"), default="static")
+    ap.add_argument("--policy", choices=("static", "random", "follow", "lion", "agent"), default="static")
     ap.add_argument("--model", default=None)
     ap.add_argument("--seed", type=int, default=2000, help="workload seed (held-out range)")
     ap.add_argument("--windows", type=int, default=5)

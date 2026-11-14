@@ -105,7 +105,7 @@ jobs:
           READ_CONSISTENCY: ${{ inputs.read_consistency }}
         run: |
           python scripts/run_experiment.py \
-            --policies static random follow best agent \
+            --policies static random follow lion best agent \
             --model "${{ steps.train.outputs.model_dir }}/best_model.zip" \
             --seeds "$EVAL_SEEDS" \
             --seed-start 2000 \

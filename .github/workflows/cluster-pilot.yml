@@ -257,12 +257,12 @@ jobs:
       # Harness piece 4: the cluster as a Gymnasium environment, end to end.
       # Static and follow for a few windows each, on the same workload seed,
       # timing every step. A trained model goes through the same script.
-      - name: Cluster episodes (static, follow)
+      - name: Cluster episodes (static, follow, lion)
         id: episodes
         if: inputs.episode_windows != '0'
         continue-on-error: true
         run: |
-          for p in static follow; do
+          for p in static follow lion; do
             echo "episode:$p" > /tmp/phase
             PYTHONPATH=src python scripts/cluster_episode.py --policy "$p" \
               --windows "${{ inputs.episode_windows }}" --transactions 200 \

@@ -292,3 +292,55 @@ Pieces 1 and 2: pass, at an unintended replica count and too slowly. Run 5
 repeats this at 3 voters (the paper's setting) and 2 voters (the second data
 point), set explicitly.
 
+
+## Training round, 14 November 2026: NOOP fix, and n-step returns
+
+Eight Train agent runs on commit 70553b9: volatility 4.0, 1,000,000 steps,
+w_migration 0.30, learner seeds 0 to 3, `n_steps` 1 and 3, evaluated on
+held-out seeds 2000 to 2007. **RF 2 and nearest-replica reads**: these predate
+ADR-0015 and ADR-0018 and are learner-side evidence, not headline results.
+Numbers copied from each run's job summary (`gh run view --log`); imbalance is
+not in the summary, so the objective below omits its term.
+
+| seed | n=1 ms | n=1 GB | n=3 ms | n=3 GB |
+|---|---|---|---|---|
+| 0 | 142.04 | 396.0 | 134.98 | 333.0 |
+| 1 | 151.15 | 336.2 | 138.87 | 418.5 |
+| 2 | 141.28 | 285.7 | 142.83 | 300.2 |
+| 3 | 145.50 | 364.1 | 141.65 | 206.2 |
+| mean | 144.99 | 345.5 | 139.58 | 314.5 |
+
+Baselines in the same runs: static 150.12 ms, follow 129.04 ms / 1086.5 GB,
+random 151.64 ms / 184.2 GB. The masked agent before the NOOP fix: 144.96 ms,
+414 GB (4 seeds).
+
+- **The NOOP fix** (ADR-0013 amendment) left latency where it was (144.99
+  against 144.96 ms) and cut data moved by about a sixth (345.5 against 414 GB).
+- **n-step 3 against 1**, paired by learner seed: mean difference −5.41 ms
+  (sd 5.80), 95% t-interval [−14.63, 3.81], paired t p = 0.16; Wilcoxon
+  p = 0.25, which with four pairs cannot go below 0.125. Not distinguishable
+  at this sample size. It is better on both latency and data moved in the
+  point estimate, and costs nothing, so **the RF 3 runs use n_steps 3**.
+- Latency plus migration terms at w = 0.30 (imbalance omitted): n=1 1.502,
+  n=3 1.443, follow 1.454, static 1.501. Not a claim of a win: the imbalance
+  term is missing and the runs are RF 2.
+
+### RF 3 baselines, both read paths (ADR-0018)
+
+`scripts/run_experiment.py`, RF 3, volatility 4, 200 windows, seeds 2000 to
+2007, policies static, random, follow and the new Lion-style co-location
+baseline (`policies.LionStylePolicy`). Objective at w = 0.30 by
+`score_objective.cost`, imbalance included.
+
+| policy | nearest ms | nearest GB | nearest cost | strong ms | strong cost |
+|---|---|---|---|---|---|
+| static | 118.81 | 0.0 | 1.241 | 192.11 | 1.959 |
+| random | 122.40 | 134.6 | 1.306 | 195.46 | 2.032 |
+| follow | 93.50 | 867.7 | 1.148 | 148.81 | 1.712 |
+| lion | 106.24 | 28.8 | **1.136** | 179.98 | 1.921 |
+
+GB moved is identical under both read paths (the policies do not see reads
+differently). Lion cuts cross-region transactions from 34% to 4% while moving
+3% of follow's data; with nearest-replica reads it is the best baseline on the
+objective, with strong reads follow is. Lion here omits its workload
+prediction and, by design, has no term for client location.
