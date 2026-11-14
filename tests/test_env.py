@@ -84,17 +84,58 @@ def test_info_carries_the_diagnostics_the_experiments_need(env) -> None:
     assert "action_applied" in info and "reward" in info
 
 
-def test_an_inapplicable_action_is_charged_a_small_fixed_cost(tiny_config) -> None:
+def _cost_only_env(tiny_config, cost: float) -> FragAllocEnv:
     cfg = replace(
         tiny_config,
         reward=RewardConfig(w_latency=0.0, w_migration=0.0, w_imbalance=0.0,
-                            inapplicable_action_cost=0.05),
+                            inapplicable_action_cost=cost),
     )
-    env = FragAllocEnv(cfg)
+    return FragAllocEnv(cfg)
+
+
+def test_an_inapplicable_action_is_charged_a_small_fixed_cost(tiny_config) -> None:
+    env = _cost_only_env(tiny_config, 0.05)
     env.reset(seed=0)
-    _, reward, _, _, info = env.step(env.sim.action_space.noop_index)
+    mask = env.action_masks()
+    noop = env.sim.action_space.noop_index
+    blocked = [a for a in np.flatnonzero(~mask) if a != noop]
+    assert blocked, "the tiny config should have some inapplicable action"
+    _, reward, _, _, info = env.step(int(blocked[0]))
     assert not info["action_applied"]
     assert reward == pytest.approx(-0.05)
+
+
+def test_noop_is_never_charged_the_inapplicable_cost(tiny_config) -> None:
+    """Doing nothing is a decision, not a failure (ADR-0013).
+
+    A masked agent cannot reach inapplicable actions, so NOOP is its only way
+    to leave the placement alone. Charging it taxed restraint on every window.
+    """
+    env = _cost_only_env(tiny_config, 0.05)
+    env.reset(seed=0)
+    noop = env.sim.action_space.noop_index
+    for _ in range(5):
+        assert env.action_masks()[noop], "NOOP must always be applicable"
+        _, reward, _, _, info = env.step(noop)
+        assert not info["action_applied"]
+        assert reward == pytest.approx(0.0)
+
+
+def test_masked_noop_step_carries_no_penalty(tiny_config) -> None:
+    """The same guarantee through the path masked training actually uses."""
+    from fragalloc.agent.masked_dqn import MaskedDQN
+
+    env = _cost_only_env(tiny_config, 0.05)
+    obs, _ = env.reset(seed=0)
+    model = MaskedDQN("MlpPolicy", env, learning_starts=0, buffer_size=64,
+                      policy_kwargs={"net_arch": [8]}, seed=0, verbose=0)
+    noop = env.sim.action_space.noop_index
+    mask = np.zeros(env.action_space.n, dtype=bool)
+    mask[noop] = True
+    action, _ = model.predict(obs, deterministic=True, action_masks=mask)
+    assert int(action) == noop
+    _, reward, _, _, _ = env.step(int(action))
+    assert reward == pytest.approx(0.0)
 
 
 def test_migration_weight_penalizes_moving_data(tiny_config) -> None:

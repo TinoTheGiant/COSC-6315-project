@@ -156,7 +156,8 @@ class RewardConfig:
     migration_scale_fraction: float = 1.0 / 6.0
     #: Cost charged when an action is inapplicable in the current state and
     #: resolves to a no-op. Small, per the declarative action semantics: an
-    #: inapplicable action should be uninteresting, not catastrophic.
+    #: inapplicable action should be uninteresting, not catastrophic. NOOP
+    #: itself is never charged (ADR-0013).
     inapplicable_action_cost: float = 0.02
 
 

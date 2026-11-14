@@ -1,7 +1,8 @@
 # ADR-0002: A flat, declarative action space with no masking
 
-**Status:** Accepted, **amended 19 October 2026**. The principle below stands:
-flat, declarative, no masking. The *contents* changed. The space is now **261
+**Status:** Accepted, **amended 19 October 2026**. **The "no masking" clause is
+superseded by [ADR-0013](ADR-0013-action-masking.md)** (10 November 2026). The
+rest of the principle below stands: flat and declarative. The *contents* changed. The space is now **261
 actions over three kinds**, not 401 over five, and the applicability figure in
 the table below (54%) was measured at variable replication factor and no longer
 applies. See the amendment at the end before taking any number here as current.

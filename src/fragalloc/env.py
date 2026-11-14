@@ -12,7 +12,13 @@ The reward is the negative weighted sum of three normalized terms::
     r = -( w_latency   * mean_latency_ms / latency_scale_ms
          + w_migration * bytes_moved / (dataset_bytes * migration_scale_fraction)
          + w_imbalance * load_imbalance
-         + inapplicable_action_cost  if the action changed nothing )
+         + inapplicable_action_cost  if a non-NOOP action changed nothing )
+
+NOOP is never charged: choosing to leave the placement alone is a legitimate
+decision, not a failed one. Charging it made doing nothing strictly worse than
+any applicable move with no data transfer, which a masked agent, unable to
+reach the inapplicable actions that used to stand in for NOOP, cannot escape.
+ADR-0013.
 
 Sweeping ``w_migration`` traces the responsiveness against stability frontier of
 Objective 5: at zero the agent is free to thrash, and high enough it learns to
@@ -96,7 +102,7 @@ class FragAllocEnv(gym.Env):
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         result = self.sim.step(int(action))
-        reward = self._reward(result)
+        reward = self._reward(result, int(action))
         info = self._info(result, reward)
         # The mask of the state just reached. MaskedReplayBuffer stores it with
         # the transition so the bootstrap target can be masked. Computed before
@@ -124,7 +130,7 @@ class FragAllocEnv(gym.Env):
     def _observe(self) -> np.ndarray:
         return observe(self.encoder, self.sim)
 
-    def _reward(self, result) -> float:
+    def _reward(self, result, action: int) -> float:
         w = self.cfg.reward
         latency_term = result.cost.mean_latency_ms / w.latency_scale_ms
         # A fraction of the dataset, never a byte count. This is what makes a
@@ -133,7 +139,9 @@ class FragAllocEnv(gym.Env):
         migration_term = result.bytes_moved / (
             self.cfg.catalog.dataset_bytes * w.migration_scale_fraction)
         imbalance_term = result.cost.load_imbalance
-        penalty = 0.0 if result.mutation.applied else w.inapplicable_action_cost
+        is_noop = action == self.sim.action_space.noop_index
+        penalty = (0.0 if result.mutation.applied or is_noop
+                   else w.inapplicable_action_cost)
         return float(
             -(
                 w.w_latency * latency_term

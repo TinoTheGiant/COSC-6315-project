@@ -50,8 +50,10 @@ mismatch. The modes:
                 For an unmasked model this gives the identical trajectory
                 (an inapplicable action already behaves as NOOP) while only
                 ever emitting legal actions, which is what a real cluster
-                needs. The reward is also identical only while NOOP and
-                inapplicable actions carry the same ``inapplicable_action_cost``.
+                needs. The reward is not identical: since ADR-0013 NOOP
+                is free whilst an inapplicable action still pays
+                ``inapplicable_action_cost``, so ``"collapse"`` scores slightly
+                better on reward. Latency and bytes moved are unchanged.
 ``"auto"``      ``"mask"`` or ``"none"``, from ``trained_with_mask``.
 """
 
