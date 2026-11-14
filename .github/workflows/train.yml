@@ -34,6 +34,11 @@ on:
       n_steps:
         description: "n-step returns. 1 is plain DQN (ADR-0014)"
         default: "1"
+      read_consistency:
+        description: "How reads are served (ADR-0018). primary_only is CockroachDB's default"
+        type: choice
+        options: [nearest_replica, primary_only]
+        default: nearest_replica
 
 jobs:
   train:
@@ -72,6 +77,7 @@ jobs:
           W_MIGRATION: ${{ inputs.w_migration }}
           SEED: ${{ inputs.seed }}
           N_STEPS: ${{ inputs.n_steps }}
+          READ_CONSISTENCY: ${{ inputs.read_consistency }}
         run: |
           python scripts/train.py \
             --timesteps "$TIMESTEPS" \
@@ -79,7 +85,8 @@ jobs:
             --volatility "$VOLATILITY" \
             --w-migration "$W_MIGRATION" \
             --seed "$SEED" \
-            --n-steps "$N_STEPS"
+            --n-steps "$N_STEPS" \
+            --read-consistency "$READ_CONSISTENCY"
           MODEL_DIR=$(ls -d results/models/*/ | sort | tail -1)
           echo "model_dir=${MODEL_DIR%/}" >> "$GITHUB_OUTPUT"
           echo "model_id=$(basename "${MODEL_DIR%/}")" >> "$GITHUB_OUTPUT"
@@ -95,6 +102,7 @@ jobs:
           VOLATILITY: ${{ inputs.volatility }}
           W_MIGRATION: ${{ inputs.w_migration }}
           EVAL_SEEDS: ${{ inputs.eval_seeds }}
+          READ_CONSISTENCY: ${{ inputs.read_consistency }}
         run: |
           python scripts/run_experiment.py \
             --policies static random follow best agent \
@@ -104,6 +112,7 @@ jobs:
             --windows "$WINDOWS" \
             --volatility "$VOLATILITY" \
             --w-migration "$W_MIGRATION" \
+            --read-consistency "$READ_CONSISTENCY" \
             --label "agent-${{ steps.train.outputs.model_id }}" \
             --figures
           RUN_DIR=$(ls -d results/runs/*/ | sort | tail -1)

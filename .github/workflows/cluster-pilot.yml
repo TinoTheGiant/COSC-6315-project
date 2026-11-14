@@ -32,6 +32,11 @@ on:
       concurrency:
         description: "Driver workers per region (fixed across conditions; stated in the paper)"
         default: "2"
+      read_consistency:
+        description: "Driver reads: primary_only (leaseholder) or nearest_replica (follower reads). ADR-0018"
+        type: choice
+        options: [primary_only, nearest_replica]
+        default: primary_only
       measure_transactions:
         description: "Transactions driven at fixed placement to choose N (design doc, section 5)"
         default: "2000"
@@ -233,6 +238,7 @@ jobs:
             --replicas "${{ inputs.replicas }}" \
             --concurrency "${{ inputs.concurrency }}" \
             --transactions "${{ inputs.measure_transactions }}" \
+            --read-consistency "${{ inputs.read_consistency }}" \
             --out results/measure_n.json | tee measure_n.txt
           echo "idle" > /tmp/phase
 

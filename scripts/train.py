@@ -44,6 +44,9 @@ def main() -> None:
                              "stability frontier is swept over, and it only means "
                              "anything here: the baselines never read the reward")
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--read-consistency", choices=("nearest_replica", "primary_only"),
+                        default=None, help="how reads are served (ADR-0018); "
+                        "CockroachDB serves a plain SELECT only from the leaseholder")
     parser.add_argument("--n-steps", type=int, default=None,
                         help="n-step returns; 1 is plain DQN (ADR-0014)")
     parser.add_argument("--outdir", type=Path, default=None)
@@ -60,6 +63,9 @@ def main() -> None:
     if args.w_migration is not None:
         env_cfg = env_cfg.evolve(reward=replace(env_cfg.reward,
                                                 w_migration=args.w_migration))
+    if args.read_consistency is not None:
+        env_cfg = env_cfg.evolve(cost=replace(env_cfg.cost,
+                                              read_consistency=args.read_consistency))
 
     agent_cfg = DQNConfig.load(args.agent_config) if args.agent_config else DQNConfig()
     changes = {}

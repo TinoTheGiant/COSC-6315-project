@@ -257,3 +257,37 @@ def test_p95_error_shrinks_with_sample_size_and_choose_n_picks_the_smallest():
     assert se[50] > se[200] > se[800]
     assert choose_n(se, se[200] + 1e-9) == 200
     assert choose_n(se, se[800] / 2) is None
+
+
+# ------------------------------------------------------------- read modes (ADR-0018)
+
+def test_follower_mode_reads_read_only_work_at_the_follower_timestamp():
+    rng = random.Random(0)
+    (single, _), = statements(Request(READ, 0, (3,), (False,)), LAYOUT, rng, "follower")
+    ro = [s for s, _ in statements(Request(TXN, 0, (2, 3), (False, False)), LAYOUT, rng,
+                                   "follower")]
+    rw = [s for s, _ in statements(Request(TXN, 0, (0, 5), (False, True)), LAYOUT, rng,
+                                   "follower")]
+    assert "follower_read_timestamp()" in single
+    assert ro[:2] == ["BEGIN TRANSACTION READ ONLY",
+                      "SET TRANSACTION AS OF SYSTEM TIME follower_read_timestamp()"]
+    # CockroachDB forbids follower reads in a read-write transaction.
+    assert not any("follower" in s for s in rw)
+
+
+def test_leaseholder_mode_never_reads_stale():
+    rng = random.Random(0)
+    for req in (Request(READ, 0, (3,), (False,)), Request(TXN, 0, (2, 3), (False, False))):
+        assert not any("AS OF" in s for s, _ in statements(req, LAYOUT, rng, "leaseholder"))
+
+
+def test_driver_carries_its_read_mode_to_every_request():
+    log = []
+    d = Driver(lambda r: FakeGateway(STORES.store_of_region[r], log), STORES, LAYOUT,
+               concurrency=1, read_mode="follower")
+    res = d.drive([Request(READ, r, (0,), (False,)) for r in (0, 1, 2)])
+    assert res.summary()["read_mode"] == "follower"
+    assert all("follower_read_timestamp()" in stmt for _, stmt, _ in log)
+    with pytest.raises(ValueError):
+        Driver(lambda r: FakeGateway(STORES.store_of_region[r], []), STORES, LAYOUT,
+               read_mode="nearest")

@@ -367,6 +367,9 @@ def main() -> None:
                         help="override the reward's migration weight. Sweeping this "
                              "traces the responsiveness against stability frontier: "
                              "at zero the agent may thrash, high enough it sits still")
+    parser.add_argument("--read-consistency", choices=("nearest_replica", "primary_only"),
+                        default=None, help="how reads are served (ADR-0018); "
+                        "CockroachDB serves a plain SELECT only from the leaseholder")
     parser.add_argument("--policies", nargs="+", default=list(DEFAULT_POLICIES),
                         choices=list(POLICY_FACTORIES))
     parser.add_argument("--model", type=Path, default=None,
@@ -395,6 +398,8 @@ def main() -> None:
         cfg = cfg.evolve(workload=replace(cfg.workload, volatility=args.volatility))
     if args.w_migration is not None:
         cfg = cfg.evolve(reward=replace(cfg.reward, w_migration=args.w_migration))
+    if args.read_consistency is not None:
+        cfg = cfg.evolve(cost=replace(cfg.cost, read_consistency=args.read_consistency))
 
     seeds = list(range(args.seed_start, args.seed_start + args.seeds))
     started = datetime.now(timezone.utc)

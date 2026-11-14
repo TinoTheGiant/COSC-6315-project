@@ -120,27 +120,47 @@ def sqlstate(exc: BaseException) -> str:
     return str(state or "")
 
 
-def statements(req: Request, layout: TableLayout, rng: random.Random) -> list[tuple[str, tuple]]:
+#: How reads are served (ADR-0018). ``leaseholder`` is a plain strong read, the
+#: simulator's ``primary_only``. ``follower`` reads read-only work at
+#: ``follower_read_timestamp()`` so the nearest replica can serve it, the
+#: simulator's ``nearest_replica``; reads inside a read-write transaction stay
+#: at the leaseholder, because CockroachDB allows nothing else.
+READ_MODES = {"primary_only": "leaseholder", "nearest_replica": "follower"}
+FOLLOWER_TS = "AS OF SYSTEM TIME follower_read_timestamp()"
+
+
+def statements(req: Request, layout: TableLayout, rng: random.Random,
+               read_mode: str = "leaseholder") -> list[tuple[str, tuple]]:
     """The SQL for one request. A random row within each member cell."""
+    if read_mode not in ("leaseholder", "follower"):
+        raise ValueError(f"unknown read mode {read_mode!r}")
+    follower = read_mode == "follower"
     t = layout.table
     stmts = []
     for cell, w in zip(req.cells, req.writes):
         key = layout.cell_key(cell) + rng.randrange(layout.rows_per_cell)
         if w:
             stmts.append((f"UPDATE {t} SET v = v WHERE k = %s", (key,)))
+        elif follower and req.kind == READ:
+            stmts.append((f"SELECT v FROM {t} {FOLLOWER_TS} WHERE k = %s", (key,)))
         else:
             stmts.append((f"SELECT v FROM {t} WHERE k = %s", (key,)))
     if req.kind != TXN:
         return stmts
-    begin = "BEGIN TRANSACTION READ ONLY" if req.read_only else "BEGIN"
-    return [(begin, ())] + stmts + [("COMMIT", ())]
+    if not req.read_only:
+        return [("BEGIN", ())] + stmts + [("COMMIT", ())]
+    begin = [("BEGIN TRANSACTION READ ONLY", ())]
+    if follower:
+        begin.append((f"SET TRANSACTION {FOLLOWER_TS}", ()))
+    return begin + stmts + [("COMMIT", ())]
 
 
 def run_one(sql: Sql, req: Request, layout: TableLayout, rng: random.Random,
             max_attempts: int = 8, sleep: Callable[[float], None] = time.sleep,
-            clock: Callable[[], float] = time.perf_counter) -> Sample:
+            clock: Callable[[], float] = time.perf_counter,
+            read_mode: str = "leaseholder") -> Sample:
     """Run one request to completion, retrying the whole unit on ``40001``."""
-    stmts = statements(req, layout, rng)
+    stmts = statements(req, layout, rng, read_mode)
     explicit = req.kind == TXN
     backoff = 0.01
     t0 = clock()
@@ -205,6 +225,7 @@ class DriveResult:
     wall_s: float
     concurrency: int
     gateways: dict[str, int]
+    read_mode: str = "leaseholder"
     suspended: bool = False
     suspend_gap_s: float = 0.0
     max_in_flight: int = 0
@@ -233,6 +254,7 @@ class DriveResult:
             "wall_s": self.wall_s,
             "throughput_per_s": len(self.samples) / self.wall_s if self.wall_s > 0 else 0.0,
             "concurrency_per_region": self.concurrency,
+            "read_mode": self.read_mode,
             "max_in_flight": self.max_in_flight,
             "gateways": self.gateways,
             "suspended": self.suspended,
@@ -263,9 +285,13 @@ class Driver:
 
     def __init__(self, connect: Callable[[int], Sql], stores: StoreMap,
                  layout: TableLayout, concurrency: int = 2, seed: int = 0,
-                 max_attempts: int = 8, stall_ms: float = 30_000.0) -> None:
+                 max_attempts: int = 8, stall_ms: float = 30_000.0,
+                 read_mode: str = "leaseholder") -> None:
         if concurrency < 1:
             raise ValueError("concurrency must be at least 1")
+        if read_mode not in ("leaseholder", "follower"):
+            raise ValueError(f"unknown read mode {read_mode!r}")
+        self.read_mode = read_mode
         self.stores, self.layout = stores, layout
         self.concurrency, self.max_attempts, self.stall_ms = concurrency, max_attempts, stall_ms
         self.n_regions = len(stores.region_names)
@@ -310,7 +336,8 @@ class Driver:
                     in_flight[0] += 1
                     in_flight[1] = max(in_flight[1], in_flight[0])
                 try:
-                    s = run_one(sql, req, self.layout, rng, self.max_attempts)
+                    s = run_one(sql, req, self.layout, rng, self.max_attempts,
+                                read_mode=self.read_mode)
                 except BaseException as exc:  # noqa: BLE001 - surfaced after join
                     with lock:
                         errors.append(exc)
@@ -335,7 +362,7 @@ class Driver:
             raise DriverError(str(errors[0])) from errors[0]
         stalls = [s.latency_ms for s in samples if s.latency_ms > self.stall_ms]
         return DriveResult(samples, wall, self.concurrency, dict(self.gateways),
-                           suspended=watch.suspended, suspend_gap_s=watch.gap_s(),
+                           read_mode=self.read_mode, suspended=watch.suspended, suspend_gap_s=watch.gap_s(),
                            max_in_flight=in_flight[1], stalls=stalls)
 
 
