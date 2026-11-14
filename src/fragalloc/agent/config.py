@@ -46,6 +46,12 @@ class DQNConfig:
     #: Discount. A diurnal cycle is 96 windows; 0.99 gives an effective horizon
     #: of about 100 windows, which is the right order to see a full rotation.
     gamma: float = 0.99
+    #: Rewards summed before bootstrapping. A move's latency benefit lands over
+    #: the windows after it whilst its migration cost lands at once, so a
+    #: one-step target credits the cost immediately and the benefit only
+    #: through a bootstrapped estimate. n > 1 puts several windows of benefit
+    #: in the target directly. 1 is plain DQN. ADR-0014.
+    n_steps: int = 1
     #: One gradient step per environment step. Raising it trades wall clock for
     #: sample efficiency, which is the wrong trade when the simulator is fast.
     train_freq: int = 1
@@ -81,6 +87,8 @@ class DQNConfig:
                 f"eval_seed_start={self.eval_seed_start} < train_seeds={self.train_seeds}")
         if not 0.0 <= self.exploration_final_eps <= self.exploration_initial_eps <= 1.0:
             raise ValueError("require 0 <= final_eps <= initial_eps <= 1")
+        if self.n_steps < 1:
+            raise ValueError("n_steps must be at least 1")
         if self.learning_starts >= self.total_timesteps:
             raise ValueError("learning_starts must be smaller than total_timesteps")
 
@@ -109,6 +117,7 @@ class DQNConfig:
             "learning_starts": self.learning_starts,
             "batch_size": self.batch_size,
             "gamma": self.gamma,
+            "n_steps": self.n_steps,
             "train_freq": self.train_freq,
             "gradient_steps": self.gradient_steps,
             "target_update_interval": self.target_update_interval,

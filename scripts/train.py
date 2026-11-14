@@ -44,6 +44,8 @@ def main() -> None:
                              "stability frontier is swept over, and it only means "
                              "anything here: the baselines never read the reward")
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--n-steps", type=int, default=None,
+                        help="n-step returns; 1 is plain DQN (ADR-0014)")
     parser.add_argument("--outdir", type=Path, default=None)
     parser.add_argument("--no-tensorboard", action="store_true")
     args = parser.parse_args()
@@ -70,6 +72,8 @@ def main() -> None:
                                           max(1, args.timesteps // 5))
     if args.seed is not None:
         changes["seed"] = args.seed
+    if args.n_steps is not None:
+        changes["n_steps"] = args.n_steps
     if changes:
         agent_cfg = replace(agent_cfg, **changes)
 

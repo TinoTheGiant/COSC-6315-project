@@ -31,6 +31,9 @@ on:
       eval_seeds:
         description: "Held-out seeds used for the final comparison table"
         default: "8"
+      n_steps:
+        description: "n-step returns. 1 is plain DQN (ADR-0014)"
+        default: "1"
 
 jobs:
   train:
@@ -68,13 +71,15 @@ jobs:
           VOLATILITY: ${{ inputs.volatility }}
           W_MIGRATION: ${{ inputs.w_migration }}
           SEED: ${{ inputs.seed }}
+          N_STEPS: ${{ inputs.n_steps }}
         run: |
           python scripts/train.py \
             --timesteps "$TIMESTEPS" \
             --windows "$WINDOWS" \
             --volatility "$VOLATILITY" \
             --w-migration "$W_MIGRATION" \
-            --seed "$SEED"
+            --seed "$SEED" \
+            --n-steps "$N_STEPS"
           MODEL_DIR=$(ls -d results/models/*/ | sort | tail -1)
           echo "model_dir=${MODEL_DIR%/}" >> "$GITHUB_OUTPUT"
           echo "model_id=$(basename "${MODEL_DIR%/}")" >> "$GITHUB_OUTPUT"

@@ -60,7 +60,11 @@ def test_the_sb3_keyword_set_is_exactly_what_dqn_accepts() -> None:
     sb3 = pytest.importorskip("stable_baselines3")
     import inspect
 
-    accepted = set(inspect.signature(sb3.DQN.__init__).parameters)
+    from fragalloc.agent.masked_dqn import MaskedDQN
+
+    # MaskedDQN takes n_steps itself (ADR-0014) and passes the rest to DQN.
+    accepted = (set(inspect.signature(sb3.DQN.__init__).parameters)
+                | set(inspect.signature(MaskedDQN.__init__).parameters))
     assert set(kwargs) <= accepted, set(kwargs) - accepted
 
 

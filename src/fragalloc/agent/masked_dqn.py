@@ -79,14 +79,32 @@ class MaskedReplayBufferSamples(NamedTuple):
 
 
 class MaskedReplayBuffer(ReplayBuffer):
-    """A replay buffer that also stores the action mask of each next state."""
+    """A replay buffer that also stores the action mask of each next state.
+
+    With ``n_steps > 1`` it samples n-step returns: the reward is the
+    discounted sum of up to ``n_steps`` consecutive rewards, the next
+    observation and next-state mask are those at the end of that run, and
+    ``discounts`` carries ``gamma ** k`` for the ``k`` steps actually summed.
+    A run stops early at an episode end, and never crosses the write head into
+    transitions from an older episode. This follows Stable-Baselines3's
+    ``NStepReplayBuffer``, which cannot be used here because it does not carry
+    the mask of the n-th next state that the masked target needs. ADR-0014.
+
+    ``n_steps == 1`` takes exactly the one-step path used before, so a model
+    trained without n-step returns trains identically.
+    """
 
     def __init__(self, buffer_size: int, observation_space, action_space,
                  device: Any = "auto", n_envs: int = 1,
                  optimize_memory_usage: bool = False,
-                 handle_timeout_termination: bool = True) -> None:
+                 handle_timeout_termination: bool = True,
+                 n_steps: int = 1, gamma: float = 0.99) -> None:
         if optimize_memory_usage:
             raise ValueError("MaskedReplayBuffer does not support optimize_memory_usage")
+        if int(n_steps) < 1:
+            raise ValueError("n_steps must be at least 1")
+        self.n_steps = int(n_steps)
+        self.gamma = float(gamma)
         super().__init__(buffer_size, observation_space, action_space, device,
                          n_envs=n_envs, optimize_memory_usage=False,
                          handle_timeout_termination=handle_timeout_termination)
@@ -103,6 +121,8 @@ class MaskedReplayBuffer(ReplayBuffer):
         super().add(obs, next_obs, action, reward, done, infos)
 
     def _get_samples(self, batch_inds: np.ndarray, env=None) -> MaskedReplayBufferSamples:
+        if self.n_steps > 1:
+            return self._get_n_step_samples(batch_inds, env)
         # Restated from ReplayBuffer._get_samples so that the mask is read at the
         # same environment index as the transition it belongs to.
         env_indices = np.random.randint(0, high=self.n_envs, size=(len(batch_inds),))
@@ -117,11 +137,58 @@ class MaskedReplayBuffer(ReplayBuffer):
         )
         return MaskedReplayBufferSamples(*tuple(map(self.to_torch, data)))
 
+    def _get_n_step_samples(self, batch_inds: np.ndarray, env=None) -> MaskedReplayBufferSamples:
+        n, size = self.n_steps, self.buffer_size
+        env_indices = np.random.randint(0, high=self.n_envs, size=(len(batch_inds),))
+
+        # The newest transition is followed in storage by the oldest, from a
+        # different episode. Treating it as truncated for the duration of this
+        # call stops every run there.
+        newest = (self.pos - 1) % size
+        saved = self.timeouts[newest].copy()
+        self.timeouts[newest] = np.logical_or(saved, self.dones[newest] == 0)
+        try:
+            steps = np.arange(n).reshape(1, -1)
+            idx = (batch_inds[:, None] + steps) % size                  # [B, n]
+            env_col = env_indices[:, None]
+            rewards = self._normalize_reward(self.rewards[idx, env_col], env)
+            ends = (self.dones[idx, env_col] > 0) | (self.timeouts[idx, env_col] > 0)
+            last = np.where(ends.any(axis=1), ends.argmax(axis=1), n - 1)  # [B]
+            used = steps <= last[:, None]
+            returns = (rewards * (self.gamma ** steps) * used).sum(axis=1, keepdims=True)
+
+            rows = np.arange(len(batch_inds))
+            end_idx = idx[rows, last]
+            dones = (self.dones[end_idx, env_indices]
+                     * (1 - self.timeouts[end_idx, env_indices])).reshape(-1, 1)
+            discounts = (self.gamma ** (last + 1)).reshape(-1, 1)
+            data = (
+                self._normalize_obs(self.observations[batch_inds, env_indices, :], env),
+                self.actions[batch_inds, env_indices, :],
+                self._normalize_obs(self.next_observations[end_idx, env_indices, :], env),
+                dones,
+                returns,
+                self.next_action_masks[end_idx, env_indices, :],
+                discounts,
+            )
+        finally:
+            self.timeouts[newest] = saved
+        return MaskedReplayBufferSamples(
+            *tuple(self.to_torch(np.asarray(d, dtype=np.float32) if i in (3, 4, 6) else d)
+                   for i, d in enumerate(data)))
+
 
 class MaskedDQN(DQN):
     """``stable_baselines3.DQN`` with action masking at selection and in the target."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, n_steps: int = 1, **kwargs: Any) -> None:
+        # n-step returns are handled by MaskedReplayBuffer, never by
+        # Stable-Baselines3's own n_steps, which would be ignored next to a
+        # custom buffer. Stored under a distinct name so it survives save/load
+        # and an older archive without it reads as one step.
+        if int(n_steps) < 1:
+            raise ValueError("n_steps must be at least 1")
+        self.n_step_returns = int(n_steps)
         # A model built to train is a masked model. One being loaded is built
         # with _init_setup_model=False and then takes the archived value, so an
         # archive written by a plain DQN, which has no such field, reads False.
@@ -141,6 +208,11 @@ class MaskedDQN(DQN):
             self.replay_buffer_class = MaskedReplayBuffer
         elif not issubclass(self.replay_buffer_class, MaskedReplayBuffer):
             raise TypeError("MaskedDQN needs a MaskedReplayBuffer to mask its target")
+        self.replay_buffer_kwargs = {
+            **(self.replay_buffer_kwargs or {}),
+            "n_steps": getattr(self, "n_step_returns", 1),
+            "gamma": self.gamma,
+        }
         super()._setup_model()
 
     # ----------------------------------------------------------- selection
