@@ -149,6 +149,26 @@ jobs:
           doing any agent work."
           fi
 
+      # Harness piece 1 (docs/harness-architecture.md, build order step 3):
+      # read placement back, move leases and replicas by hand, confirm the
+      # read-back tracks every move. Independent of the gate above.
+      - name: Placement read-back check
+        id: placement
+        continue-on-error: true
+        run: |
+          PYTHONPATH=src python scripts/placement_check.py \
+            --out results/placement_check.json | tee placement.txt
+
+      - name: Placement verdict
+        if: always()
+        run: |
+          { echo "### Placement read-back"; echo '```'; tail -45 placement.txt 2>/dev/null; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.placement.outcome }}" != "success" ]; then
+            echo "::error::The placement read-back did not match the cluster. Do not build \
+          the executor on it until this passes."
+          fi
+
       - name: Cluster logs on failure
         if: failure()
         run: docker compose -f docker/docker-compose.yml logs --tail=120
@@ -161,6 +181,7 @@ jobs:
             results/
             latency.txt
             gate.txt
+            placement.txt
             docker/docker-compose.yml
           retention-days: 30
 
