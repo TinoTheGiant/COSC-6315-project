@@ -77,13 +77,15 @@ class Executor:
     def __init__(self, sql: Sql, stores: StoreMap, layout: TableLayout,
                  cfg: FragAllocConfig, *, settle_tries: int = 15,
                  settle_wait_s: float = 1.0,
-                 sleep: Callable[[float], None] = time.sleep) -> None:
+                 sleep: Callable[[float], None] = time.sleep,
+                 lease_source: str = "details") -> None:
         if len(stores.region_names) != cfg.n_regions:
             raise ValueError("store map and config disagree on the region count")
         self.sql, self.stores, self.layout, self.cfg = sql, stores, layout, cfg
         self.space = ActionSpace(cfg.catalog.max_fragments, cfg.n_regions)
         self.rtt = build_topology(cfg.topology, cfg.catalog.dataset_bytes).rtt
         self.settle_tries, self.settle_wait_s, self.sleep = settle_tries, settle_wait_s, sleep
+        self.lease_source = lease_source
 
     # ------------------------------------------------------------ planning
 
@@ -147,7 +149,7 @@ class Executor:
         """Plan, execute, read back and compare. Raises if the cluster is gone."""
         t0 = time.monotonic()
         action = self.space.decode(index)
-        ranges = read_ranges(self.sql, self.layout)
+        ranges = read_ranges(self.sql, self.layout, self.lease_source)
         starts = [r.start_cell for r in ranges]
         if starts != intent.boundaries[:-1].tolist():
             raise PlacementError(
@@ -171,7 +173,7 @@ class Executor:
         observed, divergences = settle(
             self.sql, self.stores, self.layout, self.cfg, target,
             tries=self.settle_tries if outcome == APPLIED else 3,
-            wait_s=self.settle_wait_s, sleep=self.sleep)
+            wait_s=self.settle_wait_s, sleep=self.sleep, lease_source=self.lease_source)
         return StepOutcome(
             action=action, outcome=outcome, statements=tuple(sent), detail=detail,
             bytes_moved=float(result.bytes_moved) if outcome == APPLIED else 0.0,

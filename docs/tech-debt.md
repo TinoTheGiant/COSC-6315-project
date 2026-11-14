@@ -18,6 +18,10 @@ rank higher.
 | 6 | Baselines have no tests | 2 | 4 | 3 | **18** | open |
 | 7 | Four-deep ADR chain with two reversals | 1 | 2 | 1 | **15** | mitigated |
 | 8 | 1,773 lines of untested scripts | 2 | 3 | 4 | **10** | accepted, not scheduled |
+| 9 | Read-back 5.4 s, executor step 16 s, against a 2 to 6 s budget (results-log Run 4) | 4 | 4 | 2 | **32** | open, ADR-0016, decided by pilot #5 |
+| 10 | Cluster replica count never set or verified before 14 November | 5 | 5 | 1 | **50** | fixed: `converge_replication`, ADR-0015 |
+| 11 | docs/harness-architecture.md describes Toxiproxy; the cluster uses `netem` | 2 | 3 | 1 | **25** | open; fix before writing Methods |
+| 12 | `falsification_test.py` duplicates the harness's store resolution and relocate | 1 | 1 | 2 | **8** | accepted until after the deadline |
 
 ---
 

@@ -224,11 +224,32 @@ def parse_store_list(value: Any) -> tuple[int, ...]:
     return tuple(int(v) for v in str(value).strip("{}[] ").split(",") if v.strip())
 
 
-def read_ranges(sql: Sql, layout: TableLayout) -> list[RangeInfo]:
+#: Two ways to learn each range's leaseholder (ADR-0016).
+#:
+#: ``details``: ``SHOW RANGES ... WITH DETAILS``, the only documented source.
+#: The docs warn it "incurs a large computational overhead"; Cluster pilot #4
+#: measured a median of 5.4 s per read-back and 12 to 19 s per executor step.
+#:
+#: ``builtin``: ``crdb_internal.lease_holder(raw_start_key)`` per range, from
+#: ``SHOW RANGES ... WITH KEYS``. Undocumented, but present in v25.3
+#: (pkg/sql/sem/builtins/builtins.go): one lease-info request per range,
+#: returning the leaseholder's store id. The first range's start key may lie
+#: before the table, but the range containing that key is still this range, so
+#: the answer is still this range's leaseholder.
+LEASE_SOURCES = {
+    "details": ("SELECT start_key, range_id, lease_holder, voting_replicas "
+                "FROM [SHOW RANGES FROM TABLE {table} WITH DETAILS]"),
+    "builtin": ("SELECT start_key, range_id, crdb_internal.lease_holder(raw_start_key), "
+                "voting_replicas FROM [SHOW RANGES FROM TABLE {table} WITH KEYS]"),
+}
+
+
+def read_ranges(sql: Sql, layout: TableLayout,
+                lease_source: str = "details") -> list[RangeInfo]:
     """Every range of the harness table, in key order. One query."""
-    rows = sql.query(
-        f"SELECT start_key, range_id, lease_holder, voting_replicas "
-        f"FROM [SHOW RANGES FROM TABLE {layout.table} WITH DETAILS]")
+    if lease_source not in LEASE_SOURCES:
+        raise ValueError(f"lease_source must be one of {sorted(LEASE_SOURCES)}")
+    rows = sql.query(LEASE_SOURCES[lease_source].format(table=layout.table))
     if not rows:
         raise PlacementError(f"table {layout.table} has no ranges; was it created?")
     ranges = []
@@ -266,15 +287,16 @@ def observed_catalog(ranges: Sequence[RangeInfo], stores: StoreMap,
 
 
 def read_back(sql: Sql, stores: StoreMap, layout: TableLayout,
-              cfg: FragAllocConfig) -> FragmentCatalog:
+              cfg: FragAllocConfig, lease_source: str = "details") -> FragmentCatalog:
     """Resolve the harness table's current placement. Step 4 of the protocol."""
-    return observed_catalog(read_ranges(sql, layout), stores, cfg)
+    return observed_catalog(read_ranges(sql, layout, lease_source), stores, cfg)
 
 
 def settle(sql: Sql, stores: StoreMap, layout: TableLayout, cfg: FragAllocConfig,
            expected: "FragmentCatalog | None" = None, tries: int = 15,
            wait_s: float = 1.0,
            sleep: Callable[[float], None] = time.sleep,
+           lease_source: str = "details",
            ) -> "tuple[FragmentCatalog, list[Divergence]]":
     """Read back until the cluster matches ``expected``, or give up.
 
@@ -292,7 +314,7 @@ def settle(sql: Sql, stores: StoreMap, layout: TableLayout, cfg: FragAllocConfig
         if attempt:
             sleep(wait_s)
         try:
-            observed = read_back(sql, stores, layout, cfg)
+            observed = read_back(sql, stores, layout, cfg, lease_source)
         except PlacementError as exc:      # e.g. a range with no leaseholder yet
             last_error = exc
             continue

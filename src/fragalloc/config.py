@@ -100,8 +100,12 @@ class CatalogConfig:
 
     initial_fragments: int = 6
     max_fragments: int = 20
-    min_replicas: int = 2
-    max_replicas: int = 4
+    #: Replication factor, fixed (ADR-0009, ADR-0015): CockroachDB's default of
+    #: 3, so a write needs one follower's acknowledgement and can route around
+    #: one badly placed replica. Every action keeps the count constant, so
+    #: min == max is a statement of intent, and the cluster is set to match.
+    min_replicas: int = 3
+    max_replicas: int = 3
     #: Total logical dataset size. Migration cost is expressed as a fraction
     #: of this, never in bytes, so that a 60 GB simulator and a 1 GB cluster
     #: produce rewards on the same scale. See :class:`RewardConfig`.

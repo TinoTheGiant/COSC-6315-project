@@ -23,6 +23,9 @@ on:
       touch:
         description: "Distinct ranges each transaction writes to"
         default: "3"
+      replicas:
+        description: "Voters per range, set and converged before measuring (ADR-0015: 3; 2 for the second data point)"
+        default: "3"
 
 jobs:
   pilot:
@@ -131,6 +134,15 @@ jobs:
           $CRDB "SELECT variable, value FROM [SHOW CLUSTER SETTINGS]
                  WHERE variable LIKE 'kv.%queue%' OR variable LIKE 'kv.allocator%';"
 
+      # Node liveness, start times and under-replication, before measuring.
+      # Compared with the snapshot after: a node that restarted mid-run makes
+      # every latency in between suspect (benchmarking guidance).
+      - name: Cluster health before measuring
+        run: |
+          docker compose -f docker/docker-compose.yml exec -T node0 \
+            cockroach node status --decommission --insecure --format=csv > health_before.csv
+          cat health_before.csv
+
       - name: Falsification test (the gate)
         id: gate
         continue-on-error: true
@@ -138,6 +150,7 @@ jobs:
           PYTHONPATH=src python scripts/falsification_test.py \
             --transactions "${{ inputs.transactions }}" \
             --touch "${{ inputs.touch }}" \
+            --replicas "${{ inputs.replicas }}" \
             --out results/falsification.json | tee gate.txt
 
       - name: Verdict
@@ -158,6 +171,7 @@ jobs:
         continue-on-error: true
         run: |
           PYTHONPATH=src python scripts/placement_check.py \
+            --replicas "${{ inputs.replicas }}" \
             --out results/placement_check.json | tee placement.txt
 
       - name: Harness verdict
@@ -169,6 +183,31 @@ jobs:
             echo "::error::The harness check failed. Do not build the driver on it until \
           this passes."
           fi
+
+      - name: Cluster health after measuring
+        if: always()
+        run: |
+          docker compose -f docker/docker-compose.yml exec -T node0 \
+            cockroach node status --decommission --insecure --format=csv > health_after.csv
+          cat health_after.csv
+          python - <<'PY'
+          import csv
+          def load(path):
+              with open(path, newline="") as fh:
+                  return {r["id"]: r for r in csv.DictReader(fh)}
+          before, after = load("health_before.csv"), load("health_after.csv")
+          bad = []
+          for nid, row in after.items():
+              if row.get("is_live", "true").lower() != "true":
+                  bad.append(f"node {nid} not live")
+              if nid in before and row.get("started_at") != before[nid].get("started_at"):
+                  bad.append(f"node {nid} restarted during measurement")
+          missing = set(before) - set(after)
+          bad += [f"node {nid} disappeared" for nid in sorted(missing)]
+          for b in bad:
+              print(f"::error::{b}. Latencies measured across this are suspect.")
+          print("health: OK, no node restarted or died" if not bad else "health: PROBLEMS above")
+          PY
 
       - name: Cluster logs on failure
         if: failure()
@@ -183,6 +222,8 @@ jobs:
             latency.txt
             gate.txt
             placement.txt
+            health_before.csv
+            health_after.csv
             docker/docker-compose.yml
           retention-days: 30
 

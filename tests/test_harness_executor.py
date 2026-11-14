@@ -209,3 +209,14 @@ def test_simulator_and_cluster_stay_in_lockstep_over_a_random_walk(seed) -> None
         assert np.array_equal(out.catalog.primary, sim.primary)
         assert np.array_equal(out.catalog.replicas, sim.replicas)
         cat = out.catalog
+
+
+def test_the_executor_uses_the_lease_source_it_is_given() -> None:
+    cat = rf3_catalog()
+    cluster = FakeCluster.from_catalog(cat, STORES, LAYOUT)
+    ex = Executor(cluster, STORES, LAYOUT, CFG, sleep=lambda s: None, lease_source="builtin")
+    out = ex.step(cat, SPACE.encode(ActionKind.MOVE_LEASE, 0,
+                                    int(np.flatnonzero(cat.replicas[0])[-1])))
+    assert out.outcome == APPLIED and not out.diverged
+    reads = [s for s in cluster.statements if "SHOW RANGES" in s]
+    assert reads and all("lease_holder(raw_start_key)" in s for s in reads)

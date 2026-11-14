@@ -39,10 +39,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from fragalloc.actions import ActionSpace                            # noqa: E402
 from fragalloc.catalog import FragmentCatalog                        # noqa: E402
 from fragalloc.config import FragAllocConfig                         # noqa: E402
+from fragalloc.harness.cluster import converge_replication          # noqa: E402
 from fragalloc.harness.executor import APPLIED, Executor             # noqa: E402
 from fragalloc.harness.placement import (                            # noqa: E402
-    PsycopgSql, TableLayout, create_table, read_back, read_ranges, relocate,
-    resolve_stores, settle,
+    PsycopgSql, TableLayout, compare, create_table, read_back, read_ranges,
+    relocate, resolve_stores, settle,
 )
 from fragalloc.topology import build_topology                        # noqa: E402
 
@@ -51,11 +52,24 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=26257)
     ap.add_argument("--walk-steps", type=int, default=15)
+    ap.add_argument("--lease-source", choices=("details", "builtin"), default="builtin",
+                    help="how the executor walk reads leases (ADR-0016)")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--replicas", type=int, default=None,
+                    help="voters per range; defaults to the simulator's (ADR-0015)")
     ap.add_argument("--out", default="results/placement_check.json")
     args = ap.parse_args()
 
     cfg = FragAllocConfig()
+    replicas = args.replicas or cfg.catalog.min_replicas
+    if not cfg.catalog.min_replicas <= replicas <= cfg.catalog.max_replicas:
+        # A count the simulator cannot represent: widen the catalogue bounds so
+        # the read-back is valid, and say so (the RF 2 data point, ADR-0015).
+        from dataclasses import replace
+        cfg = cfg.evolve(catalog=replace(cfg.catalog, min_replicas=replicas,
+                                         max_replicas=replicas))
+        print(f"note: {replicas} voters per range is not the simulator's default; "
+              f"catalogue bounds set to {replicas} for this run")
     layout = TableLayout.from_config(cfg)
     sql = PsycopgSql.connect(port=args.port)
     report: dict = {"checks": []}
@@ -72,6 +86,9 @@ def main() -> int:
     create_table(sql, layout, initial.boundaries)
     print(f"table {layout.table}: {layout.n_cells} cells x {layout.rows_per_cell} rows, "
           f"split at cells {initial.boundaries.tolist()}")
+    took = converge_replication(sql, layout, replicas)
+    print(f"replication: converged to {replicas} voters per range in {took:.0f} s, "
+          f"rebalancer frozen and verified")
 
     raw = sql.query(f"SELECT start_key, range_id, lease_holder, voting_replicas "
                     f"FROM [SHOW RANGES FROM TABLE {layout.table} WITH DETAILS]")
@@ -93,9 +110,8 @@ def main() -> int:
     report["replicas_per_fragment_simulator"] = int(cfg.catalog.min_replicas)
     print(f"voters per range on the cluster: {rf}; "
           f"replicas per fragment in the simulator: {cfg.catalog.min_replicas}")
-    if rf != [cfg.catalog.min_replicas]:
-        print("  WARNING: replication factor differs between cluster and simulator "
-              "(ADR-0015). The read-back is correct; the two worlds are not yet at parity.")
+    check("every range holds exactly the chosen number of voters (ADR-0015)",
+          rf == [replicas], f"cluster {rf}, asked for {replicas}")
 
     ranges = read_ranges(sql, layout)
     expected = obs0.copy()
@@ -130,18 +146,27 @@ def main() -> int:
     check(f"split at cell {mid} reads back as two fragments with one placement", not found,
           "; ".join(map(str, found)) or f"{current.n_fragments} fragments")
 
-    timings = []
-    for _ in range(5):
-        t0 = time.monotonic()
-        read_back(sql, stores, layout, cfg)
-        timings.append(time.monotonic() - t0)
-    report["read_back_seconds"] = {"median": statistics.median(timings), "max": max(timings)}
-    print(f"read-back time: median {statistics.median(timings):.3f} s, "
-          f"max {max(timings):.3f} s over 5 reads")
+    # ADR-0016: the documented lease source (DETAILS) against the built-in.
+    report["read_back_seconds"] = {}
+    reads = {}
+    for source in ("details", "builtin"):
+        timings = []
+        for _ in range(5):
+            t0 = time.monotonic()
+            reads[source] = read_back(sql, stores, layout, cfg, lease_source=source)
+            timings.append(time.monotonic() - t0)
+        report["read_back_seconds"][source] = {"median": statistics.median(timings),
+                                               "max": max(timings)}
+        print(f"read-back via {source}: median {statistics.median(timings):.3f} s, "
+              f"max {max(timings):.3f} s over 5 reads")
+    agree = compare(reads["details"], reads["builtin"])
+    check("the built-in lease source reads the same placement as DETAILS", not agree,
+          "; ".join(map(str, agree)) or "identical")
 
     # ------------------------------------------------- part 2: executor walk
-    print(f"\npart 2: executor, {args.walk_steps} random legal actions, seed {args.seed}")
-    ex = Executor(sql, stores, layout, cfg)
+    print(f"\npart 2: executor, {args.walk_steps} random legal actions, seed {args.seed}, "
+          f"leases via {args.lease_source}")
+    ex = Executor(sql, stores, layout, cfg, lease_source=args.lease_source)
     space = ActionSpace(cfg.catalog.max_fragments, cfg.n_regions)
     rtt = build_topology(cfg.topology, cfg.catalog.dataset_bytes).rtt
     rng = np.random.default_rng(args.seed)

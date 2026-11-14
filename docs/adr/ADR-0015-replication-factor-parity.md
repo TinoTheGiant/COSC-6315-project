@@ -1,7 +1,7 @@
 # ADR-0015: One replication factor for the simulator and the cluster
 
-**Status:** Proposed
-**Date:** 2026-11-13
+**Status:** Accepted, 14 November 2026 (Option A, with an RF 2 data point)
+**Date:** 2026-11-13, accepted 2026-11-14
 **Deciders:** Tino Kaseke
 
 ## Context
@@ -29,9 +29,29 @@ runs at RF 2 already in flight, a further long-training round planned for
 
 ## Decision
 
-Proposed: **Option A, RF 3 on both sides.** Set `min_replicas` and
-`max_replicas` to 3 in every configuration, re-run the baselines, and train the
-final models at RF 3.
+**Option A, RF 3 on both sides**, with one addition: the cluster gate is also
+run at RF 2 and reported as a second data point.
+
+Set `min_replicas` and `max_replicas` to 3 in the defaults and in every
+six-region configuration (`configs/reduced-tabular.json`, a separate
+three-region tabular study, keeps its own bounds). Re-run the baselines and
+train the final models at RF 3. On the cluster, set the count explicitly with
+`fragalloc.harness.cluster.converge_replication` before any measurement.
+
+**Why the RF 2 data point.** With two voters, a Raft majority is both, so every
+write waits for the farther replica. With three, a majority is two, so a write
+waits only for the nearer follower and can route around one badly placed
+replica. RF 2 therefore probably exaggerates how much placement matters, which
+is the effect this paper measures. Measuring both turns that threat into a
+finding: the effect at CockroachDB's default, and how much larger it is when
+the database cannot route around a replica.
+
+**New evidence at acceptance.** Cluster pilot #4 (results-log Run 4) read back
+two voters on every range of the harness table. The pilot never set the count:
+it froze the rebalancer seconds after start-up, likely mid up-replication.
+Runs 1 to 3 used the same timing, so their replica count is unknown and most
+likely 2. Before this ADR the cluster matched the simulator's RF 2 by accident;
+after it, both sides are at 3 by decision.
 
 ## Options Considered
 
@@ -97,10 +117,15 @@ help, does n-step help), which carry over between replication factors.
 
 ## Action Items
 
-1. [ ] Decide A or B.
-2. [ ] (A) Set `min_replicas` and `max_replicas` to 3 in `config.py` defaults and
-       every file in `configs/`; update the tests that assume 2.
-3. [ ] (A) Re-run the baselines at volatility 4.0 on held-out seeds 2000 to 2007.
-4. [ ] (A) Launch the 16 November long-training runs at RF 3.
-5. [ ] Make `scripts/placement_check.py` fail, not warn, on an RF mismatch once
-       the decision is applied.
+1. [x] Decide: A, with an RF 2 data point (14 November).
+2. [x] `min_replicas` = `max_replicas` = 3 in `config.py` and the four six-region
+       configs. All 262 tests pass unchanged (they build their own catalogues).
+3. [ ] Re-run the baselines at RF 3 (every training run recomputes them on
+       held-out seeds 2000 to 2007).
+4. [ ] Train at RF 3: four seeds, then the long runs.
+5. [x] `placement_check.py` now fails on any range not at the chosen count.
+6. [x] `converge_replication` sets and verifies the count before any
+       measurement; `--replicas` on both cluster scripts and the pilot workflow.
+7. [ ] Cluster pilot at `replicas = 3` and at `replicas = 2`.
+8. [x] Correction note in results-log.md for Runs 1 to 3; paper section 4
+       corrected.

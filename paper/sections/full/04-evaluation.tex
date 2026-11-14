@@ -119,10 +119,14 @@ the rest of the work rests on.
 
 Three qualifications belong with that number rather than in a footnote.
 
-First, ``co-located'' means the leases, not the data. With replication
-factor three and one node per region, three replicas cannot fit inside one
-region, so every write still pays a cross-region quorum even in the
-co-located case. That is why the co-located p50 is 272.7\,ms rather than
+First, ``co-located'' means the leases, not the data. These two pilots did
+not set the replica count; they froze the rebalancer seconds after start-up,
+and a later pilot with the same start-up timing found every range on two
+voters rather than the default three (ADR-0015). Either way, with one node
+per region the voters sit in different regions, so every write still pays a
+cross-region quorum even in the co-located case.
+% TODO(ADR-0015): replace with the RF 3 gate, and report RF 2 as the second
+% data point, once both are measured with the replica count set explicitly. That is why the co-located p50 is 272.7\,ms rather than
 single digits. What the experiment isolates is the leaseholder effect,
 which is precisely what the \textsc{move\_lease} action corresponds to.
 

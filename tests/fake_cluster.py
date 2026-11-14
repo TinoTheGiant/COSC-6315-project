@@ -13,6 +13,12 @@ Knobs for failure tests: ``refuse_next`` (a result-column error for the next
 ``RELOCATE``), ``raise_next`` (an exception for the next statement of any kind),
 ``stale_reads`` (``SHOW RANGES`` returns the state before the last change this
 many times) and ``down`` (every statement raises ``ConnectionRefusedError``).
+
+Cluster settings are stored and read back; ``ignored_settings`` names settings
+that silently keep their old value, as an unsupported setting would. While
+``kv.replicate_queue.enabled`` is true, each read of voter counts moves every
+range one voter towards the table's ``num_replicas``, so convergence takes
+several polls, as on a real cluster.
 """
 
 from __future__ import annotations
@@ -37,6 +43,11 @@ class FakeCluster:
         self.down = False
         self._before: list[dict] | None = None
         self._next_id = 100
+        self.settings: dict[str, str] = {"kv.replicate_queue.enabled": "true"}
+        self.ignored_settings: set[str] = set()
+        self.num_replicas: int | None = None
+        #: range id -> polls for which it still reports a learner replica
+        self.learner_polls: dict[int, int] = {}
 
     @classmethod
     def from_catalog(cls, cat: FragmentCatalog, stores: StoreMap,
@@ -62,6 +73,16 @@ class FakeCluster:
     def _changed(self) -> None:
         self.stale_reads_left = self.stale_reads
 
+    def _replicate_one_step(self) -> None:
+        for r in self.ranges:
+            voters = r["voters"]
+            if len(voters) < self.num_replicas:
+                spare = [st for st in self.stores.store_of_region if st not in voters]
+                voters.append(spare[0])
+            elif len(voters) > self.num_replicas:
+                drop = next(v for v in reversed(voters) if v != r["lease"])
+                voters.remove(drop)
+
     # ---------------------------------------------------------------- Sql
 
     def query(self, stmt, params=()):
@@ -76,6 +97,29 @@ class FakeCluster:
         if "kv_store_status" in s:
             return [(st, st, f"region={n}") for n, st in
                     zip(self.stores.region_names, self.stores.store_of_region)]
+
+        m = re.match(r"SET CLUSTER SETTING ([\w.]+) = '?([\w]+)'?$", s)
+        if m:
+            if m[1] not in self.ignored_settings:
+                self.settings[m[1]] = m[2]
+            return []
+        m = re.match(r"SHOW CLUSTER SETTING ([\w.]+)$", s)
+        if m:
+            return [(self.settings.get(m[1], "default"),)]
+        m = re.match(r"ALTER TABLE \w+ CONFIGURE ZONE USING num_replicas = (\d+)$", s)
+        if m:
+            self.num_replicas = int(m[1])
+            return []
+        if "learner_replicas" in s and "SHOW RANGES" in s:
+            if self.settings.get("kv.replicate_queue.enabled") == "true" and self.num_replicas:
+                self._replicate_one_step()
+            rows = []
+            for r in self.ranges:
+                left = self.learner_polls.get(r["id"], 0)
+                rows.append((r["id"], list(r["voters"]), [99] if left else []))
+                if left:
+                    self.learner_polls[r["id"]] = left - 1
+            return rows
 
         if "SHOW RANGES" in s:
             state = self.ranges

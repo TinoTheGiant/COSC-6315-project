@@ -26,6 +26,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from fragalloc.config import FragAllocConfig          # noqa: E402
 from fragalloc.topology import DEFAULT_RTT_MS         # noqa: E402
+from fragalloc.harness.cluster import converge_replication, voter_counts  # noqa: E402
+from fragalloc.harness.placement import PsycopgSql, TableLayout         # noqa: E402
 
 REGIONS = list(FragAllocConfig().topology.region_names)
 GATEWAY_PORT = 26257          # node0's mapped port on the host
@@ -229,6 +231,9 @@ def main() -> int:
     ap.add_argument("--transactions", type=int, default=200)
     ap.add_argument("--touch", type=int, default=3,
                     help="distinct ranges each transaction writes to")
+    ap.add_argument("--replicas", type=int,
+                    default=FragAllocConfig().catalog.min_replicas,
+                    help="voters per range, set and converged before measuring (ADR-0015)")
     ap.add_argument("--out", default="results/falsification.json")
     args = ap.parse_args()
 
@@ -242,6 +247,17 @@ def main() -> int:
     print("  region -> store:", r2s, "\n")
 
     keys = build_table(args.ranges, args.rows_per_range)
+    # Pilot #2 ran at whatever count up-replication had reached when the
+    # rebalancer froze (two). Choose it instead, and wait until it holds.
+    pg = PsycopgSql.connect(port=GATEWAY_PORT)
+    took = converge_replication(pg, TableLayout(table="shardtest", n_cells=args.ranges,
+                                                rows_per_cell=args.rows_per_range),
+                                args.replicas)
+    voters = sorted({v for _, v, _ in voter_counts(
+        pg, TableLayout(table="shardtest", n_cells=args.ranges,
+                        rows_per_cell=args.rows_per_range))})
+    print(f"  replication: every range at {voters} voters after {took:.0f} s "
+          f"(asked for {args.replicas})")
     ids = range_ids()
     print(f"  ranges: {ids}\n")
 
@@ -270,6 +286,8 @@ def main() -> int:
 
     lo, hi = bootstrap_gap(a, b)
     result = {
+        "replicas_requested": args.replicas,
+        "voters_per_range": voters,
         "regions": n_regions,
         "transactions_per_case": args.transactions,
         "ranges_touched_per_txn": args.touch,

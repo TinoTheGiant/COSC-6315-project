@@ -9,6 +9,14 @@ labelled as simulator throughout.
 
 ---
 
+> **Correction, 14 November 2026.** Runs 1 to 3 below say "replication factor 3".
+> That was the configuration's default, never a measurement: the pilot froze the
+> rebalancer seconds after start-up without checking that up-replication had
+> finished. Run 4, with the same start-up timing, read back two voters on every
+> range of the harness table. The replica count in Runs 1 to 3 is therefore
+> **unknown, most likely 2**, and every "replication factor 3" below should be
+> read that way. From Run 5 the count is set and verified (ADR-0015).
+
 ## Run 1 — Cluster pilot #1, 8 October 2026
 
 **Commit** `00eadd9`. GitHub Actions, `ubuntu-latest`, private repository, so a
@@ -229,3 +237,58 @@ and it belongs in the paper ahead of it.
 It also qualifies the simulator, whose analytic cost model has no queueing and
 therefore cannot produce this effect. The simulator will understate the cost of
 extreme concentration. Recorded in the threats to validity.
+
+
+## Run 4 — Cluster pilot #4, 14 November 2026
+
+**Run** `43565156341`, **commit** `df7a4bc`. GitHub Actions, 4 cores / 15 GB.
+Six nodes, CockroachDB v25.3.0, `netem` shaping. Gate at N = 200 transactions per
+case, 3 ranges touched per transaction. First run of harness pieces 1 and 2
+(`scripts/placement_check.py`). Every number below is copied from the job log.
+
+### The gate passes again
+
+| | p50 (ms) | p95 (ms) | stdev (ms) |
+|---|---|---|---|
+| leaseholders co-located in us-east-1 | 213.8 | 216.0 | 38.3 |
+| leaseholders spread across all six regions | 1002.4 | 1580.6 | 298.5 |
+
+**p95 gap 1364.6 ms**, 95% bootstrap CI [1223.5, 1433.1].
+
+### Harness pieces 1 and 2 pass on a real cluster
+
+Read-back tracked every hand-issued move: a lease to another voter, a voter to an
+empty region, a split. A lease to a region with no voter was refused by the
+database ("lease target replica not found in RangeDescriptor"), as the
+catalogue's `move_lease` rule assumes. The executor then ran 15 random legal agent
+actions (seed 0); all 15 applied and the cluster matched the simulator's
+catalogue after every one.
+
+### Two findings that change the plan
+
+**1. Every range of the harness table had two voters.** Raw `SHOW RANGES` rows
+list two stores per range, for example `[1, 5]`. Nothing chose two.
+`Claim: the harness table ran at 2 voters per range. Status: numerical.
+Access: repository (job log). Not claimed: the cause, or the count on the gate's
+own table, which this run did not print.` The likely cause, by reasoning only:
+the replicate queue was frozen about ten seconds after `cockroach init`, before
+up-replication from one replica had finished. Runs 1 to 3 used the same timing,
+hence the correction at the top of this log. Fixed by
+`fragalloc.harness.cluster.converge_replication`, which sets `num_replicas`,
+waits until every range has exactly that many voters and no learners, then
+freezes the rebalancer and reads each setting back (ADR-0015).
+
+**2. Read-back is too slow for the step budget.** Median 5.397 s per read-back
+(max 5.842 s, 5 reads); executor step median 16.10 s (max 18.95 s), rising as
+the table split, against the 2 to 6 s budget in docs/harness-architecture.md.
+`SHOW RANGES ... WITH DETAILS`, the only documented source of the leaseholder,
+is documented as costly. Run 5 times it against
+`crdb_internal.lease_holder(raw_start_key)` and requires the two to agree
+(ADR-0016).
+
+### Status
+
+Pieces 1 and 2: pass, at an unintended replica count and too slowly. Run 5
+repeats this at 3 voters (the paper's setting) and 2 voters (the second data
+point), set explicitly.
+

@@ -265,3 +265,20 @@ def test_a_statement_error_with_a_server_sqlstate_is_still_a_refusal() -> None:
     sql = FakeSql({"RELOCATE": _Sqlstate("range already being rebalanced", "XX000")})
     assert relocate(sql, "ALTER RANGE 1 RELOCATE LEASE TO 2") == (
         False, "range already being rebalanced")
+
+
+@pytest.mark.parametrize("source, needle", [("details", "WITH DETAILS"),
+                                            ("builtin", "crdb_internal.lease_holder(raw_start_key)")])
+def test_both_lease_sources_read_the_same_placement(source, needle) -> None:
+    intent = rf3_catalog()
+    sql = FakeSql({"SHOW RANGES": range_rows(intent)})
+    observed = read_back(sql, STORES, LAYOUT, CFG, lease_source=source)
+    assert compare(intent, observed) == []
+    assert needle in sql.statements[-1]
+    if source == "builtin":
+        assert "WITH DETAILS" not in sql.statements[-1], "the point is to avoid DETAILS"
+
+
+def test_an_unknown_lease_source_is_refused() -> None:
+    with pytest.raises(ValueError):
+        read_ranges(FakeSql(), LAYOUT, lease_source="guess")

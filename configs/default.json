@@ -42,8 +42,8 @@
   "catalog": {
     "initial_fragments": 6,
     "max_fragments": 20,
-    "min_replicas": 2,
-    "max_replicas": 4,
+    "min_replicas": 3,
+    "max_replicas": 3,
     "dataset_bytes": 60000000000.0,
     "initial_placement": "hash"
   },
