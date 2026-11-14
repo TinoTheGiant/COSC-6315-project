@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import statistics
 import subprocess
@@ -205,6 +206,25 @@ def time_transactions(keys_per_range: list[int], n: int, touch: int) -> list[flo
     return samples
 
 
+def mark(phase: str) -> None:
+    """Tell the pilot's CPU sampler which arm is running (PHASE_FILE, if set)."""
+    path = os.environ.get("PHASE_FILE")
+    if path:
+        Path(path).write_text(phase)
+
+
+def quintile_p50s(xs: list[float]) -> list[float]:
+    """p50 of each fifth of the run, in time order.
+
+    Pilots 2 and 3 changed N and the runner's cores together (200 on 2 cores,
+    1000 on 4), and the co-located arm slowed by 62%. A drift within one run
+    separates "it gets slower the longer it runs" from "it is slower on this
+    hardware" without a second runner.
+    """
+    k = max(1, len(xs) // 5)
+    return [pct(xs[i * k:(i + 1) * k] or xs[-k:], 50) for i in range(5)]
+
+
 def pct(xs: list[float], p: float) -> float:
     s = sorted(xs)
     return s[min(len(s) - 1, int(round(p / 100 * (len(s) - 1))))]
@@ -270,7 +290,9 @@ def main() -> int:
     if len(obs_a) != 1:
         print("   WARNING: leases did not all land in one region. The two cases "
               "are less distinct than intended, which weakens the test.")
+    mark("gate:co_located")
     a = time_transactions(keys, args.transactions, args.touch)
+    mark("gate:moving")
 
     # --- Case B: leaseholders spread round-robin. Commits span regions.
     print("\ncase B: leaseholders spread across all", n_regions, "regions")
@@ -282,7 +304,9 @@ def main() -> int:
     if len(obs_b) < 2:
         print("   WARNING: leases did not spread. Case B is not spread, so any "
               "gap below is not measuring what it claims to.")
+    mark("gate:spread")
     b = time_transactions(keys, args.transactions, args.touch)
+    mark("idle")
 
     lo, hi = bootstrap_gap(a, b)
     result = {
@@ -298,6 +322,7 @@ def main() -> int:
                        "mean": statistics.fmean(a), "stdev": statistics.pstdev(a)},
         "spread":     {"p50": pct(b, 50), "p95": pct(b, 95),
                        "mean": statistics.fmean(b), "stdev": statistics.pstdev(b)},
+        "drift_p50_by_quintile": {"co_located": quintile_p50s(a), "spread": quintile_p50s(b)},
         "p95_gap_ms": pct(b, 95) - pct(a, 95),
         "p95_gap_ci95": [lo, hi],
     }
@@ -307,6 +332,8 @@ def main() -> int:
     print(f"{'co-located':16}{pct(a,50):>10.1f}{pct(a,95):>10.1f}{statistics.pstdev(a):>10.1f}")
     print(f"{'spread':16}{pct(b,50):>10.1f}{pct(b,95):>10.1f}{statistics.pstdev(b):>10.1f}")
     print(f"\np95 gap: {result['p95_gap_ms']:.1f} ms   95% CI [{lo:.1f}, {hi:.1f}]")
+    for arm, q in result["drift_p50_by_quintile"].items():
+        print(f"p50 by fifth of the run, {arm:<10}: " + "  ".join(f"{x:7.1f}" for x in q))
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(result, indent=2))

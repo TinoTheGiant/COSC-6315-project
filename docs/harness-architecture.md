@@ -55,7 +55,7 @@ meaningful replica moves per fragment.
 | Component | Count | Memory settings |
 |---|---|---|
 | `cockroach` node | 6 | `--cache=128MiB --max-sql-memory=256MiB` |
-| Toxiproxy | 1 | negligible |
+| `netem` shaping | inside each node's container | negligible |
 | Load generator | 6 processes, one per region | share one Python process pool |
 
 Six nodes at those settings is roughly **2.3 GB**, reduced from an earlier 4.5 GB
@@ -66,17 +66,21 @@ will not fit, the fallback is four regions on both sides**, which means re-runni
 the simulator sweeps at four regions before any weights are transferred. Decide
 this in the pilot, not in week 6.
 
-Latency comes from Toxiproxy rather than `tc`/`netem`: the CockroachDB image
-ships no `iproute2`, and Toxiproxy can change latency mid-run, which the
-volatility experiments want. Toxiproxy latency is applied per proxy, so an
-intended round trip of `r` between two regions is `r/2` on each direction's
-proxy. Getting that wrong puts every number in the paper out by a factor of two.
+Latency comes from `tc`/`netem` inside each node's container, per
+[ADR-0011](adr/ADR-0011-where-the-compute-runs.md) (section "Latency injection"), which reverses an earlier choice of Toxiproxy:
+a proxy cannot express a per-pair latency matrix. The image adds `iproute2` to
+the CockroachDB binary (`docker/Dockerfile.crdb`), and `scripts/gen_cluster.py`
+writes each node's rules from the simulator's own RTT matrix. `netem` shapes
+egress only, so an intended round trip of `r` between two regions is `r/2` on
+each side. Getting that wrong puts every number in the paper out by a factor of
+two; the pilot pings every pair and fails if a measured round trip is off by
+more than the larger of 8 ms and 25%.
 
 ## 3. Module layout
 
 ```
 src/fragalloc/harness/
-  cluster.py      compose-file generation, node lifecycle, Toxiproxy control,
+  cluster.py      replication count, rebalancer freeze, settings verification
                   cluster-setting application and verification
   placement.py    range-id and store-id resolution, placement readback,
                   intent assertion
@@ -105,7 +109,7 @@ work, so **the cluster is disposable and the run is checkpointed**, per
 [ADR-0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md).
 
 ```
-  make cluster-up      ~2 min   6 nodes, Toxiproxy, settings, licence key
+  make cluster-up      ~2 min   6 nodes, netem rules, settings, licence key
   make resume          ~10 s    restore placement + agent state from checkpoint
   <one or more episodes>        200 windows each, 7 to 20 min
                                 checkpoint written at every episode boundary
@@ -144,8 +148,8 @@ unreachable when the cluster is rebuilt each session, though the free key should
 still be obtained because multi-node operation without one is outside the
 licence grant.
 
-**Toxiproxy latency is reapplied on every `cluster-up`** and asserted
-afterwards. It lives in a container that is torn down with everything else, and a
+**`netem` latency is reapplied on every `cluster-up`** and asserted
+afterwards. It lives in each node's container, torn down with everything else, and a
 silently zero-latency cluster produces numbers that look plausible and mean
 nothing.
 
@@ -255,7 +259,7 @@ Each step de-risks the next. Do not reorder.
 
 1. `cluster.py`: `up` / `down` / `status` / `verify` **written as scripts on day
    one**, before a hand-tuned cluster exists to become precious. Six nodes,
-   Toxiproxy in place and asserted, the five settings applied and verified
+   `netem` rules in place and asserted, the five settings applied and verified
    individually on every start, licence key installed.
 2. **The falsification test.** Single-region against cross-region transaction
    latency, by hand, no agent. If the gap is not clearly larger than run-to-run

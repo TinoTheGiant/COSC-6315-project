@@ -26,6 +26,15 @@ on:
       replicas:
         description: "Voters per range, set and converged before measuring (ADR-0015: 3; 2 for the second data point)"
         default: "3"
+      cluster_cores:
+        description: "Pin all six nodes to this many CPUs (all = no pin). Decouples cores from N"
+        default: "all"
+      concurrency:
+        description: "Driver workers per region (fixed across conditions; stated in the paper)"
+        default: "2"
+      measure_transactions:
+        description: "Transactions driven at fixed placement to choose N (design doc, section 5)"
+        default: "2000"
 
 jobs:
   pilot:
@@ -80,6 +89,34 @@ jobs:
             cockroach init --insecure || echo "(already initialized)"
           sleep 10
           docker compose -f docker/docker-compose.yml ps
+
+      # Pilots 2 and 3 changed N and the runner's cores together, so the
+      # co-located slowdown could be either. Pinning the cluster to k CPUs on
+      # the same runner lets N and cores vary independently.
+      - name: Pin the cluster's CPUs
+        run: |
+          set -euo pipefail
+          K="${{ inputs.cluster_cores }}"
+          if [ "$K" = "all" ]; then echo "no pin: nodes share all $(nproc) cores"; exit 0; fi
+          if [ "$K" -gt "$(nproc)" ]; then echo "::error::asked for $K cores, runner has $(nproc)"; exit 1; fi
+          for c in $(docker ps --format '{{.Names}}' | grep '^crdb-'); do
+            docker update --cpuset-cpus "0-$((K-1))" "$c" >/dev/null
+            got=$(docker inspect -f '{{.HostConfig.CpusetCpus}}' "$c")
+            echo "  $c -> cpus $got"
+            [ "$got" = "0-$((K-1))" ] || { echo "::error::pin did not take on $c"; exit 1; }
+          done
+          echo "| cluster cores (pinned) | $K |" >> "$GITHUB_STEP_SUMMARY"
+
+      # Per-container CPU every 2 s, tagged with the arm that is running, so a
+      # saturated leaseholder node shows up as one container near its limit.
+      - name: Start the CPU sampler
+        run: |
+          echo "idle" > /tmp/phase
+          echo "PHASE_FILE=/tmp/phase" >> "$GITHUB_ENV"
+          nohup bash -c 'while true; do p=$(cat /tmp/phase); \
+            docker stats --no-stream --format "{{.Name}},{{.CPUPerc}}" | sed "s/^/$p,/"; \
+            sleep 2; done' > cpu_samples.csv 2>/dev/null &
+          echo "sampler pid $!"
 
       - name: Assert the injected latency is real
         # A cluster with no shaping returns plausible numbers that mean nothing.
@@ -170,6 +207,7 @@ jobs:
         id: placement
         continue-on-error: true
         run: |
+          echo "harness" > /tmp/phase
           PYTHONPATH=src python scripts/placement_check.py \
             --replicas "${{ inputs.replicas }}" \
             --out results/placement_check.json | tee placement.txt
@@ -183,6 +221,54 @@ jobs:
             echo "::error::The harness check failed. Do not build the driver on it until \
           this passes."
           fi
+
+      # Harness piece 3: the per-region driver, and the choice of N by
+      # bootstrap at fixed placement (docs/harness-architecture.md, section 5).
+      - name: Driver and the choice of N
+        id: measure
+        continue-on-error: true
+        run: |
+          echo "driver" > /tmp/phase
+          PYTHONPATH=src python scripts/measure_n.py \
+            --replicas "${{ inputs.replicas }}" \
+            --concurrency "${{ inputs.concurrency }}" \
+            --transactions "${{ inputs.measure_transactions }}" \
+            --out results/measure_n.json | tee measure_n.txt
+          echo "idle" > /tmp/phase
+
+      - name: Driver verdict
+        if: always()
+        run: |
+          { echo "### Driver and N"; echo '```'; tail -40 measure_n.txt 2>/dev/null; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.measure.outcome }}" != "success" ]; then
+            echo "::warning::The driver check did not pass every check; read it above."
+          fi
+
+      - name: CPU by phase and node
+        if: always()
+        run: |
+          python - <<'PY' | tee cpu_by_phase.txt
+          import collections, csv
+          rows = collections.defaultdict(list)
+          try:
+              lines = list(csv.reader(open("cpu_samples.csv")))
+          except FileNotFoundError:
+              print("no CPU samples"); raise SystemExit(0)
+          for row in lines:
+              try:
+                  phase, name, cpu = row
+                  rows[(phase, name)].append(float(cpu.rstrip("%")))
+              except ValueError:
+                  continue                    # a container mid-restart reports "--"
+          print("100% = one core (docker stats); a pinned cluster shares its k cores")
+          print(f"{'phase':<18}{'node':<26}{'samples':>8}{'mean %':>9}{'max %':>9}")
+          for (phase, name), xs in sorted(rows.items()):
+              if name.startswith("crdb-"):
+                  print(f"{phase:<18}{name:<26}{len(xs):>8}{sum(xs)/len(xs):>9.1f}{max(xs):>9.1f}")
+          PY
+          { echo "### CPU by phase and node"; echo '```'; cat cpu_by_phase.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
 
       - name: Cluster health after measuring
         if: always()
@@ -222,6 +308,9 @@ jobs:
             latency.txt
             gate.txt
             placement.txt
+            measure_n.txt
+            cpu_samples.csv
+            cpu_by_phase.txt
             health_before.csv
             health_after.csv
             docker/docker-compose.yml

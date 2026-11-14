@@ -20,8 +20,10 @@ rank higher.
 | 8 | 1,773 lines of untested scripts | 2 | 3 | 4 | **10** | accepted, not scheduled |
 | 9 | Read-back 5.4 s, executor step 16 s, against a 2 to 6 s budget (results-log Run 4) | 4 | 4 | 2 | **32** | open, ADR-0016, decided by pilot #5 |
 | 10 | Cluster replica count never set or verified before 14 November | 5 | 5 | 1 | **50** | fixed: `converge_replication`, ADR-0015 |
-| 11 | docs/harness-architecture.md describes Toxiproxy; the cluster uses `netem` | 2 | 3 | 1 | **25** | open; fix before writing Methods |
+| 11 | docs/harness-architecture.md describes Toxiproxy; the cluster uses `netem` | 2 | 3 | 1 | **25** | fixed 14 November: doc now follows ADR-0011 |
 | 12 | `falsification_test.py` duplicates the harness's store resolution and relocate | 1 | 1 | 2 | **8** | accepted until after the deadline |
+| 13 | Harness dependency rule (no `fragalloc.cost`/`simulator`) stated, never checked | 2 | 4 | 1 | **30** | fixed: `tests/test_harness_dependency_rule.py` |
+| 14 | Pilots 2 and 3 changed N and runner cores together, so the co-located slowdown has two candidate causes | 3 | 4 | 1 | **35** | instrumented: `cluster_cores` pin, per-node CPU by phase, within-run drift; needs the 2x2 runs |
 
 ---
 
