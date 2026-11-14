@@ -37,6 +37,9 @@ on:
         type: choice
         options: [primary_only, nearest_replica]
         default: primary_only
+      episode_windows:
+        description: "Windows per policy in the end-to-end episode check (0 skips it)"
+        default: "5"
       measure_transactions:
         description: "Transactions driven at fixed placement to choose N (design doc, section 5)"
         default: "2000"
@@ -251,6 +254,35 @@ jobs:
             echo "::warning::The driver check did not pass every check; read it above."
           fi
 
+      # Harness piece 4: the cluster as a Gymnasium environment, end to end.
+      # Static and follow for a few windows each, on the same workload seed,
+      # timing every step. A trained model goes through the same script.
+      - name: Cluster episodes (static, follow)
+        id: episodes
+        if: inputs.episode_windows != '0'
+        continue-on-error: true
+        run: |
+          for p in static follow; do
+            echo "episode:$p" > /tmp/phase
+            PYTHONPATH=src python scripts/cluster_episode.py --policy "$p" \
+              --windows "${{ inputs.episode_windows }}" --transactions 200 \
+              --concurrency "${{ inputs.concurrency }}" \
+              --replicas "${{ inputs.replicas }}" \
+              --read-consistency "${{ inputs.read_consistency }}" \
+              --volatility 4.0 \
+              --out "results/episode_$p.csv" | tee -a episodes.txt
+          done
+          echo "idle" > /tmp/phase
+
+      - name: Episode verdict
+        if: always() && inputs.episode_windows != '0'
+        run: |
+          { echo "### Cluster episodes"; echo '```'; cat episodes.txt 2>/dev/null; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.episodes.outcome }}" != "success" ]; then
+            echo "::warning::An episode reported suspect or divergent steps, or failed."
+          fi
+
       - name: CPU by phase and node
         if: always()
         run: |
@@ -315,6 +347,7 @@ jobs:
             gate.txt
             placement.txt
             measure_n.txt
+            episodes.txt
             cpu_samples.csv
             cpu_by_phase.txt
             health_before.csv

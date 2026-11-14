@@ -40,6 +40,7 @@ from gymnasium import spaces
 
 from fragalloc.config import FragAllocConfig
 from fragalloc.observation import ObservationEncoder
+from fragalloc.reward import reward
 from fragalloc.simulator import ClusterSimulator
 
 ENV_ID = "FragAlloc-v0"
@@ -131,25 +132,12 @@ class FragAllocEnv(gym.Env):
         return observe(self.encoder, self.sim)
 
     def _reward(self, result, action: int) -> float:
-        w = self.cfg.reward
-        latency_term = result.cost.mean_latency_ms / w.latency_scale_ms
-        # A fraction of the dataset, never a byte count. This is what makes a
-        # Q-function pre-trained on the 60 GB simulator meaningful on a 1 GB
-        # cluster: the same physical move scores the same in both. ADR-0010.
-        migration_term = result.bytes_moved / (
-            self.cfg.catalog.dataset_bytes * w.migration_scale_fraction)
-        imbalance_term = result.cost.load_imbalance
-        is_noop = action == self.sim.action_space.noop_index
-        penalty = (0.0 if result.mutation.applied or is_noop
-                   else w.inapplicable_action_cost)
-        return float(
-            -(
-                w.w_latency * latency_term
-                + w.w_migration * migration_term
-                + w.w_imbalance * imbalance_term
-                + penalty
-            )
-        )
+        # One definition for the simulator and the cluster: fragalloc.reward.
+        return reward(self.cfg, mean_latency_ms=result.cost.mean_latency_ms,
+                      bytes_moved=result.bytes_moved,
+                      load_imbalance=result.cost.load_imbalance,
+                      applied=result.mutation.applied,
+                      is_noop=action == self.sim.action_space.noop_index)
 
     def _info(self, result, reward: float) -> dict[str, Any]:
         info = self.sim.snapshot()

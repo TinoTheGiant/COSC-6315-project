@@ -85,8 +85,8 @@ src/fragalloc/harness/
   placement.py    range-id and store-id resolution, placement readback,
                   intent assertion
   executor.py     action -> SQL statement, error classification
-  driver.py       concurrent per-region transaction load, client-side timing
-  env.py          Gymnasium environment, spaces identical to fragalloc.env
+  driver.py       concurrent per-region transaction load, client-side timing (ADR-0017)
+  env.py          Gymnasium environment, spaces identical to fragalloc.env (ADR-0019)
   checkpoint.py   save and restore: agent state, placement, workload position
 ```
 

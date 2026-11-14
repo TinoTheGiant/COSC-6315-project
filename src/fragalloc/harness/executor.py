@@ -179,3 +179,40 @@ class Executor:
             bytes_moved=float(result.bytes_moved) if outcome == APPLIED else 0.0,
             catalog=observed, divergences=tuple(divergences),
             elapsed_s=time.monotonic() - t0)
+
+    # ------------------------------------------------------------ placing
+
+    def place(self, target: FragmentCatalog) -> FragmentCatalog:
+        """Move every range to ``target``'s placement; used at episode start.
+
+        The table must already be split at ``target``'s boundaries and hold
+        ``target``'s replica count (``create_table``, ``converge_replication``).
+        Voters move first, pairwise, then the lease. A refusal or a read-back
+        that still differs raises: an episode must not start from a placement
+        other than the one the simulator's episodes start from.
+        """
+        ranges = read_ranges(self.sql, self.layout, self.lease_source)
+        if [r.start_cell for r in ranges] != target.boundaries[:-1].tolist():
+            raise PlacementError("table is not split at the target's boundaries")
+        store = self.stores.store_of_region
+        for f, r in enumerate(ranges):
+            want = {store[i] for i in np.flatnonzero(target.replicas[f])}
+            have = set(r.voter_stores)
+            if len(want) != len(have):
+                raise PlacementError(f"range {r.range_id} has {len(have)} voters, "
+                                     f"target fragment {f} has {len(want)}")
+            for a, b in zip(sorted(have - want), sorted(want - have)):
+                ok, msg = relocate(self.sql, f"ALTER RANGE {r.range_id} RELOCATE VOTERS "
+                                             f"FROM {a} TO {b}")
+                if not ok:
+                    raise PlacementError(f"placing fragment {f}: {msg}")
+            lease = store[int(target.primary[f])]
+            ok, msg = relocate(self.sql, f"ALTER RANGE {r.range_id} RELOCATE LEASE TO {lease}")
+            if not ok and "already" not in msg:
+                raise PlacementError(f"placing fragment {f}'s lease: {msg}")
+        observed, divergences = settle(self.sql, self.stores, self.layout, self.cfg, target,
+                                       tries=self.settle_tries, wait_s=self.settle_wait_s,
+                                       sleep=self.sleep, lease_source=self.lease_source)
+        if divergences:
+            raise PlacementError("placement did not take: " + "; ".join(map(str, divergences)))
+        return observed
