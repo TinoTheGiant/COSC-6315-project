@@ -1,6 +1,6 @@
 # ADR-0016: How the harness reads each range's leaseholder
 
-**Status:** Proposed; decided by the measurement in Cluster pilot #5
+**Status:** Accepted, 14 November 2026: the built-in (Option B), on the evidence of Cluster pilot #5
 **Date:** 2026-11-14
 **Deciders:** Tino Kaseke
 
@@ -85,5 +85,23 @@ what the design says not to assume.
 
 1. [x] Selectable lease source, tests for both.
 2. [x] `placement_check.py` times both and requires agreement.
-3. [ ] Cluster pilot #5; record the timings in results-log.md.
-4. [ ] Switch the default, or adopt C, and amend this ADR with the numbers.
+3. [x] Cluster pilot #5; timings in results-log.md (Run 5).
+4. [x] Default switched to the built-in in `placement.py` and `executor.py`.
+
+## Outcome (Cluster pilot #5, five runs, 14 November 2026)
+
+| run | DETAILS, median s | built-in, median s | same placement |
+|---|---|---|---|
+| 43672955396 | 8.094 | 1.221 | identical |
+| 43673069841 | 8.498 | 1.415 | identical |
+| 43673170009 | 8.361 | 1.165 | identical |
+| 43673237944 | 6.249 | 0.870 | identical |
+| 43673292953 | 5.827 | 0.869 | identical |
+
+The built-in is about seven times faster and read the same placement as the
+documented source in every run. With it, an executor step took a median of
+2.22 to 3.58 s (maximum 5.56 s), inside the 2 to 6 s budget. The built-in is
+at or just above the 1 s line this ADR set for adopting Option C in three of
+five runs; the step budget is met regardless, so C is not adopted. The pilot
+keeps comparing the two sources on every run, so a release that changes the
+built-in still fails loudly.

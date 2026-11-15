@@ -10,7 +10,8 @@ import numpy as np
 import pytest
 
 from fragalloc.harness.driver import (
-    READ, TXN, WRITE, Driver, DriverError, Request, SuspendWatch, choose_n, p95_standard_error,
+    READ, TXN, WRITE, Driver, DriverError, Request, SuspendWatch, choose_n, mean_standard_error,
+    p95_standard_error,
     percentile, run_one, sample_requests, statements,
 )
 from fragalloc.harness.placement import StoreMap, TableLayout
@@ -291,3 +292,10 @@ def test_driver_carries_its_read_mode_to_every_request():
     with pytest.raises(ValueError):
         Driver(lambda r: FakeGateway(STORES.store_of_region[r], []), STORES, LAYOUT,
                read_mode="nearest")
+
+
+def test_mean_error_is_sd_over_root_n():
+    lat = [100.0, 200.0, 300.0, 400.0]
+    sd = float(np.std(lat, ddof=1))
+    se = mean_standard_error(lat, [4, 16])
+    assert se[4] == pytest.approx(sd / 2) and se[16] == pytest.approx(sd / 4)

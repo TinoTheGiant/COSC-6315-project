@@ -394,6 +394,21 @@ def p95_standard_error(latencies: Sequence[float], sizes: Sequence[int], iters: 
     return out
 
 
+def mean_standard_error(latencies: Sequence[float], sizes: Sequence[int]) -> dict[int, float]:
+    """Standard error of the mean latency at each sample size: ``sd / sqrt(n)``.
+
+    The reward is built from the mean, so this, not the p95 error, decides N.
+    Pilot #5 showed why they differ: latency is multimodal (reads, writes and
+    transactions sit about 170, 430 and 500 to 900 ms apart), so the p95 lands
+    in the gap between modes and its estimate is far noisier than the mean's.
+    """
+    xs = np.asarray(latencies, dtype=np.float64)
+    if xs.size < 2:
+        raise ValueError("need at least two latencies")
+    sd = float(xs.std(ddof=1))
+    return {int(n): sd / float(np.sqrt(int(n))) for n in sizes}
+
+
 def choose_n(se_by_size: dict[int, float], target_se_ms: float) -> int | None:
     """Smallest size whose p95 standard error is at or below the target; None if none is."""
     ok = [n for n, se in sorted(se_by_size.items()) if se <= target_se_ms]

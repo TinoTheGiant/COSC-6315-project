@@ -68,7 +68,7 @@ def voter_counts(sql: Sql, layout: TableLayout) -> list[tuple[int, int, int]]:
 
 
 def converge_replication(sql: Sql, layout: TableLayout, n_replicas: int, *,
-                         timeout_s: float = 300.0, poll_s: float = 2.0,
+                         timeout_s: float = 600.0, poll_s: float = 2.0,
                          sleep: Callable[[float], None] = time.sleep,
                          clock: Callable[[], float] = time.monotonic) -> float:
     """Bring every range of the table to ``n_replicas`` voters, then freeze.

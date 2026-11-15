@@ -159,9 +159,19 @@ fact, and that a system able to learn from its own outcomes should eventually
 beat a fixed rule written by someone who could not anticipate every workload.
 
 Placement has received less attention within this family than tuning or
-optimization. RLRP~\cite{lu2022rlrp} applies a Deep Q-Network to replica
-placement and migration in object storage, addressing heterogeneous nodes and
-balancing load against movement. Sibyl~\cite{singh2022sibyl} places data across
+optimization. RLRP~\cite{lu2022rlrp} is the nearest in method: a Deep Q-Network
+places the replicas of each virtual node in an object store, a second agent
+migrates replicas when a node joins, and the whole is validated on a real
+system, Ceph. Its objective is fairness. The reward is the negative standard
+deviation of node load, or, on heterogeneous hardware, the reciprocal of mean
+read response time. A placement is decided once, when a virtual node is created
+or the cluster changes size, the volume of data moved does not enter the
+reward, and the nodes share one cluster, so where a request originates plays no
+part. Two of its devices recur here. When the highest-valued action is invalid
+RLRP takes the next highest, which is action masking at selection time, as the
+agent here does. And when the node count grows it reuses the trained
+weights, zero-initializing the new inputs, which is the natural route past the
+fixed region count this work assumes. Sibyl~\cite{singh2022sibyl} places data across
 hybrid storage devices with online reinforcement learning, and
 Harmonia~\cite{nadig2026harmonia} extends that to coordinate placement and
 migration as two agents. Zheng et al.~\cite{zheng2024replica} place replicas in
@@ -189,7 +199,8 @@ hand-written cost model and do not learn from their own outcomes. Lion learns a
 forecast but not a policy, and its cost model is denominated in bytes rather
 than in distance. GeoTP optimizes execution against a fixed placement. The
 learned administration systems address knobs, plans and indexes. The learned
-placement systems address storage tiers and edge nodes, not a transactional
+placement systems address storage tiers, edge nodes and, in RLRP, the even
+spread of load within one cluster, not a transactional
 workload whose centre of gravity moves, and they hold the unit of placement
 fixed.
 

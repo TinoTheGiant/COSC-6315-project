@@ -161,6 +161,28 @@ jobs:
           { echo "### Latency injection"; echo '```'; cat latency.txt; echo '```'; } \
             >> "$GITHUB_STEP_SUMMARY"
 
+      # Pilot #5: the balancer was frozen 35 s after init, with node 1 holding 74
+      # replicas and the others about 15. Every range then had to up-replicate
+      # later, through one node's queue, and the gate timed out waiting.
+      # Let the cluster finish first, then freeze.
+      - name: Wait for up-replication to finish
+        run: |
+          CRDB="docker compose -f docker/docker-compose.yml exec -T node0 cockroach sql --insecure --format=csv -e"
+          Q="SELECT count(*) FROM [SHOW CLUSTER RANGES] WHERE array_length(voting_replicas, 1) < 3;"
+          t0=$(date +%s)
+          while true; do
+            n=$($CRDB "$Q" 2>/dev/null | tail -1 | tr -d '[:space:]')
+            el=$(( $(date +%s) - t0 ))
+            if [ "$n" = "0" ]; then echo "every range has at least 3 voters after ${el} s"; break; fi
+            if [ "$el" -gt 900 ]; then
+              echo "::warning::after ${el} s, ${n:-unknown} ranges still under 3 voters; continuing"
+              break
+            fi
+            [ $(( el % 30 )) -lt 5 ] && echo "  ${el} s: ${n:-?} ranges under 3 voters"
+            sleep 5
+          done
+          echo "| up-replication wait | ${el} s |" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Disable the balancer, and verify each setting took
         run: |
           set -euo pipefail

@@ -2,9 +2,10 @@
 
 1. Hold placement fixed. Drive a large sample (default 2000) of one window's
    demand through the per-region driver (harness piece 3).
-2. Bootstrap the p95 estimate at a range of subsample sizes.
-3. Report the smallest N whose p95 standard error is at most one third of the
-   smallest effect the paper must detect.
+2. Compute the standard error of the mean latency at a range of sample sizes
+   (the reward uses the mean), and bootstrap the p95's for the record.
+3. Report the smallest N whose standard error of the mean is at most one third
+   of the smallest effect the paper must detect.
 
 The effect defaults to the simulator's static-to-follow gap at RF 3,
 volatility 4, held-out seeds 2000 to 2007, under the read path in use
@@ -33,7 +34,7 @@ from fragalloc.catalog import FragmentCatalog                          # noqa: E
 from fragalloc.config import FragAllocConfig                           # noqa: E402
 from fragalloc.harness.cluster import converge_replication             # noqa: E402
 from fragalloc.harness.driver import (                                 # noqa: E402
-    READ_MODES, Driver, choose_n, p95_standard_error, port_connector, sample_requests,
+    READ_MODES, Driver, choose_n, mean_standard_error, p95_standard_error, port_connector, sample_requests,
 )
 from fragalloc.harness.placement import (                              # noqa: E402
     PsycopgSql, TableLayout, create_table, read_back, resolve_stores,
@@ -104,15 +105,18 @@ def main() -> int:
 
     lat = result.latencies()
     sizes = [n for n in SIZES if n <= len(lat)]
-    se = p95_standard_error(lat, sizes, iters=args.iters, seed=args.seed)
+    se_p95 = p95_standard_error(lat, sizes, iters=args.iters, seed=args.seed)
+    se = mean_standard_error(lat, sizes)
     target = args.effect_ms / 3.0
-    chosen = choose_n(se, target)
+    chosen = choose_n(se, target)        # on the mean: the reward's quantity
     per_txn_s = result.wall_s / max(1, len(result.samples))
-    print(f"\np95 standard error by N (bootstrap, {args.iters} resamples):")
+    print(f"\nstandard error by N: mean (sd/sqrt N), and p95 (bootstrap, "
+          f"{args.iters} resamples):")
     for n in sizes:
         mark = "  <- chosen" if n == chosen else ""
-        print(f"  N={n:>5}  SE {se[n]:7.2f} ms  ~{n * per_txn_s:6.1f} s per step{mark}")
-    print(f"target: SE <= {target:.2f} ms (a third of {args.effect_ms} ms)")
+        print(f"  N={n:>5}  mean SE {se[n]:6.2f} ms  p95 SE {se_p95[n]:7.2f} ms  "
+              f"~{n * per_txn_s:6.1f} s per step{mark}")
+    print(f"target: mean SE <= {target:.2f} ms (a third of {args.effect_ms} ms)")
     print("chosen N:", chosen if chosen else f"none up to {sizes[-1]}; drive more or accept a "
           "larger detectable effect")
 
@@ -124,7 +128,7 @@ def main() -> int:
     }
     for name, ok in checks.items():
         print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
-    report = {"summary": summary, "se_by_n": se, "target_se_ms": target,
+    report = {"summary": summary, "se_mean_by_n": se, "se_p95_by_n": se_p95, "target_se_ms": target,
               "effect_ms": args.effect_ms, "chosen_n": chosen, "seconds_per_txn": per_txn_s,
               "replicas": replicas, "workload_seed": args.seed,
               "window": int(window.index), "checks": checks,

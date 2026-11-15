@@ -344,3 +344,76 @@ differently). Lion cuts cross-region transactions from 34% to 4% while moving
 3% of follow's data; with nearest-replica reads it is the best baseline on the
 objective, with strong reads follow is. Lion here omits its workload
 prediction and, by design, has no term for client location.
+
+## Run 5 — Cluster pilot #5, 14 November 2026
+
+Five runs on commit 6babfc6 (Actions 43672955396, 43673069841, 43673170009,
+43673237944, 43673292953), 4-core runners, RF 3. Four with strong reads, of
+which two pinned to 2 CPUs; one with follower reads. A sixth, at RF 2
+(43672996178), was still running when this was written. Numbers copied from
+the job logs.
+
+### The gate did not run, in any of the five
+
+`converge_replication` timed out: `after 300 s, ranges not at 3 voters:
+{74: 2}`. Cause, from the health snapshot taken 35 s after `cockroach init`:
+node 1 held 74 replicas and the other five about 15 each, so the balancer was
+frozen long before up-replication finished. Re-enabling the replicate queue
+later left one node's queue to up-replicate the whole cluster, and range 74,
+one of the gate table's ranges, was still at 2 when the wait expired. By the placement check,
+five minutes on, every range was at 3. So **the 2 by 2 on N and cores has no
+gate numbers yet.** Fixed: the pilot now waits until no range has fewer than 3
+voters before freezing, and the timeout is 600 s.
+
+### Pieces 1 to 4 pass on a real cluster
+
+| check | result (range over five runs) |
+|---|---|
+| read-back and hand moves | pass |
+| 15-step executor walk, cluster against the simulator's catalogue | all applied, all agree |
+| lease source: DETAILS against the built-in | identical; 5.8 to 8.5 s against 0.87 to 1.42 s |
+| executor step | median 2.22 to 3.58 s, maximum 5.56 s (budget 2 to 6 s) |
+| driver, 2000 requests at fixed placement | 0 failures, 0 retries, gateways verified |
+| episodes (static, follow, lion; 5 windows) | 0 suspect steps, 0 divergent steps |
+
+`SHOW node_id`, `BEGIN TRANSACTION READ ONLY` and
+`AS OF SYSTEM TIME follower_read_timestamp()` all work on v25.3.
+
+### The cluster agrees with the simulator's RTT matrix
+
+In run 43672955396 the leases sat in us-west-2 and 67% of requests came from
+ap-southeast-1. Reads: p50 166.4 ms, p95 166.7 ms. The simulator's round trip
+for that pair is 165 ms. With follower reads the read p50 is 0.65 ms.
+
+### Episodes: five windows, one workload seed, volatility 4
+
+| policy | strong reads, ms (4 runs) | follower reads, ms (1 run) | GB moved |
+|---|---|---|---|
+| static | 234.7 to 239.3 | 149.1 | 0.0 |
+| follow | 145.7 to 148.6 | 98.9 | 19.9 |
+| lion | 226.0 to 230.1 | 156.1 | 30.0 |
+
+`Status: numerical. Not claimed:` a ranking. Five windows and one seed; the
+ordering (follow well ahead of static, Lion close to static under strong
+reads) matches the simulator's 200-window baselines in direction only.
+Step time 7.8 to 12.4 s with strong reads, so a 200-window episode is roughly
+26 to 41 minutes.
+
+### Cores, from the steps that did run
+
+Pinning all six nodes to 2 of 4 CPUs moved episode latency by under 2%
+(static 234.8 against 239.3 ms, follow 146.0 against 146.0). No node averaged
+above 20% of one core in any measured phase. At this load the cluster is not
+CPU-bound, so the pilot 2 to pilot 3 slowdown is not reproduced here; the gate
+re-run settles it.
+
+### N
+
+The p95 standard error never reached the target (42 ms at N = 2000 against
+14.4). Latency is multimodal: reads about 166 ms, writes 428 ms, transactions
+500 to 930 ms, so the p95 falls between modes. The reward uses the mean, so N
+is now chosen on the standard error of the mean, with the p95 error still
+reported. The raw latencies are in the run artifact, which could not be
+downloaded here, so the mean-based N is read off the next run. A rough figure
+from the per-kind summaries: standard deviation near 175 ms, so about 12 ms
+at N = 200. `Status: conjectured` until that run.

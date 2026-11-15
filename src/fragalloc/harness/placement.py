@@ -245,7 +245,7 @@ LEASE_SOURCES = {
 
 
 def read_ranges(sql: Sql, layout: TableLayout,
-                lease_source: str = "details") -> list[RangeInfo]:
+                lease_source: str = "builtin") -> list[RangeInfo]:
     """Every range of the harness table, in key order. One query."""
     if lease_source not in LEASE_SOURCES:
         raise ValueError(f"lease_source must be one of {sorted(LEASE_SOURCES)}")
@@ -287,7 +287,7 @@ def observed_catalog(ranges: Sequence[RangeInfo], stores: StoreMap,
 
 
 def read_back(sql: Sql, stores: StoreMap, layout: TableLayout,
-              cfg: FragAllocConfig, lease_source: str = "details") -> FragmentCatalog:
+              cfg: FragAllocConfig, lease_source: str = "builtin") -> FragmentCatalog:
     """Resolve the harness table's current placement. Step 4 of the protocol."""
     return observed_catalog(read_ranges(sql, layout, lease_source), stores, cfg)
 
@@ -296,7 +296,7 @@ def settle(sql: Sql, stores: StoreMap, layout: TableLayout, cfg: FragAllocConfig
            expected: "FragmentCatalog | None" = None, tries: int = 15,
            wait_s: float = 1.0,
            sleep: Callable[[float], None] = time.sleep,
-           lease_source: str = "details",
+           lease_source: str = "builtin",
            ) -> "tuple[FragmentCatalog, list[Divergence]]":
     """Read back until the cluster matches ``expected``, or give up.
 

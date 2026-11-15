@@ -78,7 +78,7 @@ class Executor:
                  cfg: FragAllocConfig, *, settle_tries: int = 15,
                  settle_wait_s: float = 1.0,
                  sleep: Callable[[float], None] = time.sleep,
-                 lease_source: str = "details") -> None:
+                 lease_source: str = "builtin") -> None:
         if len(stores.region_names) != cfg.n_regions:
             raise ValueError("store map and config disagree on the region count")
         self.sql, self.stores, self.layout, self.cfg = sql, stores, layout, cfg
