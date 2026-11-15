@@ -417,3 +417,64 @@ reported. The raw latencies are in the run artifact, which could not be
 downloaded here, so the mean-based N is read off the next run. A rough figure
 from the per-kind summaries: standard deviation near 175 ms, so about 12 ms
 at N = 200. `Status: conjectured` until that run.
+
+## Run 5, continued: reruns and the RF 2 run (15 November 2026)
+
+Four reruns on commit 532e3b0 (43677110819, 43677169901, 43677848382,
+43677877555) and the RF 2 run from the first batch (43672996178).
+
+- **Up-replication wait works**: every range had at least 3 voters after 43 to
+  52 s, before the freeze.
+- **The gate still did not run.** `after 600 s, ranges not at 3 voters:
+  {74: 5}`. With the split queue frozen, the gate table's first range stays
+  joined to the system range before it and keeps that range's five voters.
+  Fixed: convergence now enables the split queue as well, and requires two
+  consecutive clean polls. `Status: conjectured` until a run confirms it.
+- **RF 2 is refused by CockroachDB** (ADR-0015 amendment). All six steps of
+  that run failed on the zone configuration.
+- **Lease transfers can be refused.** In three of four runs the follow
+  heuristic's first action, `MOVE_LEASE(f3, r5)`, was rejected twice running,
+  and follow then scored 221.6 to 225.8 ms over five windows instead of 146.1.
+  The simulator allows that action. The refusal text was not logged; it is
+  now. One run's Lion episode failed in `place` with "trying to add a voter to
+  a store that already has a VOTER_FULL", a placement read taken whilst a
+  relocation was still landing; `place` now re-reads and retries.
+- **N.** Standard error of one step's mean latency at N = 200: 16.8 to 29.2 ms
+  across four runs (it depends on where the leases sit). The per-step target
+  of 14.4 ms needs N between 300 and 1000. Policies are compared on the mean
+  over an episode, and 200 steps divide that error by about 14, to 1.2 to
+  2.1 ms. **N = 200 stays** for evaluation; fine-tuning on the cluster would
+  see the noisier per-step reward.
+- **Cores.** Static episodes: 231.7 to 233.1 ms pinned to 2 CPUs, 232.4 ms on
+  all 4. No effect at this load. The gate comparison is still outstanding.
+
+## Training round, 15 November 2026: RF 3, strong reads, n_steps 3
+
+Four Train agent runs on commit 6babfc6 (43674067630, 43674455394,
+43674558770, 43674597349): volatility 4.0, 1,000,000 steps, w_migration 0.30,
+`read_consistency = primary_only`, held-out seeds 2000 to 2007. Numbers copied
+from each job summary.
+
+| policy | mean ms | GB moved |
+|---|---|---|
+| agent, four learner seeds | 163.18, 170.73, 162.74, 166.88 (mean 165.88) | 117.8, 278.1, 121.7, 216.7 (mean 183.6) |
+| static | 192.11 | 0.0 |
+| random | 195.46 | 134.6 |
+| follow | 148.81 | 867.7 |
+| Lion-style | 179.98 | 28.8 |
+| best per window, fixed shards (bound) | 91.02 | 0.0 |
+
+- The agent is 26.2 ms (13.7%) faster than static on every seed's 95%
+  interval, 14.1 ms faster than Lion, and 17.1 ms slower than follow whilst
+  moving 21% of follow's data.
+- Latency plus migration at w = 0.30, imbalance omitted (not in the summary):
+  agent 1.686, follow 1.618, Lion 1.804, static 1.921. With the baselines'
+  imbalance terms (ADR-0018 table) follow is 1.712; the agent's needs its
+  `summary.csv`. `Not claimed:` that the agent beats follow on the objective.
+  On these numbers it does not.
+- **Training has plateaued, not under-run.** Held-out latency sits between
+  about 160 and 190 ms from step 50,000 to 1,000,000 with no downward trend,
+  and the best checkpoint fell at steps 60,000, 110,000 and 170,000 in three
+  of four runs. More steps are not the lever. The best checkpoint is chosen
+  on three evaluation episodes, so the choice itself is noisy.
+- 0.0% inapplicable actions on all four (masking); "Nothing" at most 1.2%.

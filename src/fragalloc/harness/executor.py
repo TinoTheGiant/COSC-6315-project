@@ -191,10 +191,31 @@ class Executor:
         that still differs raises: an episode must not start from a placement
         other than the one the simulator's episodes start from.
         """
+        store = self.stores.store_of_region
+        last: PlacementError | None = None
+        for _attempt in range(3):
+            try:
+                self._place_once(target, store)
+                last = None
+                break
+            except PlacementError as exc:
+                # The placement moved under us (a relocation still landing).
+                # Read again and place from what is there now.
+                last = exc
+                self.sleep(self.settle_wait_s)
+        if last is not None:
+            raise last
+        observed, divergences = settle(self.sql, self.stores, self.layout, self.cfg, target,
+                                       tries=self.settle_tries, wait_s=self.settle_wait_s,
+                                       sleep=self.sleep, lease_source=self.lease_source)
+        if divergences:
+            raise PlacementError("placement did not take: " + "; ".join(map(str, divergences)))
+        return observed
+
+    def _place_once(self, target: FragmentCatalog, store) -> None:
         ranges = read_ranges(self.sql, self.layout, self.lease_source)
         if [r.start_cell for r in ranges] != target.boundaries[:-1].tolist():
             raise PlacementError("table is not split at the target's boundaries")
-        store = self.stores.store_of_region
         for f, r in enumerate(ranges):
             want = {store[i] for i in np.flatnonzero(target.replicas[f])}
             have = set(r.voter_stores)
@@ -210,9 +231,3 @@ class Executor:
             ok, msg = relocate(self.sql, f"ALTER RANGE {r.range_id} RELOCATE LEASE TO {lease}")
             if not ok and "already" not in msg:
                 raise PlacementError(f"placing fragment {f}'s lease: {msg}")
-        observed, divergences = settle(self.sql, self.stores, self.layout, self.cfg, target,
-                                       tries=self.settle_tries, wait_s=self.settle_wait_s,
-                                       sleep=self.sleep, lease_source=self.lease_source)
-        if divergences:
-            raise PlacementError("placement did not take: " + "; ".join(map(str, divergences)))
-        return observed

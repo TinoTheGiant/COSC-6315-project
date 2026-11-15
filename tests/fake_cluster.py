@@ -108,6 +108,9 @@ class FakeCluster:
             return [(self.settings.get(m[1], "default"),)]
         m = re.match(r"ALTER TABLE \w+ CONFIGURE ZONE USING num_replicas = (\d+)$", s)
         if m:
+            if int(m[1]) == 2:           # as CockroachDB v25.3 does
+                raise ValueError("could not validate zone config: at least 3 replicas "
+                                 "are required for multi-replica configurations")
             self.num_replicas = int(m[1])
             return []
         if "learner_replicas" in s and "SHOW RANGES" in s:

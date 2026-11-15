@@ -110,7 +110,7 @@ def main() -> int:
             t = time.monotonic()
             obs, r, _, trunc, info = env.step(a)
             row = {"step": i, "window": info["window"], "action": env.space.describe(a),
-                   "outcome": info["outcome"], "mean_ms": info["mean_latency_ms"],
+                   "outcome": info["outcome"], "detail": info["detail"], "mean_ms": info["mean_latency_ms"],
                    "p95_ms": info["tail_latency_ms"], "gb_moved": info["bytes_moved"] / 1e9,
                    "imbalance": info["load_imbalance"], "reward": r,
                    "executor_s": info["step_seconds"], "drive_s": info["drive"]["wall_s"],
@@ -121,6 +121,9 @@ def main() -> int:
             print(f"  {i:>3} {row['action']:<28} {row['outcome']:<9} mean {row['mean_ms']:7.1f} "
                   f"p95 {row['p95_ms']:7.1f} ms  reward {r:7.3f}  step {row['step_s']:5.1f} s"
                   + ("  SUSPECT" if row["suspect"] else ""))
+            if row["outcome"] == "rejected":
+                # The cluster's own words: a refusal is a finding, not noise.
+                print(f"        refused: {str(row['detail'])[:300]}")
             if trunc:
                 break
     finally:

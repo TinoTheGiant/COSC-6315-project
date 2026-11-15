@@ -1,6 +1,6 @@
 # ADR-0015: One replication factor for the simulator and the cluster
 
-**Status:** Accepted, 14 November 2026 (Option A, with an RF 2 data point)
+**Status:** Accepted, 14 November 2026 (Option A). The RF 2 data point was withdrawn on 15 November: CockroachDB refuses it
 **Date:** 2026-11-13, accepted 2026-11-14
 **Deciders:** Tino Kaseke
 
@@ -126,6 +126,20 @@ help, does n-step help), which carry over between replication factors.
 5. [x] `placement_check.py` now fails on any range not at the chosen count.
 6. [x] `converge_replication` sets and verifies the count before any
        measurement; `--replicas` on both cluster scripts and the pilot workflow.
-7. [ ] Cluster pilot at `replicas = 3` and at `replicas = 2`.
+7. [x] Cluster pilot at `replicas = 3`. `replicas = 2` is not possible (below).
 8. [x] Correction note in results-log.md for Runs 1 to 3; paper section 4
        corrected.
+
+## Amendment, 15 November 2026: no RF 2 data point
+
+Cluster pilot run 43672996178 asked for two voters per range. CockroachDB
+v25.3 rejected the zone configuration every time: `could not validate zone
+config: at least 3 replicas are required for multi-replica configurations`.
+Two replicas is not a configuration the database offers. The two-voter ranges
+of pilots 1 to 4 were an under-replicated transient, caught by freezing the
+balancer before up-replication finished, not a setting.
+
+Consequences: the paper reports RF 3 only; the write-quorum argument above
+stays as reasoning, not as a measurement; `converge_replication` now refuses 2
+before touching the cluster. Results from pilots 1 to 4 are labelled as taken
+on an under-replicated cluster.

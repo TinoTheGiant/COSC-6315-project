@@ -77,17 +77,33 @@ def converge_replication(sql: Sql, layout: TableLayout, n_replicas: int, *,
     out whether or not convergence succeeded, so a failure never leaves the
     cluster rebalancing behind the experiment's back.
     """
-    if not 1 <= int(n_replicas) <= 7:
-        raise ValueError("n_replicas must lie in [1, 7]")
     n = int(n_replicas)
+    if n == 2 or not 1 <= n <= 7:
+        # Pilot #5: CockroachDB rejects num_replicas = 2 outright ("at least 3
+        # replicas are required for multi-replica configurations").
+        raise ValueError("n_replicas must be 1 or lie in [3, 7]; CockroachDB refuses 2")
     t0 = clock()
     sql.query(f"ALTER TABLE {layout.table} CONFIGURE ZONE USING num_replicas = {n}")
+    # The split queue too, not only the replicate queue. With splits frozen, the
+    # table's first range can stay joined to the system range before it and
+    # inherit that range's five voters (pilot #5: "ranges not at 3 voters:
+    # {74: 5}"). The split queue cuts it at the table boundary; nothing else
+    # is splittable here (load-based splitting stays off, the table is small).
+    set_and_verify(sql, "kv.split_queue.enabled", "true")
     set_and_verify(sql, "kv.replicate_queue.enabled", "true")
     try:
+        stable = 0
         while True:
             counts = voter_counts(sql, layout)
             if counts and all(v == n and lr == 0 for _, v, lr in counts):
-                return clock() - t0
+                # Two consecutive clean polls: a voter swap in flight shows up
+                # as a learner on the next poll, and placing ranges on top of
+                # one fails ("already has a VOTER_FULL", pilot #5).
+                stable += 1
+                if stable >= 2:
+                    return clock() - t0
+            else:
+                stable = 0
             if clock() - t0 > timeout_s:
                 off = {rid: v for rid, v, lr in counts if v != n or lr}
                 raise ClusterError(

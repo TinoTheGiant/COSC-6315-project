@@ -43,7 +43,7 @@ class Clock:
         self.t += s
 
 
-@pytest.mark.parametrize("start, target", [(2, 3), (3, 2), (3, 3)])
+@pytest.mark.parametrize("start, target", [(2, 3), (5, 3), (3, 3)])
 def test_every_range_reaches_the_chosen_count_before_the_freeze(start, target) -> None:
     c, clock = cluster_at(start), Clock()
     converge_replication(c, LAYOUT, target, sleep=clock.sleep, clock=clock)
@@ -101,3 +101,29 @@ def test_a_range_still_adding_a_learner_is_not_converged() -> None:
 def test_an_absurd_replica_count_is_refused() -> None:
     with pytest.raises(ValueError):
         converge_replication(cluster_at(3), LAYOUT, 0)
+
+
+def test_two_replicas_is_refused_before_touching_the_cluster() -> None:
+    """CockroachDB rejects num_replicas = 2 (Cluster pilot #5)."""
+    c = cluster_at(3)
+    before = list(c.log) if hasattr(c, "log") else None
+    with pytest.raises(ValueError, match="refuses 2"):
+        converge_replication(c, LAYOUT, 2, sleep=lambda _: None)
+    if before is not None:
+        assert list(c.log) == before
+
+
+def test_split_queue_runs_during_convergence_and_is_frozen_after() -> None:
+    c, clock = cluster_at(2), Clock()
+    seen = []
+    real = c.query
+
+    def spy(stmt, params=()):
+        if "learner_replicas" in stmt:
+            seen.append(c.settings.get("kv.split_queue.enabled"))
+        return real(stmt, params)
+    c.query = spy
+    converge_replication(c, LAYOUT, 3, sleep=clock.sleep, clock=clock)
+    assert seen and set(seen) == {"true"}
+    assert c.settings["kv.split_queue.enabled"] == "false"
+    assert len(seen) >= 2                 # two clean polls before returning

@@ -24,7 +24,7 @@ on:
         description: "Distinct ranges each transaction writes to"
         default: "3"
       replicas:
-        description: "Voters per range, set and converged before measuring (ADR-0015: 3; 2 for the second data point)"
+        description: "Voters per range, set and converged before measuring (ADR-0015: 3. CockroachDB refuses 2)"
         default: "3"
       cluster_cores:
         description: "Pin all six nodes to this many CPUs (all = no pin). Decouples cores from N"
