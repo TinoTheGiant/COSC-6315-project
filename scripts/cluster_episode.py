@@ -136,9 +136,15 @@ def main() -> int:
         "mean_latency_ms": statistics.fmean(r["mean_ms"] for r in rows),
         "gb_moved_total": sum(r["gb_moved"] for r in rows),
         "mean_step_s": statistics.fmean(r["step_s"] for r in rows),
+        "mean_imbalance": statistics.fmean(r["imbalance"] for r in rows),
         "suspect_steps": sum(r["suspect"] for r in rows),
         "divergent_steps": sum(r["divergences"] > 0 for r in rows),
     }
+    # The project's objective at w = 0.30 (scripts/score_objective.cost), on
+    # measured latency. Comparable across policies run with the same settings.
+    summary["cost_w030"] = (summary["mean_latency_ms"] / 100.0
+                            + 0.30 * summary["gb_moved_total"] / 2000.0
+                            + 0.10 * summary["mean_imbalance"])
     Path(args.out).with_suffix(".json").write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary, indent=1))
     ok = summary["suspect_steps"] == 0 and summary["divergent_steps"] == 0

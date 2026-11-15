@@ -1,0 +1,342 @@
+name: Cluster evaluate
+
+# Full episodes on the six-node CockroachDB cluster: the trained agent and the
+# baselines, same workload seed, same driver, one after another. This is the
+# sim-to-real result. The cluster set-up is the Cluster pilot's, step for step.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_run_id:
+        description: "Train agent run id whose model to evaluate (blank = baselines only)"
+        default: ""
+      policies:
+        description: "Policies to run, in order (agent needs model_run_id)"
+        default: "agent static follow lion"
+      windows:
+        description: "Decision windows per episode (training used 200)"
+        default: "200"
+      seed:
+        description: "Workload seed (held-out range starts at 2000)"
+        default: "2000"
+      transactions:
+        description: "N, requests timed per step (chosen by measure_n.py)"
+        default: "200"
+      volatility:
+        description: "Workload volatility"
+        default: "4.0"
+      replicas:
+        description: "Voters per range (ADR-0015)"
+        default: "3"
+      read_consistency:
+        description: "Driver reads (ADR-0018); must match what the model was trained with"
+        type: choice
+        options: [primary_only, nearest_replica]
+        default: primary_only
+      concurrency:
+        description: "Driver workers per region"
+        default: "2"
+      regions:
+        description: "Regions (must match the simulator)"
+        default: "6"
+      cluster_cores:
+        description: "Pin all six nodes to this many CPUs (all = no pin)"
+        default: "all"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report the hardware we actually got
+        run: |
+          CORES=$(nproc); MEM=$(free -g | awk '/^Mem:/{print $2}')
+          echo "cores=$CORES mem=${MEM}GB"
+          {
+            echo "## Runner"
+            echo "| | |"
+            echo "|---|---|"
+            echo "| cores | $CORES |"
+            echo "| memory | ${MEM} GB |"
+            echo "| docker | $(docker --version) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$CORES" -lt 4 ]; then
+            echo "::warning::$CORES cores. Six CockroachDB nodes will contend, \
+          which adds scheduling noise to the latency being measured. A public \
+          repository gets a 4-core/16GB runner."
+          fi
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install "psycopg[binary]" pyyaml
+
+      - name: Fast test suite
+        run: PYTHONPATH=src pytest -q
+
+      - name: Generate the cluster from the simulator's RTT matrix
+        run: |
+          PYTHONPATH=src python scripts/gen_cluster.py --regions "${{ inputs.regions }}"
+          echo "### Generated topology" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -E "container_name|NETEM_RULES" docker/docker-compose.yml >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bring the cluster up
+        run: |
+          docker compose -f docker/docker-compose.yml up -d --build
+          echo "waiting for nodes"; sleep 20
+          docker compose -f docker/docker-compose.yml exec -T node0 \
+            cockroach init --insecure || echo "(already initialized)"
+          sleep 10
+          docker compose -f docker/docker-compose.yml ps
+
+      # Pilots 2 and 3 changed N and the runner's cores together, so the
+      # co-located slowdown could be either. Pinning the cluster to k CPUs on
+      # the same runner lets N and cores vary independently.
+      - name: Pin the cluster's CPUs
+        run: |
+          set -euo pipefail
+          K="${{ inputs.cluster_cores }}"
+          if [ "$K" = "all" ]; then echo "no pin: nodes share all $(nproc) cores"; exit 0; fi
+          if [ "$K" -gt "$(nproc)" ]; then echo "::error::asked for $K cores, runner has $(nproc)"; exit 1; fi
+          for c in $(docker ps --format '{{.Names}}' | grep '^crdb-'); do
+            docker update --cpuset-cpus "0-$((K-1))" "$c" >/dev/null
+            got=$(docker inspect -f '{{.HostConfig.CpusetCpus}}' "$c")
+            echo "  $c -> cpus $got"
+            [ "$got" = "0-$((K-1))" ] || { echo "::error::pin did not take on $c"; exit 1; }
+          done
+          echo "| cluster cores (pinned) | $K |" >> "$GITHUB_STEP_SUMMARY"
+
+      # Per-container CPU every 2 s, tagged with the arm that is running, so a
+      # saturated leaseholder node shows up as one container near its limit.
+      - name: Start the CPU sampler
+        run: |
+          echo "idle" > /tmp/phase
+          echo "PHASE_FILE=/tmp/phase" >> "$GITHUB_ENV"
+          nohup bash -c 'while true; do p=$(cat /tmp/phase); \
+            docker stats --no-stream --format "{{.Name}},{{.CPUPerc}}" | sed "s/^/$p,/"; \
+            sleep 2; done' > cpu_samples.csv 2>/dev/null &
+          echo "sampler pid $!"
+
+      - name: Assert the injected latency is real
+        # A cluster with no shaping returns plausible numbers that mean nothing.
+        # This is the step that stops a silent zero-latency run reaching a paper.
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python - <<'PY' | tee latency.txt
+          import subprocess, sys
+          sys.path.insert(0, "src")
+          from fragalloc.config import FragAllocConfig
+          from fragalloc.topology import DEFAULT_RTT_MS
+          names = list(FragAllocConfig().topology.region_names)
+          src = f"crdb-{names[0]}"
+          bad = []
+          print(f"{'pair':<36}{'expected':>10}{'measured':>10}")
+          for j in range(1, len(names)):
+              ip = f"172.28.0.{11+j}"
+              out = subprocess.run(["docker","exec",src,"ping","-c","5","-q",ip],
+                                   capture_output=True, text=True, timeout=60).stdout
+              avg = float(out.split("=")[-1].split("/")[1])
+              exp = DEFAULT_RTT_MS[0][j]
+              print(f"{names[0]} -> {names[j]:<20}{exp:>10.1f}{avg:>10.1f}")
+              if abs(avg - exp) > max(8.0, 0.25 * exp):
+                  bad.append((names[j], exp, avg))
+          if bad:
+              print("\nFAIL: measured latency does not match the configured matrix.")
+              for n, e, a in bad:
+                  print(f"  {n}: expected {e} ms, measured {a:.1f} ms")
+              print("netem did not apply. Every latency number from this cluster "
+                    "would be meaningless. Check NET_ADMIN and the entrypoint.")
+              raise SystemExit(1)
+          print("\nOK: injected latency matches the simulator's matrix.")
+          PY
+          { echo "### Latency injection"; echo '```'; cat latency.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      # Pilot #5: the balancer was frozen 35 s after init, with node 1 holding 74
+      # replicas and the others about 15. Every range then had to up-replicate
+      # later, through one node's queue, and the gate timed out waiting.
+      # Let the cluster finish first, then freeze.
+      - name: Wait for up-replication to finish
+        run: |
+          CRDB="docker compose -f docker/docker-compose.yml exec -T node0 cockroach sql --insecure --format=csv -e"
+          Q="SELECT count(*) FROM [SHOW CLUSTER RANGES] WHERE array_length(voting_replicas, 1) < 3;"
+          t0=$(date +%s)
+          while true; do
+            n=$($CRDB "$Q" 2>/dev/null | tail -1 | tr -d '[:space:]')
+            el=$(( $(date +%s) - t0 ))
+            if [ "$n" = "0" ]; then echo "every range has at least 3 voters after ${el} s"; break; fi
+            if [ "$el" -gt 900 ]; then
+              echo "::warning::after ${el} s, ${n:-unknown} ranges still under 3 voters; continuing"
+              break
+            fi
+            [ $(( el % 30 )) -lt 5 ] && echo "  ${el} s: ${n:-?} ranges under 3 voters"
+            sleep 5
+          done
+          echo "| up-replication wait | ${el} s |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Disable the balancer, and verify each setting took
+        run: |
+          set -euo pipefail
+          CRDB="docker compose -f docker/docker-compose.yml exec -T node0 cockroach sql --insecure -e"
+          for s in "kv.allocator.load_based_rebalancing = 'off'" \
+                   "kv.replicate_queue.enabled = false" \
+                   "kv.lease_queue.enabled = false" \
+                   "kv.split_queue.enabled = false" \
+                   "kv.range_merge.queue.enabled = false"; do
+            if $CRDB "SET CLUSTER SETTING $s;" >/dev/null 2>&1; then
+              echo "  set   ${s%% *}"
+            else
+              echo "::warning::could not set ${s%% *} on this build"
+            fi
+          done
+          $CRDB "SELECT variable, value FROM [SHOW CLUSTER SETTINGS]
+                 WHERE variable LIKE 'kv.%queue%' OR variable LIKE 'kv.allocator%';"
+
+      # Node liveness, start times and under-replication, before measuring.
+      # Compared with the snapshot after: a node that restarted mid-run makes
+      # every latency in between suspect (benchmarking guidance).
+      - name: Cluster health before measuring
+        run: |
+          docker compose -f docker/docker-compose.yml exec -T node0 \
+            cockroach node status --decommission --insecure --format=csv > health_before.csv
+          cat health_before.csv
+
+      - name: Fetch the trained model
+        if: inputs.model_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download "${{ inputs.model_run_id }}" --repo "${{ github.repository }}" \
+            --pattern 'model-*' --dir model
+          MODEL=$(find model -name best_model.zip | head -1)
+          [ -n "$MODEL" ] || { echo "::error::no best_model.zip in run ${{ inputs.model_run_id }}"; exit 1; }
+          echo "MODEL=$MODEL" >> "$GITHUB_ENV"
+          echo "| model | $MODEL (run ${{ inputs.model_run_id }}) |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Episodes on the cluster
+        id: episodes
+        continue-on-error: true
+        run: |
+          rc=0
+          for p in ${{ inputs.policies }}; do
+            if [ "$p" = "agent" ] && [ -z "${MODEL:-}" ]; then
+              echo "::warning::agent skipped: no model_run_id given"; continue
+            fi
+            echo "episode:$p" > /tmp/phase
+            EXTRA=""; [ "$p" = "agent" ] && EXTRA="--model $MODEL"
+            PYTHONPATH=src python scripts/cluster_episode.py --policy "$p" $EXTRA \
+              --windows "${{ inputs.windows }}" --seed "${{ inputs.seed }}" \
+              --transactions "${{ inputs.transactions }}" \
+              --concurrency "${{ inputs.concurrency }}" \
+              --replicas "${{ inputs.replicas }}" \
+              --read-consistency "${{ inputs.read_consistency }}" \
+              --volatility "${{ inputs.volatility }}" \
+              --out "results/episode_$p.csv" | tee "episode_$p.txt" || rc=1
+          done
+          echo "idle" > /tmp/phase
+          exit $rc
+
+      - name: Comparison table
+        if: always()
+        run: |
+          python - <<'PY' | tee comparison.txt
+          import glob, json
+          rows = [json.load(open(f)) for f in sorted(glob.glob("results/episode_*.json"))]
+          print("| policy | steps | mean ms | GB moved | imbalance | cost (w=0.30) | s/step | suspect | divergent |")
+          print("|---|---|---|---|---|---|---|---|---|")
+          for r in sorted(rows, key=lambda r: r["cost_w030"]):
+              print(f"| {r['policy']} | {r['steps']} | {r['mean_latency_ms']:.2f} | "
+                    f"{r['gb_moved_total']:.1f} | {r['mean_imbalance']:.3f} | {r['cost_w030']:.3f} | "
+                    f"{r['mean_step_s']:.1f} | {r['suspect_steps']} | {r['divergent_steps']} |")
+          PY
+          { echo "### Cluster episodes: measured on CockroachDB"; cat comparison.txt; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.episodes.outcome }}" != "success" ]; then
+            echo "::warning::An episode failed or reported suspect or divergent steps."
+          fi
+
+      - name: CPU by phase and node
+        if: always()
+        run: |
+          python - <<'PY' | tee cpu_by_phase.txt
+          import collections, csv
+          rows = collections.defaultdict(list)
+          try:
+              lines = list(csv.reader(open("cpu_samples.csv")))
+          except FileNotFoundError:
+              print("no CPU samples"); raise SystemExit(0)
+          for row in lines:
+              try:
+                  phase, name, cpu = row
+                  rows[(phase, name)].append(float(cpu.rstrip("%")))
+              except ValueError:
+                  continue                    # a container mid-restart reports "--"
+          print("100% = one core (docker stats); a pinned cluster shares its k cores")
+          print(f"{'phase':<18}{'node':<26}{'samples':>8}{'mean %':>9}{'max %':>9}")
+          for (phase, name), xs in sorted(rows.items()):
+              if name.startswith("crdb-"):
+                  print(f"{phase:<18}{name:<26}{len(xs):>8}{sum(xs)/len(xs):>9.1f}{max(xs):>9.1f}")
+          PY
+          { echo "### CPU by phase and node"; echo '```'; cat cpu_by_phase.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cluster health after measuring
+        if: always()
+        run: |
+          docker compose -f docker/docker-compose.yml exec -T node0 \
+            cockroach node status --decommission --insecure --format=csv > health_after.csv
+          cat health_after.csv
+          python - <<'PY'
+          import csv
+          def load(path):
+              with open(path, newline="") as fh:
+                  return {r["id"]: r for r in csv.DictReader(fh)}
+          before, after = load("health_before.csv"), load("health_after.csv")
+          bad = []
+          for nid, row in after.items():
+              if row.get("is_live", "true").lower() != "true":
+                  bad.append(f"node {nid} not live")
+              if nid in before and row.get("started_at") != before[nid].get("started_at"):
+                  bad.append(f"node {nid} restarted during measurement")
+          missing = set(before) - set(after)
+          bad += [f"node {nid} disappeared" for nid in sorted(missing)]
+          for b in bad:
+              print(f"::error::{b}. Latencies measured across this are suspect.")
+          print("health: OK, no node restarted or died" if not bad else "health: PROBLEMS above")
+          PY
+
+      - name: Cluster logs on failure
+        if: failure()
+        run: docker compose -f docker/docker-compose.yml logs --tail=120
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cluster-eval-results
+          path: |
+            results/
+            latency.txt
+            episode_*.txt
+            comparison.txt
+            cpu_samples.csv
+            cpu_by_phase.txt
+            health_before.csv
+            health_after.csv
+            docker/docker-compose.yml
+          retention-days: 30
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v || true
