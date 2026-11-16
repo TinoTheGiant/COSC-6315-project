@@ -22,6 +22,8 @@ env/
 runs/
 results/*
 !results/.gitkeep
+# The small tables the paper figures are drawn from (scripts/make_paper_figures.py).
+!results/recorded/
 !results/runs/
 results/runs/*
 !results/runs/*/

@@ -1,6 +1,11 @@
 # ADR-0018: Which replica serves a read, in the simulator and on the cluster
 
-**Status:** Proposed; needs a decision before the RF 3 training runs start
+**Status:** Accepted, 15 November 2026: `primary_only` (strong reads served by the
+leaseholder) for every RF 3 result. The training round, the volatility sweep
+and the cluster evaluation of 15 November all pass it explicitly. The code
+default is still `nearest_replica`, so any new run must pass
+`--read-consistency primary_only`; flipping the default is recorded in
+`docs/tech-debt.md`.
 **Date:** 2026-11-14
 **Deciders:** Tino Kaseke
 

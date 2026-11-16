@@ -534,3 +534,29 @@ agent against static (13.4 ms) and against follow (25.6 ms) are.
   Run 5. `Not claimed:` that Lion is worse than the agent on a cluster; a
   Lion that retried a refused lease move would do better than this one.
 - Step time 12.9 to 15.2 s; the whole run took 3 h 19 min.
+
+## Volatility sweep at RF 3, strong reads (15 November 2026)
+
+`scripts/run_experiment.py`, commit 18b0c0f, seeds 0 to 7, 200 windows,
+`--read-consistency primary_only`, policies static, random, follow, lion,
+best. Four runs, one per volatility, under `results/runs/20261116T032622Z-*`;
+the table the paper uses is `results/recorded/sweep.csv`. Run in the sandbox,
+not on Actions; the simulator is deterministic, so the manifests reproduce it.
+
+| volatility | static | random | follow | Lion | bound | follow GB |
+|---|---|---|---|---|---|---|
+| 0.5 | 196.8 | 196.4 | 117.0 | 183.0 | 118.7 | 322.5 |
+| 1 | 196.3 | 201.6 | 119.8 | 181.7 | 118.0 | 632.6 |
+| 2 | 195.5 | 201.6 | 137.4 | 173.3 | 111.5 | 900.2 |
+| 4 | 196.1 | 203.0 | 160.4 | 177.8 | 102.8 | 873.7 |
+
+- The shape of the earlier sweep holds: static flat, bound improving, follow
+  degrading, the follow-to-bound gap opening from -1.7 to 57.5 ms.
+- Follow sits 1.7 ms *below* the bound at volatility 0.5: it moves replicas,
+  the bound moves leases only.
+- Retired: "at volatility 4 follow is indistinguishable from static under the
+  objective". At RF 3 with strong reads, w = 0.30, follow scores 1.824 and
+  static 2.002.
+- Weight rescoring (paper Table IV): in simulation the agent is the cheapest
+  policy for 0.50 < w < 1.82 (imbalance omitted); on the cluster's one seed it
+  is never the cheapest (follow below w = 0.71, Lion above).

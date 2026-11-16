@@ -25,7 +25,7 @@ differently.
 \subsection{The cost of a placement}
 
 Latency is computed analytically from a fixed matrix of round-trip times
-between regions. A read costs the round trip to its nearest copy. A write costs
+between regions. A read costs the round trip to the shard's primary, the leaseholder, because a strong read is served there on the real cluster and the simulator must price it the same way. A write costs
 the round trip to the primary plus the time for a majority of replicas to
 acknowledge it, since a write is not durable until enough copies agree. A
 transaction touching several shards costs its member operations plus, if those
@@ -86,8 +86,10 @@ replication factor stays constant. It costs one shard's worth of movement.
 Two properties of this encoding matter. First, every action names a desired end
 state rather than an operation, so every action is defined in every state: an
 action that cannot be applied resolves to a small penalty rather than an
-error. This matters because a Deep Q-Network cannot mask illegal actions, so an
-action space with illegal members would need machinery that this one avoids.
+error. Actions that would resolve to that penalty are in addition masked out
+for the agent, at selection and in its bootstrap target, so the declarative
+form keeps the environment total and the mask keeps the agent from wasting
+decisions on it.
 Second, the encoding was chosen by measurement rather than by taste. The
 destination-only form of \textsc{move\_replica\_to} gives 261 actions against
 861 for the naive source-and-destination form, with a higher fraction of
@@ -105,14 +107,14 @@ meaningless in the other.
 
 \subsection{Baselines}
 
-Four reference points. Three are policies and one is a bound.
+Five reference points. Four are policies and one is a bound.
 
 \begin{itemize}
 \item \textbf{Static hash} never moves anything. The initial placement is what
 a consistent-hash partitioner~\cite{karger1997consistent} produces, and it is
 held for the whole episode.
 This is what a production database does today and it is the thing to beat.
-\item \textbf{Random} selects a legal action uniformly. It is a control: it
+\item \textbf{Random} selects an action uniformly from the whole space. It is a control: it
 proves that any gain comes from choosing \emph{where} to move data rather than
 from moving data at all.
 \item \textbf{Follow traffic} finds, each window, the single shard whose
@@ -120,6 +122,12 @@ primary placement costs the most relative to the best available region, and
 moves it towards that region. It is the obvious rule an operator would write by
 hand, and it is myopic by construction, weighing no migration cost and
 anticipating no drift.
+\item \textbf{Lion-style} is a co-location planner after
+Lion~\cite{lion2024}. Every ten windows it groups shards that are accessed
+together, chooses a region for each group with a cost model that prefers a
+lease move (a cheap remaster) over a replica move (a copy), and then
+rebalances load. It is the strongest published idea we could adapt to this
+action space, and unlike the heuristic it weighs movement cost.
 \item \textbf{Best per window (fixed shards)} is not a policy. It is the lowest
 latency reachable by relocating every primary for free and instantly, each
 window, at the shard boundaries the episode started with. No real policy can
@@ -138,14 +146,17 @@ Stable-Baselines3 implementation~\cite{raffin2021sb3} against a Gymnasium
 environment~\cite{towers2025gymnasium}, following Mnih et
 al.~\cite{mnih2015dqn}.
 
-The plain form is used deliberately, without the extensions that
-Rainbow~\cite{hessel2018rainbow} combines: double Q-learning to correct
-overestimation~\cite{vanhasselt2016double}, a dueling
-head~\cite{wang2016dueling}, or prioritized replay~\cite{schaul2016per}. The
-question here is whether the problem is learnable at all, and establishing that
-with the simplest agent makes any later improvement attributable to the
-extension rather than to the combination. The evaluation reports where that
-choice costs something.
+Two additions to the plain form are used, each because a measured failure
+called for it. Inapplicable actions are masked, both when the agent selects an
+action and in the maximum taken by its bootstrap target, which removed an
+inapplicable share that had reached 80\% to 90\% without it. And returns are
+accumulated over three steps rather than one, because a move is charged in
+full when it is made whilst the latency it buys arrives in later windows. The
+other extensions that Rainbow~\cite{hessel2018rainbow} combines, double
+Q-learning~\cite{vanhasselt2016double}, a dueling
+head~\cite{wang2016dueling} and prioritized replay~\cite{schaul2016per}, are
+not used, so that any later improvement is attributable to the extension
+that produced it.
 
 Two choices in the training setup are worth stating because they are easy to
 get wrong. Training resets onto a rotating set of 64 workload seeds rather than
@@ -201,7 +212,7 @@ cost structure by construction, which is why the database was chosen for that
 property.
 
 The simulator's cost model is an assumption, and the assumption is testable.
-I deploy six CockroachDB~\cite{taft2020cockroachdb} nodes, one per simulated
+We deploy six CockroachDB~\cite{taft2020cockroachdb} nodes, one per simulated
 region, in containers on a single host, with wide-area round-trip times injected
 between them using the Linux kernel's traffic control facility. CockroachDB was
 selected over sixteen other candidate systems on one criterion: it exposes a \emph{synchronous}

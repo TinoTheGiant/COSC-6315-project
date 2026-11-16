@@ -25,7 +25,9 @@ sys.path.insert(0, str(ROOT / "src"))
 from fragalloc import viz  # noqa: E402
 
 REC = ROOT / "results" / "recorded"
-OUT = ROOT / "paper" / "figures"
+# The midterm draft (main.tex) keeps the figures it was submitted with; the
+# CCGrid paper (ccgrid.tex) draws from its own folder.
+OUT = ROOT / "paper" / "figures" / "ccgrid"
 
 
 def sweep_figure(plt) -> None:
@@ -83,7 +85,7 @@ def movement_figure(plt) -> None:
 
 
 def cluster_figure(plt) -> None:
-    """Co-located against spread leaseholders, both pilots."""
+    """Co-located against spread leaseholders, the RF 3 gate."""
     d = pd.read_csv(REC / "cluster.csv", comment="#")
     fig, ax = plt.subplots(figsize=viz.FIG_1COL)
 
@@ -109,90 +111,6 @@ def cluster_figure(plt) -> None:
     plt.close(fig)
 
 
-def objective_figure(plt) -> None:
-    """Every policy scored under the objective the agent actually minimises.
-
-    The latency figures elsewhere in the paper show one term of a three-term
-    cost. This figure shows the whole cost, which is the only comparison that
-    decides whether the learned policy is better, and it scores each pair at
-    the SAME migration weight, because scoring a learned run against a
-    baseline evaluated at a different weight is how a win gets manufactured.
-    """
-    import csv
-
-    def cost(lat, gb, imb, w):
-        return lat / 100.0 + w * (gb / 2000.0) + 0.10 * imb
-
-    def read(name):
-        with open(REC / name, newline="") as fh:
-            return list(csv.DictReader(ln for ln in fh if not ln.startswith("#")))
-
-    base = {(float(r["volatility"]), r["policy"]):
-            (float(r["latency_ms"]), float(r["gb_moved"]), float(r["imbalance"]))
-            for r in read("baselines-heldout.csv") if r["imbalance"]}
-
-    # Only the w = 0.30 agent runs, so every bar in a group shares one weight.
-    agents = [r for r in read("agent-runs.csv")
-              if r["agent_imbalance"] and float(r["w_migration"]) == 0.30]
-
-    W = 0.30
-    vols = [2.0, 4.0]
-    fig, ax = plt.subplots(figsize=viz.FIG_1COL)
-
-    width = 0.26
-    for off, key in ((-width, "static"), (0.0, "follow")):
-        spec = viz.POLICY[key]
-        ax.bar([i + off for i in range(len(vols))],
-               [cost(*base[(v, key)], W) for v in vols],
-               width=width, color=spec["color"], edgecolor=viz.INK,
-               linewidth=0.5, label=spec["label"], zorder=spec["z"])
-
-    # One bar per volatility for the agent: its best recorded learner seed at
-    # that volatility. Both seeds are reported in the table; the figure would
-    # become unreadable with two more bars.
-    agent_cost = {}
-    for r in agents:
-        v = float(r["volatility"])
-        c = cost(float(r["agent_latency_ms"]), float(r["agent_gb"]),
-                 float(r["agent_imbalance"]), W)
-        agent_cost[v] = min(c, agent_cost.get(v, c))
-    spec = viz.POLICY["agent"]
-    ax.bar([i + width for i in range(len(vols))],
-           [agent_cost[v] for v in vols], width=width, color=spec["color"],
-           edgecolor=viz.INK, linewidth=0.5, label=spec["label"],
-           zorder=spec["z"])
-
-    for i, v in enumerate(vols):
-        for off, val in ((-width, cost(*base[(v, "static")], W)),
-                         (0.0, cost(*base[(v, "follow")], W)),
-                         (width, agent_cost[v])):
-            ax.annotate(f"{val:.3f}", (i + off, val), textcoords="offset points",
-                        xytext=(0, 3), ha="center", fontsize=6)
-
-    # The bound, as a reference rule per group rather than a fourth series.
-    for i, v in enumerate(vols):
-        b = cost(*base[(v, "best")], W)
-        ax.plot([i - 1.6 * width, i + 1.6 * width], [b, b],
-                color=viz.POLICY["best"]["color"],
-                dashes=viz.POLICY["best"]["dash"][1] or (1, 0),
-                linewidth=viz.POLICY["best"]["lw"], zorder=6,
-                label=viz.POLICY["best"]["label"] if i == 0 else None)
-        ax.annotate(f"{b:.3f}", (i + 1.6 * width, b), textcoords="offset points",
-                    xytext=(2, -1), ha="left", va="center", fontsize=6,
-                    color=viz.POLICY["best"]["color"])
-
-    ax.set_xticks(range(len(vols)))
-    ax.set_xticklabels([f"volatility {v:g}" for v in vols])
-    ax.set_ylabel("objective cost (lower is better)")
-    ax.set_ylim(0.70, 2.02)
-    ax.set_xlim(-0.58, len(vols) - 1 + 0.78)
-    ax.legend(frameon=False, fontsize=6.0, loc="upper left", ncol=2,
-              columnspacing=1.0, handlelength=1.6)
-    fig.tight_layout()
-    fig.savefig(OUT / "objective.png", dpi=300)
-    plt.close(fig)
-
-
 def main() -> None:
     import matplotlib
     matplotlib.use("Agg")
@@ -203,8 +121,7 @@ def main() -> None:
     sweep_figure(plt)
     movement_figure(plt)
     cluster_figure(plt)
-    objective_figure(plt)
-    print("wrote sweep.png, movement.png, cluster.png, objective.png to", OUT)
+    print("wrote sweep.png, movement.png, cluster.png to", OUT)
 
 
 if __name__ == "__main__":

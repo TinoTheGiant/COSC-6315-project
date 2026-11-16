@@ -23,7 +23,9 @@ rank higher.
 | 11 | docs/harness-architecture.md describes Toxiproxy; the cluster uses `netem` | 2 | 3 | 1 | **25** | fixed 14 November: doc now follows ADR-0011 |
 | 12 | `falsification_test.py` duplicates the harness's store resolution and relocate | 1 | 1 | 2 | **8** | accepted until after the deadline |
 | 13 | Harness dependency rule (no `fragalloc.cost`/`simulator`) stated, never checked | 2 | 4 | 1 | **30** | fixed: `tests/test_harness_dependency_rule.py` |
-| 14 | Pilots 2 and 3 changed N and runner cores together, so the co-located slowdown has two candidate causes | 3 | 4 | 1 | **35** | instrumented: `cluster_cores` pin, per-node CPU by phase, within-run drift; needs the 2x2 runs |
+| 14 | Pilots 2 and 3 changed N and runner cores together, so the co-located slowdown has two candidate causes | 3 | 4 | 1 | **35** | resolved by Run 6: no saturation at RF 3 (leaseholder node 15.7% of a core); pilots 2 and 3 were under-replicated |
+| 15 | `read_consistency` defaults to `nearest_replica` although every RF 3 result uses `primary_only` (ADR-0018) | 3 | 3 | 1 | **27** | open: pass the flag explicitly until the default is flipped and the affected tests updated |
+| 16 | Lion-style planner does not retry a lease move refused with "may need a Raft snapshot" (cluster evaluation 1: 20 refusals) | 2 | 3 | 2 | **15** | open: retry next window, or model the rule in the simulator |
 
 ---
 

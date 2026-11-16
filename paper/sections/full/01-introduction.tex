@@ -28,7 +28,7 @@ placement and traffic grows.
 
 The obvious response is to move the data when the traffic moves. A simple rule
 does this: each decision window, find the shard whose placement costs the most
-and move it towards the region reading it. I implement that rule as a baseline
+and move it towards the region reading it. We implement that rule as a baseline
 and call it \emph{follow traffic}. The question this paper asks is whether
 anything is gained by replacing it with a policy learned from experience, and
 the answer turns out to depend entirely on how fast the workload moves. When
@@ -40,23 +40,25 @@ already moved again. The room for a learned policy is therefore largest exactly
 where the problem is hardest, and that is a measured observation rather than an
 assumption.
 
-This paper reports the following. I build a simulator of a six-region cluster
+This paper reports the following. We build a simulator of a six-region cluster
 with a workload whose geographic centre drifts on a daily cycle and spikes
-locally, and I define the placement problem on it as a Markov decision process
-with a flat action space of 261 declarative actions. I establish four reference
+locally, and we define the placement problem on it as a Markov decision process
+with a flat action space of 261 declarative actions. We establish five reference
 points against which any learned policy must be judged: static hash
 partitioning, which is what production systems do today; a random control; the
-follow-traffic heuristic; and a per-window bound on what lease movement alone
-can achieve. I measure how the gap between the heuristic and that bound widens
-with workload volatility. I verify on a real six-node CockroachDB cluster, with
+follow-traffic heuristic; a co-location planner modeled on Lion; and a
+per-window bound on what lease movement alone
+can achieve. We measure how the gap between the heuristic and that bound widens
+with workload volatility. We verify on a real six-node CockroachDB cluster, with
 wide-area latency injected between the nodes, that placement changes
 transaction latency by far more than the measurement noise, which is the
-precondition for any of this being learnable outside simulation. Finally I
-train a Deep Q-Network on the simulator and report where it stands: at
-volatility 4 it beats both the heuristic and static hashing on the objective,
-on two independent learner seeds, by moving a twentieth of the data the
-heuristic moves; and it remains a long way from the bound, with most of the
-actions it selects inapplicable in the state it selects them in.
+precondition for any of this being learnable outside simulation. We train a
+Deep Q-Network with action masking and multi-step returns on the simulator:
+at volatility 4, on four learner seeds, it is 13.7\% faster than static
+hashing and moves a fifth of the data the heuristic moves, but it stays
+17\,ms slower than the heuristic, which keeps the lower objective cost at the
+trained migration weight. Finally we run the trained agent, unchanged, on the
+cluster, where the policies rank as they do in simulation.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

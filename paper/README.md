@@ -9,6 +9,16 @@ pdflatex main && bibtex main && pdflatex main && pdflatex main
 Overleaf works too: upload the whole `paper/` folder and set `main.tex` as
 the root document.
 
+**Two root documents.** `main.tex` is the course midterm draft, left as
+submitted, with its figures in `figures/`. `ccgrid.tex` is the CCGrid 2027
+submission: anonymised, built from `sections/full/`, with its figures in
+`figures/ccgrid/` (drawn by `scripts/make_paper_figures.py` from
+`results/recorded/`). It must stay within 10 pages including references:
+
+```
+pdflatex ccgrid && bibtex ccgrid && pdflatex ccgrid && pdflatex ccgrid
+```
+
 ## State of the draft
 
 | Section | State |

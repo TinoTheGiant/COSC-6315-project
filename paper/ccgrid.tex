@@ -1,0 +1,75 @@
+% Reinforcement Learning for Dynamic Data Fragmentation and Allocation.
+% CCGrid 2027 submission. Double-blind: no author names, institution, grant,
+% repository link or self-identifying acknowledgement may appear in this file
+% or in any section it inputs. main.tex is the course midterm draft and is
+% left as submitted.
+%
+% Build:  pdflatex ccgrid && bibtex ccgrid && pdflatex ccgrid && pdflatex ccgrid
+% Limit:  10 letter pages including references, figures and tables.
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/ccgrid/}{figures/}}
+
+\begin{document}
+
+\title{Reinforcement Learning for Dynamic Data\\
+Fragmentation and Allocation}
+
+\author{\IEEEauthorblockN{Anonymous Author(s)}
+\IEEEauthorblockA{\textit{Submitted for double-blind review}}}
+
+\maketitle
+
+\begin{abstract}
+Distributed databases fix how data is split into shards at design time and
+place those shards with key-based rules that never observe where requests
+originate. When the geographic center of a workload moves, as it does daily in
+multi-region services and abruptly during local events, placement drifts away
+from the traffic and transaction latency rises. We train a Deep Q-Network
+agent that adjusts placement continuously. Its actions move a shard's
+leaseholder, move a replica, or split the shard, and its reward combines
+transaction latency, the volume of data moved, and load imbalance. We mask
+invalid actions and use multi-step returns, so that a move is credited with
+the latency it saves in later windows. The agent is pre-trained in a simulator
+of a six-region cluster and evaluated on a six-node CockroachDB cluster with
+injected wide-area latency. A harness executes each action on the cluster and
+reads the resulting placement back before timing real transactions. We compare
+the agent with static hashing, a traffic-following heuristic, and a
+co-location planner modeled on Lion. In simulation the agent is 14\% faster
+than static hashing and moves about a fifth of the data the heuristic moves,
+but remains 17\,ms slower than that heuristic. On the cluster the ranking of
+the four policies by combined cost is unchanged, the agent is 6.5\% faster than
+static hashing, and static hashing and the heuristic both run 13\% slower than
+the simulator predicts.
+\end{abstract}
+
+\begin{IEEEkeywords}
+distributed databases, data placement, fragmentation, replica allocation,
+deep reinforcement learning, geo-distribution
+\end{IEEEkeywords}
+
+\input{sections/full/01-introduction}
+\input{sections/full/02-related-work}
+\input{sections/full/03-system-model}
+\input{sections/full/04-evaluation}
+\input{sections/full/05-conclusion}
+
+% IEEEtran.bst is not obtainable in this environment, so the build uses
+% ieeetr, which ships with texlive base. On Overleaf, change this line to
+% IEEEtran.
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\end{document}

@@ -1,84 +1,67 @@
-% STATUS: WRITTEN. Written after the Evaluation section, deliberately, so
-% that it describes the result that was measured rather than the one that
-% was hoped for.
+% STATUS: WRITTEN, 15 November 2026, after the Evaluation section, so that it
+% describes the result that was measured rather than the one that was hoped
+% for.
 
 \section{Conclusion and Future Work}
 
-This paper set out to test whether a reinforcement learning agent can act
-as an autonomous database administrator, re-fragmenting and re-allocating
-shards in real time as a workload's geographic centre of gravity moves.
-What has been established is a measured problem statement, a cluster that
-confirms the premise, and a first learned policy that wins where the
-problem is hardest.
+This paper asked whether a reinforcement learning agent can act as an
+autonomous database administrator, re-fragmenting and re-allocating shards
+as a workload's geographic centre of gravity moves. What it establishes is a
+measured problem statement, a cluster that confirms the premise, a learned
+policy that makes a different and cheaper trade than the obvious heuristic,
+and evidence that the simulator ranks policies as the cluster does.
 
-The problem is stated as a Markov decision process with an action encoding
-that was measured rather than assumed, four baselines running through one
-shared episode loop, and a reward in which migration cost is a fraction of
-the dataset rather than a byte count, so that a policy trained in the
-simulator can be evaluated on the cluster without the reward changing
-meaning underneath it. On the real cluster, gathering leaseholders in the
-region issuing the transactions against spreading them across regions
-changes p95 latency by 1372.5\,ms. Placement matters, measurably, on
-hardware.
+On a real six-node CockroachDB cluster at replication factor three,
+gathering leaseholders in the region issuing the transactions against
+spreading them changes p95 latency by 1337.8\,ms. Placement matters on
+hardware. Sweeping how fast the workload moves shows when learning is worth
+attempting: a reactive heuristic that follows the traffic is at the
+reference under slow drift and 57.5\,ms above it under fast drift, whilst
+its advantage over static hashing falls from 40.6\% to 18.2\%. The case for
+a learned policy is conditional on volatility, and this work measures the
+condition.
 
-The main result is about when a learned policy is worth having. A reactive
-heuristic that follows the traffic is 0.44\,ms off the achievable bound
-under slow drift and 57.20\,ms off it under fast drift, which is 41\% of
-its own latency, whilst the data it moves rises from 405.1\,GB to
-1115.2\,GB per episode. It pays nearly three times as much and gets
-progressively less. Scored under the full objective at volatility 4 it is
-indistinguishable from static hashing, 1.554 against 1.557, because
-everything it gains on latency it hands back in movement and imbalance. The
-case for learning is therefore conditional on volatility, and this work
-measures the condition instead of asserting it.
-
-Against that heuristic, the learned policy wins at volatility 4 on both
-learner seeds, by 0.068 and 0.031 of objective cost, and beats static
-hashing in every run recorded. It does so by being slower and very much
-cheaper: 139.91\,ms against 129.04\,ms, but 62.7\,GB moved against
-1086.5\,GB. That is a narrow win over a heuristic that has itself stopped
-working, and it should be read as such. The policy sits at 1.486 against a
-bound of 0.813, it had not converged when the training budget ran out, and
-between 80\% and 90\% of the actions it selects are inapplicable in the
-state it selects them in. The agent is winning on the minority of its
-decisions that land.
+At volatility 4 the agent is 13.7\% faster than static hashing on held-out
+seeds and faster than a Lion-style co-location planner on all four learner
+seeds, and on average it moves about a fifth of the data the heuristic
+moves. It is 17\,ms
+slower than the heuristic, and at the migration weight it was trained with
+the heuristic still has the lower objective cost. Rescoring the same
+behavior shows the verdict turns on the price of movement: in simulation the
+agent is the cheapest policy for any migration weight between 0.50 and
+1.82. On the cluster, over one full episode per policy, the four policies
+rank as they do in simulation, and the simulator is optimistic by a steady
+13\% for the policies whose actions all applied. The one policy that lost
+more in transfer did so for a reason the simulator does not model: the
+database refused lease moves onto replicas that had not yet caught up.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
 
 In the order they should be attempted.
 
-Fix the action space first. An 80\% to 90\% inapplicable rate is the
-largest measured inefficiency in the project, it is a known failure mode as
-the invalid share of an action space grows \cite{huang2022masking}, and
-action-elimination networks built on DQN address exactly it
-\cite{zahavy2018elimination}. Nothing else on this list is likely to matter
-as much.
+Run the cluster evaluation on more workload seeds. One episode per policy
+supports a ranking, not an interval, and seed 2000 is a favorable seed for
+the co-location planner. This is the cheapest change that would strengthen
+the result.
 
-Run more seeds per setting. The spread between two learner seeds currently
-exceeds the effect of changing the migration weight, which means the
-present data cannot answer how that weight should be set. This is cheap and
-it blocks a question the work already wants to ask.
+Train at the migration weight the deployment cares about. The weight
+analysis rescales fixed behavior; an agent trained at $w=0.6$ or $w=1.0$
+should move less again, and whether it stays the cheapest policy is the
+question the rescoring raises but cannot answer.
 
-Address credit assignment. A move is charged in full at the moment it is
-made whilst the latency it buys arrives over later windows, which is a
-disagreement a Q-function has to resolve from a short training budget.
-$n$-step returns, as combined in Rainbow \cite{hessel2018rainbow}, or a
-shaping term that credits a move with the latency it later saves, are the
-two obvious routes.
+Teach the simulator the database's refusal rule. A lease transfer onto a
+replica that may need a snapshot is refused on the cluster and accepted in
+simulation. Modeling it, or retrying a refused move in the next window,
+would remove the largest single source of transfer loss measured here.
 
-Train for longer. Every run was still improving at its final step, so the
-reported numbers are a floor rather than a ceiling.
+Address the plateau. Held-out latency stopped improving early in every run,
+so the lever is not more steps. Double Q-learning, a dueling head and
+prioritized replay, as combined in Rainbow \cite{hessel2018rainbow}, are the
+obvious next components, together with choosing the best checkpoint on more
+than three evaluation episodes.
 
-Choose the cluster transaction count by measurement rather than by
-convenience, and separate the transaction count from the core count so that
-the saturation effect seen between the two pilots can be attributed.
-
-Fine-tune the pre-trained agent on the real cluster. The apparatus exists,
-the reward normalisation that makes transfer meaningful is already in
-place, and the harness that would drive it is not yet built.
-
-Add a cost-model rebalancer in the style of Lion \cite{lion2024} as a
-stronger baseline. Following the traffic is a weak opponent at volatility
-4, and the next version of this result should be measured against something
-that is still working.
+Fine-tune on the cluster. The harness already executes actions, reads the
+placement back and measures real transactions with the reward the simulator
+uses, which is the apparatus fine-tuning needs; at about 15\,s per step on
+the present runner the budget, not the code, is the constraint.
