@@ -200,11 +200,8 @@ from its recorded configuration wherever it is executed.
 
 \subsection{Validation on a real cluster}
 
-Training in a cheap simulator and deploying on expensive real hardware is
-borrowed from robotics, where it is standard and where the gap between the two
-is the central difficulty~\cite{tobin2017domain}. In this paper the trained
-agent is run on the cluster unchanged; fine-tuning it there is left to future
-work. The gap here is narrower and more checkable than in robotics: the simulator and the
+The trained agent is run on the cluster unchanged; fine-tuning it there is
+left to future work. The simulator and the
 cluster can be made to agree on the observation space, the action space and the
 cost structure by construction, which is why the database was chosen for that
 property.

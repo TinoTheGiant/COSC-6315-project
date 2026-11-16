@@ -560,3 +560,33 @@ not on Actions; the simulator is deterministic, so the manifests reproduce it.
 - Weight rescoring (paper Table IV): in simulation the agent is the cheapest
   policy for 0.50 < w < 1.82 (imbalance omitted); on the cluster's one seed it
   is never the cheapest (follow below w = 0.71, Lion above).
+
+## Controls for the agent's trade, held-out seeds (16 November 2026)
+
+`scripts/run_experiment.py`, run `20261116T225729Z-f4870a4f-controls-heldout-v4` (committed under `results/runs/`),
+held-out seeds 2000 to 2007, volatility 4, 200 windows, `primary_only`.
+Two new controls in `fragalloc.policies`: `ThrottledFollowPolicy` (follow
+traffic that starts a move only every k windows and always finishes a
+two-window relocation) and `ApplicableRandomPolicy` (uniform over applicable,
+non-NOOP actions). Tests: `tests/test_control_policies.py`, both mutations
+caught.
+
+| policy | mean ms [95% CI] | GB moved | imbalance |
+|---|---|---|---|
+| follow | 148.81 [143.8, 153.7] | 867.7 | 0.935 |
+| follow, every 2 | 157.18 [152.2, 162.0] | 696.3 | 0.907 |
+| follow, every 4 | 171.82 [165.5, 178.1] | 405.1 | 0.794 |
+| follow, every 8 | 185.84 [179.7, 192.4] | 157.6 | 0.746 |
+| static | 192.11 | 0.0 | 0.382 |
+| random (all actions) | 195.46 | 134.6 | 0.569 |
+| random (applicable only) | 210.76 [206.7, 215.4] | 438.5 | 0.557 |
+| agent, four learner seeds (Training round, 15 November) | 165.88 | 183.6 | not recorded |
+
+- **Slowing the heuristic does not reproduce the agent's trade.** Every 4: the
+  agent is 5.9 ms faster and moves less than half the data. Every 8: the agent
+  is 20.0 ms faster for 26.0 GB more. `Not claimed:` an interval on the
+  agent's side; its per-seed rows are in the training artifacts.
+- **Undirected movement is harmful, not neutral.** Random over applicable moves
+  is 18.7 ms slower than static hashing.
+- Baseline rows (static, random, follow, Lion, oracle) reproduce
+  `results/recorded/heldout-rf3.csv` exactly.

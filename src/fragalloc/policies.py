@@ -119,6 +119,68 @@ class FollowTrafficPolicy:
         return None
 
 
+class ThrottledFollowPolicy:
+    """Follow traffic, but start a move only every ``every`` windows.
+
+    A control for the agent's main result. The agent moves about a fifth of the
+    data follow traffic moves; this asks whether simply slowing the heuristic
+    down buys the same trade, in which case the trade is not something the
+    agent learned.
+
+    Follow traffic often needs two windows for one relocation: a replica move,
+    then the lease move onto it. A throttle that cut that pair in half would
+    pay for the copy and never collect the latency, which would make the
+    control look worse than slowing the heuristic really is. So a window right
+    after a replica move is always allowed to act.
+    """
+
+    def __init__(self, action_space: ActionSpace, every: int) -> None:
+        if every < 1:
+            raise ValueError("every must be at least 1")
+        self.action_space = action_space
+        self.every = every
+        self._follow = FollowTrafficPolicy(action_space)
+        self._window = 0
+        self._finish = False
+
+    def act(self, sim: ClusterSimulator) -> int:
+        window, self._window = self._window, self._window + 1
+        if window % self.every and not self._finish:
+            return self.action_space.noop_index
+        action = self._follow.act(sim)
+        self._finish = self.action_space.decode(action).kind is ActionKind.MOVE_REPLICA_TO
+        return action
+
+    def reset(self) -> None:
+        self._window = 0
+        self._finish = False
+
+
+class ApplicableRandomPolicy:
+    """Uniform over the actions that are applicable in the current state.
+
+    The plain random baseline draws from all 261 actions, so most of its draws
+    change nothing. This one draws only from moves that change the placement,
+    which is the fair control for "moving data without looking at the traffic".
+    """
+
+    def __init__(self, action_space: ActionSpace, seed: int = 0) -> None:
+        self.action_space = action_space
+        self._seed = seed
+        self._rng = np.random.default_rng(seed)
+
+    def act(self, sim: ClusterSimulator) -> int:
+        mask = self.action_space.applicable_mask(sim.catalog)
+        mask[self.action_space.noop_index] = False
+        legal = np.flatnonzero(mask)
+        if legal.size == 0:
+            return self.action_space.noop_index
+        return int(self._rng.choice(legal))
+
+    def reset(self) -> None:
+        self._rng = np.random.default_rng(self._seed)
+
+
 def rollout(sim: ClusterSimulator, policy: Policy, seed: int | None = None) -> list[dict[str, float]]:
     """Run one full episode under ``policy`` and return the per-step records."""
     sim.reset(seed=seed)

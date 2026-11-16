@@ -117,9 +117,9 @@ ADR-0017 marked Accepted on Run 6; ADR index now lists 0012 to 0020;
 
 | # | Experiment | Cost | Answers |
 |---|---|---|---|
-| 1 | Follow-traffic throttled to every 2, 4, 8 windows, held-out seeds | minutes, laptop | Whether the agent's latency/movement trade is unique or a slowed heuristic matches it. Run before leaning on "a fifth of the data" |
-| 2 | Random over applicable actions only, movement-matched to follow | minutes | Closes the confound in Q2 (random moves 5x less than follow) |
-| 3 | Cluster episodes on workload seeds 2001 and 2002, all four policies | about 3.3 h each, parallel Actions jobs | Turns the n = 1 ordering into a spread |
+| 1 | ~~Follow-traffic throttled to every 2, 4, 8 windows~~ | **Done 16 Nov** | Throttling does not reproduce the agent's trade; now in Q4 (results-log, "Controls") |
+| 2 | ~~Random over applicable actions only~~ | **Done 16 Nov** | 18.7 ms slower than static; now in Q2 |
+| 3 | Cluster episodes on workload seeds 2001 to 2003 | **Running** (Actions 43954753671, 43954879894, 43954980773) | Turns the n = 1 ordering into a spread |
 | 4 | Agent with splits masked, 1 to 2 learner seeds | about 1.6 h each | Whether fragmentation earns its place in the title |
 | 5 | Train at w = 0.6, two learner seeds | about 1.6 h each | Turns the Table IV rescoring into evidence |
 | 6 | Static placement with CockroachDB's own rebalancing on, seed 2000 | about 3 h | The production comparison a reviewer will ask for |
@@ -137,12 +137,12 @@ From the adversarial reading, checked against the code where marked:
 - **The oracle is not a minimum.** Renamed rather than replaced. An exact
   per-window minimum over lease assignments with the 2PC term would restore a
   true bound.
-- **Missing related work named from memory by the reviewer, not yet
-  verified:** Akkio (OSDI 2018), SLOG (VLDB 2019), DynaMast (ICDE 2021),
-  Facebook Shard Manager (SOSP 2021), P-Store. Akkio and SLOG bear directly on
-  the claim that no cost model in the area carries geographic distance. Look
-  them up before adding. Shard Manager also turned up in today's Consensus
-  search.
+- **Related work the reviewer named from memory.** Akkio (OSDI 2018) is
+  verified and now cited. SLOG (VLDB 2019, DOI 10.14778/3342263.3342647) is
+  verified, not yet cited: it assigns each data granule a home region by
+  access locality and is worth a clause if space allows. DynaMast, Shard
+  Manager and P-Store are unverified. The reviewer's "NeuroShard (MLSys 2023)"
+  is a different paper (embedding-table sharding), not a gap.
 - Split renumbers fragment indices mid-episode; the simulator treats migration
   as instantaneous. Both worth one sentence in Threats to validity.
 - `huang2022masking` and `zahavy2018elimination` are in the bib but uncited;
@@ -185,6 +185,5 @@ that went past their abstracts, the Q5 sentence that did not name the
 simulator source of its ordering, the cluster data-moved sentence (it is the
 catalogue's account of each applied action), two leftover "pre-trained", and
 the sweep table's 7.8 pt overrun. The final build is 10 pages with no
-warnings. Still unverified: whether Neuroshard's published title carries a
-subtitle (Crossref gives only "Neuroshard"); check it in the ACM Digital
-Library.
+warnings. Neuroshard's full title was confirmed from the authors' PDF and BibTeX and
+fixed in the bibliography.

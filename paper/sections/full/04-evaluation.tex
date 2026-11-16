@@ -127,8 +127,9 @@ The random baseline separates two explanations that are easy to confuse. It
 relocates data without looking at the traffic. It draws from the whole action
 space, so 77\% of its draws are inapplicable and change nothing, yet across the
 sweep in Table~\ref{tab:sweep} the remainder still move 162.7\,GB per episode and ends between 196.4
-and 203.0\,ms, no better than doing nothing and at higher volatility slightly
-worse. The heuristic, at volatility 1, reaches 119.8\,ms, 39.0\% faster than
+and 203.0\,ms, no better than doing nothing. A control that draws only
+applicable moves is worse still: on the held-out seeds of Q4 it moves
+438.5\,GB and is 18.7\,ms slower than static hashing. The heuristic, at volatility 1, reaches 119.8\,ms, 39.0\% faster than
 static hashing. Movement by itself buys nothing; everything is in the choice
 of destination. That is why the problem is a decision problem, and why a
 learned policy is a sensible thing to attempt.
@@ -155,7 +156,7 @@ buys has expired by the time it lands.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{sweep.png}
+\includegraphics[width=0.93\textwidth]{sweep.png}
 \caption{Left: latency against volatility for static hashing, the reactive
 heuristic and the per-window oracle. Right: the heuristic's distance above the
 oracle, the room available to a better policy. Seed block 0 to 7.}
@@ -209,7 +210,11 @@ Oracle        &  91.0 &   n/a \\
 On every learner seed the agent is faster than static hashing, by 13.7\% on
 average (165.9 against 192.1\,ms), and faster than the Lion-style planner by
 14.1\,ms. It is 17.1\,ms slower than the heuristic and moves 21\% of the
-heuristic's data (183.6 against 867.7\,GB on average). It buys its latency
+heuristic's data (183.6 against 867.7\,GB on average). Slowing the heuristic
+does not reproduce that trade. Allowed to start a move only every 4 or 8
+windows, and always to finish one, it reaches 171.8\,ms at 405.1\,GB and
+185.8\,ms at 157.6\,GB: the agent is faster than the first while moving less
+than half its data, and 20\,ms faster than the second for 26\,GB more. It buys its latency
 mostly with lease moves, which carry no data: on the cluster episode in Q5,
 131 of its 200 actions moved a lease, 55 moved a replica and 14 split a
 shard.
@@ -331,13 +336,8 @@ matters on hardware and that the simulator orders the strongest and weakest
 policies as the cluster does on one seed; they do not establish that its magnitudes are right, and
 it is about 13\% optimistic where it can be compared.
 
-The cluster results rest on one episode per policy and one workload seed.
-The within-episode sampling error is 1 to 2\,ms, but there is no interval
-across workload seeds, and none across learner seeds on the cluster.
-
-The agent's imbalance was not recorded in the simulator runs, so the
-simulator rows of Table~\ref{tab:weight} omit that term for every policy.
-The cluster rows include it.
+The cluster results rest on one episode per policy and one workload seed, so
+there is no interval across workload or learner seeds.
 
 The weight analysis rescales fixed trajectories. It shows where the price of
 movement changes the verdict; it does not show what an agent trained at that

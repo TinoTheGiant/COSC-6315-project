@@ -8,6 +8,8 @@
 % index. kostler2023fluidity, vanbenschoten2022multiregion, eldeeb2022neuroshard
 % and costafilho2020adaptive were added on 16 November 2026 from abstracts only
 % (Consensus), with metadata copied from Crossref the same day.
+% annamalai2018akkio was added the same day from its USENIX abstract page;
+% USENIX papers carry no Crossref DOI.
 %
 % That limit governs what may be written here. A sentence summarizing a paper's
 % abstract is supportable. A sentence about its internals, its baselines or its
@@ -89,12 +91,14 @@ geo-distributed clouds, solving placement and replication jointly by overlapping
 correlation clustering, and Adnan et al.~\cite{adnan2025network} optimize
 placement against network cost in the same setting. Both reach the joint framing
 this work uses, and both reach it with a solver rather than a learned policy.
-Fluidity~\cite{kostler2023fluidity} moves the replicas of a replicated state
+Akkio~\cite{annamalai2018akkio}, in production at Facebook, migrates small
+units of data between datacenters to cut access latency and cross-datacenter
+traffic. Fluidity~\cite{kostler2023fluidity} moves the replicas of a replicated state
 machine at run time towards the locations its client requests come from, and
 CockroachDB's multi-region abstractions~\cite{vanbenschoten2022multiregion}
 let a developer declare data locality in SQL, which the database maps to
-replica placement and partitioning. In both, geography drives placement, and
-neither is presented as a learned policy.
+replica placement and partitioning. In all three, geography drives placement,
+and none is presented as a learned policy.
 
 These systems share the premise of this work, that placement should follow the
 workload, and they share a limitation. Each re-solves an optimization problem
@@ -201,8 +205,8 @@ policy, for transactional workloads. The workload-driven partitioners re-solve a
 hand-written cost model and do not learn from their own outcomes. Lion learns a
 forecast but not a policy, and its cost model is denominated in bytes rather
 than in distance. GeoTP optimizes execution against a fixed placement. The
-learned administration systems address knobs, plans and indexes. Fluidity and CockroachDB's multi-region design see geography but are not
-presented as learned policies.
+learned administration systems address knobs, plans and indexes. Akkio, Fluidity and CockroachDB's multi-region design see geography but are
+not presented as learned policies.
 The learned placement systems address storage tiers, edge nodes and, in RLRP,
 the even spread of load within one cluster, not a transactional workload whose
 center of gravity moves, and only Neuroshard learns the shard assignment
