@@ -478,3 +478,59 @@ from each job summary.
   of four runs. More steps are not the lever. The best checkpoint is chosen
   on three evaluation episodes, so the choice itself is noisy.
 - 0.0% inapplicable actions on all four (masking); "Nothing" at most 1.2%.
+
+## Run 6 — Cluster pilot, first fully clean run (15 November 2026)
+
+Actions 43751092905, commit 18b0c0f, RF 3, strong reads, 4 cores, N = 200.
+
+| gate arm | p50 ms | p95 ms |
+|---|---|---|
+| leaseholders co-located (us-east-1) | 293.6 | 441.7 |
+| leaseholders spread over six regions | 1059.0 | 1779.5 |
+
+p95 gap 1337.8 ms, 95% CI [1168.5, 1407.8]. Up-replication finished in 49 s;
+table convergence took 3 s (the split-queue fix holds). Every harness, driver
+and episode check passed; no lease move was refused.
+
+The single-node saturation suggested by pilots 2 and 3 is not reproduced: in
+the co-located arm the leaseholder node averaged 15.7% of one core (maximum
+26.1%), and the arm's p50 by fifth of the run was 300.1, 290.5, 364.5, 294.9,
+294.3 ms, with no drift. Pilots 2 and 3 ran on an under-replicated cluster.
+
+## Cluster evaluation 1 — the trained agent on CockroachDB (15 November 2026)
+
+Actions 43751004009, commit 18b0c0f. Model from Train agent run 43674558770
+(simulator: 162.74 ms, 121.7 GB over seeds 2000 to 2007). One 200-window
+episode per policy, workload seed 2000, volatility 4, RF 3, strong reads,
+N = 200 requests per step, 2 workers per region. Numbers copied from the job
+summary. Simulator columns: `run_experiment.py`, same seed and settings.
+
+| policy | cluster ms | simulator ms | GB moved (cluster / sim) | imbalance (cluster / sim) | cluster cost, w = 0.30 |
+|---|---|---|---|---|---|
+| follow | 167.23 | 148.14 | 771.6 / 771.6 | 1.024 / 1.014 | 1.890 |
+| agent | 192.79 | not run for this seed alone | 127.5 / n.a. | 0.801 / n.a. | 2.027 |
+| Lion-style | 191.63 | 153.01 | 30.0 / 30.0 | 1.202 / 1.346 | 2.041 |
+| static | 206.17 | 182.44 | 0.0 / 0.0 | 0.416 / 0.404 | 2.103 |
+
+`Status: numerical.` One episode per policy and one workload seed, so no
+interval across seeds. Within an episode the sampling error of the mean is
+about 1 to 2 ms (Run 5), so agent against Lion (1.2 ms) is not a difference;
+agent against static (13.4 ms) and against follow (25.6 ms) are.
+
+- **The ranking on the objective carries over**: follow, agent, Lion, static,
+  on the cluster as in the simulator.
+- **The agent on the cluster** is 13.4 ms (6.5%) faster than static and
+  25.6 ms slower than follow, moving 16.5% of follow's data. No action of
+  the agent's was refused, and no step was suspect or divergent.
+- **The cluster is slower than the model by a steady margin** for the
+  policies whose actions all applied: static +23.7 ms (13.0%), follow
+  +19.1 ms (12.9%). Data moved matches to the decimal.
+- **Lion lost most in transfer** (+38.6 ms): 20 of its 200 actions were
+  refused, all lease moves, all with `refusing to transfer lease ... because
+  target may need a Raft snapshot: local replica not raft leader`. Lion moves
+  a replica and then, in the next window, the lease onto it; CockroachDB will
+  not hand a lease to a replica it cannot confirm has caught up. The
+  simulator has no such rule. This also explains the refusals follow met in
+  Run 5. `Not claimed:` that Lion is worse than the agent on a cluster; a
+  Lion that retried a refused lease move would do better than this one.
+- Step time 12.9 to 15.2 s; the whole run took 3 h 19 min.
