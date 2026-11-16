@@ -1,6 +1,6 @@
 # ADR-0017: How the harness drives and times transactions
 
-**Status:** Proposed; implemented, awaiting Cluster pilot #5
+**Status:** Accepted, 15 November 2026, on the evidence of Cluster pilot #6 (Actions 43751092905), where every driver check passed (docs/results-log.md, Run 6). Was: Proposed; implemented, awaiting Cluster pilot #5.
 **Date:** 2026-11-14
 **Deciders:** Tino Kaseke
 

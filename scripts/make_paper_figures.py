@@ -37,7 +37,8 @@ def sweep_figure(plt) -> None:
 
     for col, key in (("static", "static"), ("follow", "follow")):
         left.plot(d.volatility, d[col], **viz.policy_kwargs(key))
-    left.plot(d.volatility, d["bound"], **viz.policy_kwargs("best"))
+    left.plot(d.volatility, d["bound"], **viz.policy_kwargs(
+        "best", label="Per-window oracle (fixed shards)"))
     left.set_xlabel("workload volatility")
     left.set_ylabel("mean latency (ms)")
     left.set_xscale("log", base=2)
@@ -49,9 +50,9 @@ def sweep_figure(plt) -> None:
     # rather than leaving the reader to subtract two lines by eye.
     gap = d["follow"] - d["bound"]
     right.plot(d.volatility, gap, **viz.policy_kwargs("agent",
-                                                      label="gap to the bound"))
+                                                      label="gap to the oracle"))
     right.set_xlabel("workload volatility")
-    right.set_ylabel("follow traffic above the bound (ms)")
+    right.set_ylabel("follow traffic above the oracle (ms)")
     right.set_xscale("log", base=2)
     right.set_xticks(d.volatility)
     right.set_xticklabels([f"{v:g}" for v in d.volatility])

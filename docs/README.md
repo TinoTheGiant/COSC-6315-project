@@ -30,6 +30,15 @@ Start here depending on what you need.
 | [0009](adr/ADR-0009-cockroachdb-for-sim-to-real-parity.md) | Reverse to CockroachDB, because sim-to-real transfer requires cost-model parity |
 | [0010](adr/ADR-0010-session-scoped-cluster-and-resumable-runs.md) | A session-scoped cluster and episode-checkpointed runs, for a laptop that cannot stay on |
 | [0011](adr/ADR-0011-where-the-compute-runs.md) | Keep pre-training, use no GPU, run the cluster in Codespaces; `netem` over Toxiproxy |
+| [0012](adr/ADR-0012-project-naming.md) | The project has one name, and the package is named after what it does |
+| [0013](adr/ADR-0013-action-masking.md) | Mask inapplicable actions in selection, exploration and the bootstrap target |
+| [0014](adr/ADR-0014-n-step-returns.md) | N-step returns in the masked replay buffer |
+| [0015](adr/ADR-0015-replication-factor-parity.md) | One replication factor for the simulator and the cluster |
+| [0016](adr/ADR-0016-read-back-lease-source.md) | How the harness reads each range's leaseholder |
+| [0017](adr/ADR-0017-transaction-driver.md) | How the harness drives and times transactions |
+| [0018](adr/ADR-0018-read-consistency-parity.md) | Which replica serves a read, in the simulator and on the cluster |
+| [0019](adr/ADR-0019-cluster-load-accounting.md) | Where the cluster environment's load imbalance comes from |
+| [0020](adr/ADR-0020-zero-shot-cluster-evaluation.md) | Evaluate the trained agent on the cluster unchanged; defer fine-tuning |
 
 ## Reading order for someone new
 

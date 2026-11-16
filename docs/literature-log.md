@@ -261,3 +261,44 @@ That is the harder error to catch, because a reader checking the DOI lands on
 the correct paper and has no reason to look at the names. It was caught by
 verifying rather than by proofreading, and it breaks the rule about
 reconstructing fields rather than copying them.
+
+---
+
+## Session, 16 November 2026 (publication-readiness pass)
+
+```
+Query: "deep reinforcement learning shard leaseholder replica placement geo-distributed transactional database moving workload"
+Date:  2026-11-16   Index: Consensus (Semantic Scholar, OpenAlex, PubMed), 25 records
+Opened: 25 abstract records
+Blocked: none
+Stopped: no
+Conclusion: Four relevant records absent from the bibliography: Fluidity
+(SAC 2023), CockroachDB multi-region (SIGMOD 2022), Neuroshard (aiDM 2022),
+Costa Filho et al. (CCPE 2020). All read at abstract level only. Neuroshard
+learns partitioning, which retires the sentence that no learned placement
+system changes the unit of placement.
+```
+
+```
+Query: reinforcement learning, data placement, geo-distributed database, sharding, replica placement
+Date:  2026-11-16   Index: alphaXiv (arXiv), recency-ranked, 10 records
+Opened: 10 titles and abstract snippets
+Blocked: none
+Stopped: no
+Conclusion: No paper learning fragmentation and geographic placement jointly
+for transactional workloads among the ten. Not a novelty claim.
+```
+
+```
+Query: Crossref works records for the four additions and for lion2024,
+       nadig2026harmonia, towers2025gymnasium, adnan2025network, mahmoud2025rlfawm
+Date:  2026-11-16   Index: api.crossref.org (through web fetch)
+Opened: 9 records
+Blocked: none (two requests rate-limited, then retried and opened)
+Stopped: no
+Conclusion: All nine match the bibliography on title, authors, venue and year.
+adnan2025network lacked its issue (4) and article number (30);
+mahmoud2025rlfawm lacked its issue (3). Both added. The other 36 DOIs were
+not re-checked in this session; they rest on the 26 October verification.
+Niu et al. resolved to arXiv:2605.31002 (abstract page).
+```

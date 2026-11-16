@@ -16,7 +16,7 @@ That arrangement works whilst the traffic stays where the designer expected it.
 In a service with users on several continents, served by a database spread
 across regions in the manner of Spanner~\cite{corbett2013spanner} or
 CockroachDB~\cite{taft2020cockroachdb}, it does not. The geographic
-centre of the workload moves across the day as one region wakes and another
+center of the workload moves across the day as one region wakes and another
 sleeps, and it moves abruptly when something local draws attention to one
 region. A placement chosen for the morning is wrong by the evening. Every
 request that has to cross an ocean to reach its data pays the round-trip time
@@ -32,23 +32,24 @@ and move it towards the region reading it. We implement that rule as a baseline
 and call it \emph{follow traffic}. The question this paper asks is whether
 anything is gained by replacing it with a policy learned from experience, and
 the answer turns out to depend entirely on how fast the workload moves. When
-drift is slow, the simple rule is within half a millisecond of the best
-placement that moving shards can achieve, and there is nothing worth learning.
-When drift is fast, the same rule falls 57\,ms short of that bound, which is
-41\% of its own latency, because it reacts one window behind a target that has
+drift is slow, the simple rule is within 2\,ms of a free per-window oracle,
+and there is little worth learning. When
+drift is fast, the same rule falls 57.5\,ms short of an oracle that re-places every shard for
+free each window, which is 36\%
+of its own latency, because it reacts one window behind a target that has
 already moved again. The room for a learned policy is therefore largest exactly
 where the problem is hardest, and that is a measured observation rather than an
 assumption.
 
 This paper reports the following. We build a simulator of a six-region cluster
-with a workload whose geographic centre drifts on a daily cycle and spikes
+with a workload whose geographic center drifts on a daily cycle and spikes
 locally, and we define the placement problem on it as a Markov decision process
 with a flat action space of 261 declarative actions. We establish five reference
 points against which any learned policy must be judged: static hash
-partitioning, which is what production systems do today; a random control; the
+partitioning, which never moves anything; a random control; the
 follow-traffic heuristic; a co-location planner modeled on Lion; and a
-per-window bound on what lease movement alone
-can achieve. We measure how the gap between the heuristic and that bound widens
+per-window oracle that relocates every primary for free. We measure how the
+gap between the heuristic and that oracle widens
 with workload volatility. We verify on a real six-node CockroachDB cluster, with
 wide-area latency injected between the nodes, that placement changes
 transaction latency by far more than the measurement noise, which is the
@@ -58,7 +59,8 @@ at volatility 4, on four learner seeds, it is 13.7\% faster than static
 hashing and moves a fifth of the data the heuristic moves, but it stays
 17\,ms slower than the heuristic, which keeps the lower objective cost at the
 trained migration weight. Finally we run the trained agent, unchanged, on the
-cluster, where the policies rank as they do in simulation.
+cluster, where the heuristic is again cheapest and static hashing again most
+expensive, with the agent between them.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

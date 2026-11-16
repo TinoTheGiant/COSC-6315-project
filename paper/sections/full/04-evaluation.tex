@@ -19,24 +19,15 @@ cluster?
 The simulated cluster has six regions, one node per region, replication
 factor three, and a keyspace of 256 cells from which shards are built. An
 episode is 200 decision windows. At each window the policy sees the
-per-region read and write counts from the window just finished and issues one
+demand on each shard by region of origin in the window just finished and issues one
 action; the environment then charges it for the latency its placement
 produced and for the data any move carried. Reads are strong: they are served
 by the leaseholder, which is how the cluster serves a read that is not marked
 as stale, so the simulator and the cluster price a read the same way.
 
-Every policy runs through the same episode loop. The policies are static hash partitioning, random relocation, the
-reactive heuristic that follows the traffic, a co-location planner modeled on
-Lion~\cite{lion2024}, and the learned policy. The Lion-style planner re-plans
-every ten windows: it groups shards that are accessed together, places each
-group on one region by a cost model that prefers moving a lease over copying
-data, and then rebalances load. Beside them sits a per-window bound: the
-lowest latency reachable by relocating every lease for free, each window,
-\emph{at the shard boundaries the episode started with}. It is not a global
-optimum. A policy that moves replicas or splits shards can score below it.
-
-The agent minimises a single cost, which is the quantity it is judged on
-throughout:
+Every policy and the oracle described in Section~III run through the same
+episode loop. The agent minimizes a single cost, the episode mean of its
+per-window negative reward, which is the quantity it is judged on throughout:
 %
 \begin{equation}
 c = \frac{\ell}{100} \;+\; w \cdot \frac{g}{2000} \;+\; 0.10 \cdot b
@@ -51,12 +42,9 @@ separately, so that a policy cannot win on latency by overloading a single
 region. Migration is expressed as a fraction of the dataset, so the 60\,GB
 simulator and the 1\,GB cluster score the same physical move identically.
 
-The agent is a Deep Q-Network with invalid actions masked both at selection
-and in the bootstrap target, and three-step returns, so that a move is
-credited with the latency it saves in the windows after it. Masking removes
-the inapplicable actions that dominated an earlier unmasked agent; across the
-runs reported here the inapplicable share is 0.0\%. Each training run takes
-$10^6$ steps at volatility 4.
+Each agent is trained for $10^6$ steps at volatility 4 with masking and
+three-step returns; across the runs reported here its inapplicable share is
+0.0\%.
 
 Two seed blocks appear and are never mixed in one table. The volatility sweep
 uses seeds 0 to 7. Agent evaluations use held-out seeds 2000 to 2007, which
@@ -70,7 +58,7 @@ database, and only then times $N=200$ transactions issued from per-region
 connections. $N$ was chosen by measuring the standard error of the mean
 latency, which is about 1 to 2\,ms per episode at that size. Before any
 measurement the harness waits until every range has three voters and then
-freezes the database's own rebalancer, so the placement under test is the one
+freezes the database's own rebalancing, follow-the-workload included, so the placement under test is the one
 the policy chose.
 
 % ---------------------------------------------------------------------
@@ -79,7 +67,7 @@ the policy chose.
 The gate runs the same transactions twice on the cluster: once with the
 leaseholders for the keys involved gathered in the region issuing them, and
 once with those leaseholders spread across regions
-(Table~\ref{tab:cluster}, Fig.~\ref{fig:cluster}).
+(Table~\ref{tab:cluster}).
 
 \begin{table}[t]
 \caption{Cluster gate, replication factor 3, $N=200$ transactions per arm.
@@ -96,14 +84,6 @@ spread     & 1059.0 & 1779.5 \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{cluster.png}
-\caption{Co-located against spread leaseholders on the real cluster,
-replication factor 3. The difference is far larger than the measurement
-noise, which is all this experiment is asked to establish.}
-\label{fig:cluster}
-\end{figure}
 
 The p95 gap is 1337.8\,ms, with a bootstrap 95\% interval of
 [1168.5, 1407.8]\,ms. Placement is worth a great deal on real hardware, which
@@ -130,9 +110,10 @@ run on a cluster that had not finished replicating, and are not reported.
 \label{tab:sweep}
 \centering
 \small
+\setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{lrrrrrr}
 \toprule
-Vol. & Static & Random & Follow & Lion & Bound & Follow GB \\
+Vol. & Static & Random & Follow & Lion & Oracle & Follow GB \\
 \midrule
 0.5 & 196.8 & 196.4 & 117.0 & 183.0 & 118.7 & 322.5 \\
 1.0 & 196.3 & 201.6 & 119.8 & 181.7 & 118.0 & 632.6 \\
@@ -143,8 +124,9 @@ Vol. & Static & Random & Follow & Lion & Bound & Follow GB \\
 \end{table}
 
 The random baseline separates two explanations that are easy to confuse. It
-relocates data without looking at the traffic. Across the sweep in
-Table~\ref{tab:sweep} it moves 162.7\,GB per episode and ends between 196.4
+relocates data without looking at the traffic. It draws from the whole action
+space, so 77\% of its draws are inapplicable and change nothing, yet across the
+sweep in Table~\ref{tab:sweep} the remainder still move 162.7\,GB per episode and ends between 196.4
 and 203.0\,ms, no better than doing nothing and at higher volatility slightly
 worse. The heuristic, at volatility 1, reaches 119.8\,ms, 39.0\% faster than
 static hashing. Movement by itself buys nothing; everything is in the choice
@@ -154,19 +136,19 @@ learned policy is a sensible thing to attempt.
 % ---------------------------------------------------------------------
 \subsection{Q3: the room for a better policy grows with volatility}
 
-Volatility controls how fast the geographic centre of the workload drifts
+Volatility controls how fast the geographic center of the workload drifts
 between windows. Table~\ref{tab:sweep} and Fig.~\ref{fig:sweep} sweep it over
 a factor of eight.
 
 Static hashing is flat, 195.5 to 196.8\,ms. It never tracked the workload, so
-it does not degrade as the workload moves faster. The bound improves, from
+it does not degrade as the workload moves faster. The oracle improves, from
 118.7 to 102.8\,ms, because a more volatile workload is a more sharply
 concentrated one, and a concentrated workload is easier to serve if the data
 is in the right place. Faster drift makes the problem harder for a policy and
 easier for an oracle.
 
 The heuristic goes the other way: 117.0\,ms rising to 160.4\,ms, whilst the
-data it moves rises from 322.5\,GB to about 900\,GB. Its advantage over static hashing falls from
+data it moves rises from 322.5\,GB to 874 to 900\,GB. Its advantage over static hashing falls from
 40.6\% to 18.2\%. A rule that reacts to the window just finished is chasing a
 target that has already moved, and under fast drift much of what each move
 buys has expired by the time it lands.
@@ -175,17 +157,18 @@ buys has expired by the time it lands.
 \centering
 \includegraphics[width=\textwidth]{sweep.png}
 \caption{Left: latency against volatility for static hashing, the reactive
-heuristic and the per-window bound. Right: the heuristic's distance above the
-bound, the room available to a better policy. Seed block 0 to 7.}
+heuristic and the per-window oracle. Right: the heuristic's distance above the
+oracle, the room available to a better policy. Seed block 0 to 7.}
 \label{fig:sweep}
 \end{figure*}
 
 
-The gap between the heuristic and the bound is $-1.7$\,ms at volatility 0.5,
-1.7\,ms at volatility 1, 25.9\,ms at 2 and 57.5\,ms at 4, where it is 36\% of
-the heuristic's own latency. At slow drift the heuristic is slightly
-\emph{below} the bound, because it moves replicas as well as leases and the
-bound moves leases only. Under slow drift, then, a reactive rule is already as
+The gap between the heuristic and the oracle is $-1.7$\,ms at volatility 0.5,
+1.7\,ms at volatility 1, 25.8\,ms at 2 and 57.5\,ms at 4 (paired 95\%
+interval [54.3, 61.6]\,ms), where it is 36\% of the heuristic's own latency. At slow drift the heuristic is slightly
+\emph{below} the oracle, which shows the oracle is not a minimum: it places
+each shard on its own and ignores the commit and quorum costs that couple
+them. Under slow drift, then, a reactive rule is already as
 good as the reference, and there is nothing worth learning. Under fast drift
 there is a great deal. The case for a learned policy is conditional on
 volatility, and the condition is measured rather than assumed. The
@@ -218,7 +201,7 @@ Static hash   & 192.1 &   0.0 \\
 Random        & 195.5 & 134.6 \\
 Follow traffic& 148.8 & 867.7 \\
 Lion-style    & 180.0 &  28.8 \\
-Bound         &  91.0 &   0.0 \\
+Oracle        &  91.0 &   n/a \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -274,11 +257,11 @@ Cluster   & 0.0 & 2.008 & \textbf{1.775} & 2.036 & 2.103 \\
 
 Training has plateaued rather than run short: held-out latency stays between
 about 160 and 190\,ms from step 50{,}000 to $10^6$, and in three of four runs
-the best checkpoint fell before step 170{,}000. The bound, at 91.0\,ms,
+the best checkpoint fell before step 170{,}000. The oracle, at 91.0\,ms,
 remains far away.
 
 % ---------------------------------------------------------------------
-\subsection{Q5: the ranking carries over to the cluster}
+\subsection{Q5: the ordering largely carries over to the cluster}
 
 The agent from the third learner seed, unchanged, was run on the cluster for
 a full 200-window episode on workload seed 2000, alongside follow, Lion-style
@@ -287,7 +270,8 @@ passed the harness checks, with no suspect or divergent step.
 
 \begin{table}[t]
 \caption{One 200-window episode per policy on the cluster, workload seed
-2000, volatility 4. Simulator column: the same seed and settings. Source:
+2000, volatility 4. Simulator column: the same seed and settings; the agent
+was not rerun in simulation on this seed alone. Source:
 \texttt{results/recorded/cluster-eval.csv}.}
 \label{tab:clustereval}
 \centering
@@ -305,16 +289,21 @@ Static     & 206.2 & 182.4 &   0.0 & 0.416 & 2.103 \\
 \end{table}
 
 The order under the objective, follow, agent, Lion-style, static, is the
-order the simulator gives. The agent is 13.4\,ms (6.5\%) faster than static
+order of the simulator's held-out means (Table~\ref{tab:weight}, $w=0.3$), but
+its middle is not resolved: agent and
+Lion-style differ by 0.014 in cost. The agent is 13.4\,ms (6.5\%) faster than static
 hashing and 25.6\,ms slower than the heuristic, moving 16.5\% of its data.
 Against the Lion-style planner the latency difference, 1.2\,ms, is inside
-the episode's sampling error; the agent's lower cost comes from lower
-imbalance.
+the episode's sampling error, and the agent's lower cost comes only from lower
+imbalance, so one episode cannot separate the two.
 
 The simulator's errors are systematic rather than random. For the two
 policies all of whose actions were applied, the cluster is slower by a
 steady margin: 23.7\,ms (13.0\%) for static hashing and 19.1\,ms (12.9\%)
-for the heuristic, whilst the data moved agrees to the decimal. A constant
+for the heuristic. Imbalance on the cluster is computed from the read-back
+placement and the requests actually sent, by the simulator's accounting rule,
+and data moved is the catalogue's account of each applied action; neither is
+measured from the database's storage. A constant
 offset of this kind does not change a ranking, which is what transfer
 requires.
 
@@ -338,8 +327,8 @@ rather than a contradiction, but it is the only cluster evidence there is.
 
 The simulator's cost model is analytic, and the cluster runs on one host with
 \texttt{netem} latency and no injected jitter or loss. Q1 and Q5 establish that placement
-matters on hardware and that the simulator ranks policies as the cluster
-does on one seed; they do not establish that its magnitudes are right, and
+matters on hardware and that the simulator orders the strongest and weakest
+policies as the cluster does on one seed; they do not establish that its magnitudes are right, and
 it is about 13\% optimistic where it can be compared.
 
 The cluster results rest on one episode per policy and one workload seed.
@@ -354,6 +343,6 @@ The weight analysis rescales fixed trajectories. It shows where the price of
 movement changes the verdict; it does not show what an agent trained at that
 price would do.
 
-Results at one volatility should not be generalised to another, which Q3
+Results at one volatility should not be generalized to another, which Q3
 demonstrates. The agent results at volatility 4 say nothing about volatility
 1, where the heuristic is already at the reference.

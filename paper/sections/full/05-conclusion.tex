@@ -6,20 +6,18 @@
 
 This paper asked whether a reinforcement learning agent can act as an
 autonomous database administrator, re-fragmenting and re-allocating shards
-as a workload's geographic centre of gravity moves. What it establishes is a
+as a workload's geographic center of gravity moves. What it establishes is a
 measured problem statement, a cluster that confirms the premise, a learned
 policy that makes a different and cheaper trade than the obvious heuristic,
-and evidence that the simulator ranks policies as the cluster does.
+and evidence that the simulator orders the strongest and weakest policies
+as the cluster does.
 
-On a real six-node CockroachDB cluster at replication factor three,
-gathering leaseholders in the region issuing the transactions against
-spreading them changes p95 latency by 1337.8\,ms. Placement matters on
-hardware. Sweeping how fast the workload moves shows when learning is worth
-attempting: a reactive heuristic that follows the traffic is at the
-reference under slow drift and 57.5\,ms above it under fast drift, whilst
-its advantage over static hashing falls from 40.6\% to 18.2\%. The case for
-a learned policy is conditional on volatility, and this work measures the
-condition.
+On a real six-node CockroachDB cluster, gathering leaseholders in the
+issuing region rather than spreading them changes p95 latency by
+1337.8\,ms. A reactive heuristic that follows the traffic is at the
+per-window oracle under slow drift and 57.5\,ms above it under fast drift,
+so the case for a learned policy is conditional on volatility, and this work
+measures the condition.
 
 At volatility 4 the agent is 13.7\% faster than static hashing on held-out
 seeds and faster than a Lion-style co-location planner on all four learner
@@ -29,8 +27,9 @@ slower than the heuristic, and at the migration weight it was trained with
 the heuristic still has the lower objective cost. Rescoring the same
 behavior shows the verdict turns on the price of movement: in simulation the
 agent is the cheapest policy for any migration weight between 0.50 and
-1.82. On the cluster, over one full episode per policy, the four policies
-rank as they do in simulation, and the simulator is optimistic by a steady
+1.82. On the cluster, over one full episode per policy, the heuristic is again
+cheapest and static hashing most expensive, the agent and the Lion-style
+planner cannot be separated, and the simulator is optimistic by a steady
 13\% for the policies whose actions all applied. The one policy that lost
 more in transfer did so for a reason the simulator does not model: the
 database refused lease moves onto replicas that had not yet caught up.
@@ -55,11 +54,11 @@ replica that may need a snapshot is refused on the cluster and accepted in
 simulation. Modeling it, or retrying a refused move in the next window,
 would remove the largest single source of transfer loss measured here.
 
-Address the plateau. Held-out latency stopped improving early in every run,
+Address the plateau. Held-out latency stopped improving early in at least three of four runs,
 so the lever is not more steps. Double Q-learning, a dueling head and
 prioritized replay, as combined in Rainbow \cite{hessel2018rainbow}, are the
 obvious next components, together with choosing the best checkpoint on more
-than three evaluation episodes.
+than three evaluation episodes and on the objective rather than latency alone.
 
 Fine-tune on the cluster. The harness already executes actions, reads the
 placement back and measures real transactions with the reward the simulator

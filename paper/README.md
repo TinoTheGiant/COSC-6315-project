@@ -21,6 +21,10 @@ pdflatex ccgrid && bibtex ccgrid && pdflatex ccgrid && pdflatex ccgrid
 
 ## State of the draft
 
+This table describes the midterm draft, `main.tex`, and is kept as a record.
+`ccgrid.tex` is complete; its open items are in
+`docs/publication-readiness.md`.
+
 | Section | State |
 |---|---|
 | Abstract | Not written. **Write it last**, after Evaluation |
