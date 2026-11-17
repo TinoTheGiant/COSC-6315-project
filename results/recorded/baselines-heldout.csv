@@ -1,0 +1,15 @@
+# Baselines on held-out seeds 2000-2007, 200 windows, commit f459c44.
+# Measured locally and verified to reproduce the CI runs digest-for-digest.
+volatility,policy,latency_ms,gb_moved,imbalance
+2.0,static,151.67,0.0,0.5011
+2.0,random,152.20,184.2,0.6478
+2.0,follow,114.57,1048.5,0.9451
+2.0,best,80.71,0.0,0.7823
+4.0,static,150.12,0.0,0.5614
+4.0,random,151.64,184.2,0.7091
+4.0,follow,129.04,1086.5,1.0034
+4.0,best,71.84,0.0,0.9450
+1.0,static,151.19,0.0,
+1.0,random,151.56,184.2,
+1.0,follow,90.76,752.6,
+1.0,best,85.77,0.0,
