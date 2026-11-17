@@ -220,25 +220,23 @@ episode in Q5, 131 of its 200 actions moved a lease, 55 moved a replica and
 14 split a shard.
 
 Under the objective the comparison with the heuristic is close and goes
-against the agent. With the latency and migration terms alone, at $w=0.30$,
-the four agents score 1.646 to 1.749 against the heuristic's 1.618; the
-imbalance term was not recorded for the agent runs and is omitted from both
-sides here. The agent does not beat the heuristic on the objective it was
-trained on.
+against the agent. At $w=0.30$ the four agents score 1.738 to 1.832 against
+the heuristic's 1.712. The agent does not beat the heuristic on the objective
+it was trained on.
 
 How this verdict depends on the price of movement is the subject of
 Table~\ref{tab:weight}. The policies' trajectories are fixed; only the weight
 used to score them changes. In simulation, the agent's cost falls below the
-heuristic's once $w$ exceeds 0.50, and stays below the Lion-style planner's
-until $w$ reaches 1.82. Over that whole band the learned policy is the
+heuristic's once $w$ exceeds 0.49, and stays below the Lion-style planner's
+until $w$ reaches 2.18. Over that whole band the learned policy is the
 cheapest of the four. This is a rescoring, not a retraining: an agent trained
 at a higher weight would behave differently, and that experiment has not been
 run.
 
 \begin{table}[t]
 \caption{Objective cost as the migration weight $w$ varies, with each
-policy's behavior fixed. Simulator: held-out seeds, mean of the four agents,
-imbalance omitted. Cluster: mean over workload seeds 2000 to 2003, full
+policy's behavior fixed. Simulator: held-out seeds, mean of the four
+agents. Cluster: mean over workload seeds 2000 to 2003, full
 Eq.~\eqref{eq:objective}. Lowest in each row in bold.}
 \label{tab:weight}
 \centering
@@ -247,10 +245,10 @@ Eq.~\eqref{eq:objective}. Lowest in each row in bold.}
 \toprule
  & $w$ & Agent & Follow & Lion & Static \\
 \midrule
-Simulator & 0.0 & 1.659 & \textbf{1.488} & 1.800 & 1.921 \\
-          & 0.3 & 1.686 & \textbf{1.618} & 1.804 & 1.921 \\
-          & 0.6 & \textbf{1.714} & 1.748 & 1.808 & 1.921 \\
-          & 1.0 & \textbf{1.751} & 1.922 & 1.814 & 1.921 \\
+Simulator & 0.0 & 1.748 & \textbf{1.582} & 1.917 & 1.959 \\
+          & 0.3 & 1.776 & \textbf{1.712} & 1.921 & 1.959 \\
+          & 0.6 & \textbf{1.803} & 1.842 & 1.925 & 1.959 \\
+          & 1.0 & \textbf{1.840} & 2.015 & 1.931 & 1.959 \\
 \addlinespace
 Cluster   & 0.0 & 2.010 & \textbf{1.785} & 2.391 & 2.243 \\
           & 0.3 & 2.027 & \textbf{1.910} & 2.396 & 2.243 \\
@@ -276,8 +274,8 @@ no suspect or divergent step.
 \begin{table}[t]
 \caption{Cluster, one 200-window episode per policy on each of workload
 seeds 2000 to 2003, volatility 4: means over the four seeds, with the range
-of latency. Simulator column: the same seeds and settings; the agent was not
-rerun in simulation per seed. Imb.: imbalance. Source:
+of latency. Simulator column: the same seeds and settings. Imb.: imbalance.
+Source:
 \texttt{results/recorded/cluster-eval.csv}.}
 \label{tab:clustereval}
 \centering
@@ -287,7 +285,7 @@ rerun in simulation per seed. Imb.: imbalance. Source:
 Policy & Cluster ms & Sim. & GB & Imb. & Cost \\
 \midrule
 Follow & 169.0 (161--175) & 148.8 & 827.4 & 0.96 & 1.910 \\
-Agent  & 192.4 (174--204) &   --  & 118.5 & 0.86 & 2.028 \\
+Agent  & 192.4 (174--204) & 162.0 & 118.5 & 0.86 & 2.028 \\
 Static & 220.2 (206--234) & 193.5 &   0.0 & 0.41 & 2.243 \\
 Lion   & 226.8 (192--276) & 183.4 &  30.0 & 1.24 & 2.396 \\
 \bottomrule
@@ -304,7 +302,8 @@ imbalance still gives it the lower cost.
 
 The simulator's errors are systematic rather than random. For static hashing
 and the heuristic the cluster is slower on every seed, by 22.0 to 33.7\,ms
-and 18.8 to 21.7\,ms, 13.7\% and 13.5\% on average. Cluster imbalance and data moved
+and 18.8 to 21.7\,ms, 13.7\% and 13.5\% on average; for the agent by 27.6 to
+31.6\,ms, 18.7\%. Cluster imbalance and data moved
 are counted from the read-back placement and the requests sent, by the
 simulator's rule, not measured from storage. An
 offset of this kind does not change an ordering, and the per-seed order of
@@ -326,7 +325,7 @@ and 4 actions), so its data moved there falls short of the simulator's.
 On the cluster's four-seed means (Table~\ref{tab:weight}) the heuristic is
 cheapest up to $w=0.63$ and the agent beyond it; the Lion-style planner never
 is. Per seed the crossing falls between 0.36 and 0.73, around the simulator's
-0.50.
+0.49.
 
 % ---------------------------------------------------------------------
 \subsection{Threats to validity}
@@ -336,7 +335,8 @@ The simulator's cost model is analytic, and the cluster runs on one host with
 matters on hardware and that the agent's place among the policies, and the
 baselines' order on each seed, carry over; they do not establish that the
 simulator's magnitudes are right. It is about 14\% optimistic for static
-hashing and the heuristic and about 24\% for the Lion-style planner.
+hashing and the heuristic, 19\% for the agent and 24\% for the Lion-style
+planner.
 
 The cluster results rest on four workload seeds and one learner seed, one
 episode each, which supports a consistent ordering but not an interval.

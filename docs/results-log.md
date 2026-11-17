@@ -622,3 +622,20 @@ no suspect or divergent step. Combined with evaluation 1 in
   agent above (until static at w = 3.9); Lion never. Per-seed crossing 0.36 to
   0.73.
 - Retired: "agent and Lion-style cannot be separated" (seed 2000 only).
+
+## Agent numbers recovered from the archived artifacts (16 November 2026)
+
+The nine Actions runs behind the paper were downloaded with `gh run download`
+into `results/archive/` (55 MB). The four training runs' held-out
+`summary.csv` files supply what the job summaries lacked:
+
+- Agent imbalance on seeds 2000 to 2007, per learner seed: 0.888, 0.825,
+  0.934, 0.923 (mean 0.893). Baselines on the same seeds (rerun 16 Nov):
+  static 0.382, follow 0.935, Lion 1.170.
+- Table IV's simulator rows now use the full objective. At w = 0.30 the agents
+  score 1.738 to 1.832 against follow's 1.712. The agent is cheapest in
+  simulation for 0.49 < w < 2.18 (was 0.50 to 1.82 with imbalance omitted).
+- The cluster model (learner seed 3) in simulation on seeds 2000 to 2003:
+  161.82, 172.05, 145.98, 168.16 ms (mean 162.0). Cluster minus simulator:
+  +27.6 to +31.6 ms, 18.7% on average, between the baselines' 14% and Lion's
+  24%.
