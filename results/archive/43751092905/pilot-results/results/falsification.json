@@ -1,0 +1,63 @@
+{
+  "replicas_requested": 3,
+  "voters_per_range": [
+    3
+  ],
+  "regions": 6,
+  "transactions_per_case": 200,
+  "ranges_touched_per_txn": 3,
+  "relocate_failures": {
+    "co_located": 0,
+    "spread": 0
+  },
+  "observed_regions": {
+    "co_located": [
+      "us-east-1"
+    ],
+    "spread": [
+      "ap-northeast-1",
+      "ap-southeast-1",
+      "eu-central-1",
+      "eu-west-1",
+      "us-east-1",
+      "us-west-2"
+    ]
+  },
+  "distinct_regions": {
+    "co_located": 1,
+    "spread": 6
+  },
+  "co_located": {
+    "p50": 293.55280100003256,
+    "p95": 441.6607969999973,
+    "mean": 305.1639878999998,
+    "stdev": 82.1522023308899
+  },
+  "spread": {
+    "p50": 1059.0315890000284,
+    "p95": 1779.467779000015,
+    "mean": 1061.4379845149963,
+    "stdev": 333.51622346828975
+  },
+  "drift_p50_by_quintile": {
+    "co_located": [
+      300.08151599997746,
+      290.4561510000008,
+      364.4957120000072,
+      294.88154000000577,
+      294.28393000000597
+    ],
+    "spread": [
+      1030.084014999943,
+      1007.5075820000166,
+      1146.1189279999644,
+      1079.1628790000232,
+      979.5558219999521
+    ]
+  },
+  "p95_gap_ms": 1337.8069820000178,
+  "p95_gap_ci95": [
+    1168.5108439999112,
+    1407.7691459999642
+  ]
+}

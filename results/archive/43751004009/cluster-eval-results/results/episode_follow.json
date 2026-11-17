@@ -1,0 +1,12 @@
+{
+ "policy": "follow",
+ "seed": 2000,
+ "steps": 200,
+ "mean_latency_ms": 167.22848495155242,
+ "gb_moved_total": 771.5625,
+ "mean_step_s": 12.86365391540507,
+ "mean_imbalance": 1.0237102655748103,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 1.8903902510730053
+}

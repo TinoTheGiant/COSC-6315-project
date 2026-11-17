@@ -1,0 +1,12 @@
+{
+ "policy": "lion",
+ "seed": 2001,
+ "steps": 200,
+ "mean_latency_ms": 276.4002882754261,
+ "gb_moved_total": 30.0,
+ "mean_step_s": 19.510086891319915,
+ "mean_imbalance": 1.236683966030753,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.892171279357336
+}
