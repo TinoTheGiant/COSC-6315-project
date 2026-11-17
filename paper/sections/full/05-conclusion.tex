@@ -21,10 +21,11 @@ so the case for a learned policy is conditional on volatility, and this work
 measures the condition.
 
 At volatility 4 the agent is 13.7\% faster than static hashing on held-out
-seeds and faster than a Lion-style co-location planner on all four learner
-seeds, and on average it moves about a fifth of the data the heuristic
-moves. It is 17\,ms
-slower than the heuristic, and at the migration weight it was trained with
+seeds, faster on average than a Lion-style co-location planner though not
+distinguishably across workload seeds, and moves about a fifth of the data the
+heuristic moves, partly by splitting shards selectively before moving them.
+Neither throttling the heuristic nor splitting evenly reproduces that trade.
+It is 17\,ms slower than the heuristic, and at the migration weight it was trained with
 the heuristic still has the lower objective cost. Rescoring the same
 behavior shows the verdict turns on the price of movement: in simulation the
 agent is the cheapest policy for any migration weight between 0.49 and

@@ -131,7 +131,7 @@ lease move (a cheap remaster) over a replica move (a copy), and then
 rebalances load. It is the closest published system we could adapt to this
 action space, and unlike the heuristic it weighs movement cost. Like Lion, its
 cost model has no distance term, and we omit Lion's workload predictor, so it
-plans from the last window; it does nothing in 90 to 95\% of windows.
+plans from the last window; it does nothing in about 89\% of windows.
 \item \textbf{Per-window oracle (fixed shards)} is not a policy. Each window,
 it searches every assignment of primaries to regions ($6^6$ for the six
 starting shards), with followers in the regions nearest each primary, and
@@ -156,19 +156,19 @@ is copied every 2000 steps, and $\epsilon$ falls from 1.0 to 0.05 over the
 first 30\% of training. Every $10^4$ steps the policy is scored on three
 evaluation seeds, and the checkpoint with the lowest mean latency is kept.
 
-Two additions to the plain form are used, each because a measured failure
-called for it. Inapplicable actions are masked~\cite{huang2022masking,zahavy2018elimination},
+Two additions to the plain form are used. Inapplicable actions are masked~\cite{huang2022masking,zahavy2018elimination},
 both when the agent selects an action and in the maximum taken by its
 bootstrap target: without the mask, 79.9 to 89.8\% of the agent's chosen
 actions were inapplicable, no better than a uniform policy's 80.4\%. And
 returns are accumulated over three steps rather than one, because a move is
 charged in full when it is made whilst the latency it buys arrives in later
 windows. Against one-step returns this improved held-out latency by 5.4\,ms
-over four learner seeds (paired 95\% interval $[-14.6, 3.8]$\,ms, at an
-earlier replication factor of 2): not significant, and kept because it costs
+over four learner seeds (paired 95\% $t$-interval $[-14.6, 3.8]$\,ms, at an
+earlier replication factor of 2, so not the protocol of Section~\ref{sec:metrics}): not significant, and kept because it costs
 nothing. The
-other extensions that Rainbow~\cite{hessel2018rainbow} combines, such as
-double Q-learning, a dueling head and prioritized replay, are not used, so that any later improvement is attributable to the extension
+other extensions that Rainbow~\cite{hessel2018rainbow} combines, double
+Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}
+and prioritized replay~\cite{schaul2016per}, are not used, so that any later improvement is attributable to the extension
 that produced it.
 
 Two choices in the training setup are worth stating because they are easy to
@@ -178,7 +178,7 @@ rather than the structure behind it. Evaluation uses a block of seeds disjoint
 from the training seeds and acts greedily rather than exploring, so the
 reported number is generalization rather than recall.
 
-\subsection{Metrics}
+\subsection{Metrics}\label{sec:metrics}
 
 Results report mean latency in milliseconds, averaged over the windows of an
 episode; p95 latency where the tail matters; data moved, in gigabytes per
@@ -194,19 +194,26 @@ sample and nothing guarantees the per-seed means are normally distributed.
 
 \subsection{Experimental apparatus}
 
-Every number reported here comes from a single script that writes one
+Simulator numbers come from one script that writes a
 self-contained directory per run, holding the resolved configuration, the seed
 list, the commit the code was at, the package versions, the machine, the raw
 per-window record, the per-seed summary, and the exact command that reproduces
 the run. Training and cluster runs execute on GitHub Actions rather than on a
 personal machine, so each is unattended and each records the hardware it
-received. The simulator is deterministic, so a simulator run reproduces exactly
-from its recorded configuration wherever it is executed.
+received; agent and cluster figures are copied from those runs' summaries and
+archived artifacts, and each recorded table names the run it came from. The
+simulator is deterministic, so a simulator run reproduces exactly from its
+recorded configuration wherever it is executed. An anonymised copy of the
+code, configurations, run records and archived artifacts accompanies the
+submission.
 
 \subsection{Validation on a real cluster}
 
-The trained agent is run on the cluster unchanged; fine-tuning it there is
-left to future work. The simulator and the
+Training in a cheap simulator and deploying on expensive real hardware is
+borrowed from robotics, where it is standard and where the gap between the two
+is the central difficulty~\cite{tobin2017domain}. Here the trained agent is
+run on the cluster unchanged; fine-tuning it there is left to future work. The
+gap is narrower and more checkable than in robotics: the simulator and the
 cluster can be made to agree on the observation space, the action space and the
 cost structure by construction, which is why the database was chosen for that
 property.

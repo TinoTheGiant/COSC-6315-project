@@ -709,3 +709,42 @@ volatility 4) and stays ahead of static and Lion-style, but follow improves
 under slower drift and leads by 41 ms. The trained policy does not adapt its
 trade to the slower workload. Not claimed: anything about an agent trained at
 volatility 2.
+
+## Second in-project review: findings checked and acted on (17 November 2026)
+
+An adversarial reading by a separate AI session (not peer review) of
+Sections I to IV-D. Every finding below was checked against the code or the
+archived runs before the paper changed.
+
+- **Splitting and the data saving.** Confirmed: agents finish with 12.4 to
+  19.8 shards (archived Train summaries), their replica moves carry 1.9 to
+  6.0 GB against 10 GB for fixed-shard policies. New control: follow,
+  throttled follow, Lion and static started on 12 and 20 equal shards
+  (`results/runs/20261117T054022Z-*-presplit{12,20}-heldout-v4`). Follow:
+  177.49 ms / 448.8 GB (12 shards), 197.40 ms / 257.6 GB (20 shards); static
+  212.75 and 229.13 ms. Even splitting makes every fixed policy slower and
+  does not reproduce the agent's 165.9 ms / 183.6 GB.
+- **Lease churn.** Confirmed from the cluster step CSVs: agent 131 to 188 lease
+  moves per episode, 36 to 81 of them A-B-A returns; follow 111 to 122 and
+  none; Lion 14 to 41.
+- **Intervals** (paired by workload seed, mean of the four agents, percentile
+  bootstrap as in `run_experiment.bootstrap_ci`): agent minus static -26.23
+  [-31.05, -20.78]; minus follow 17.07 [11.12, 22.49]; minus Lion -14.10
+  [-30.89, 2.53] (includes zero: "faster than Lion" withdrawn as a firm claim);
+  minus follow every 4 -5.94 [-12.41, 0.69]; minus follow every 8 -19.96
+  [-27.46, -12.62]; objective cost minus follow +0.064 [0.004, 0.115].
+  Per-learner crossing weights against follow: 0.37, 0.71, 0.37, 0.55.
+- **Oracle wording.** The gap is now called an upper bound on the room for a
+  policy, and the "within 15%" line corrected (16.9% above the oracle).
+  Oracle held-out run committed: `20261117T042521Z-f4870a4f-heldout-oracle`.
+- **Model vs CockroachDB commit.** Disclosed in threats: the model charges two
+  rounds from a participant coordinator; CockroachDB uses gateway coordination
+  and parallel commits.
+- Abstract premise reworded (CockroachDB rebalances by load); "transaction
+  latency" corrected to request latency; reproducibility statement corrected;
+  Lion idle share 88.5% not "90 to 95%"; related work scoped, Hilprecht et al.
+  (SIGMOD 2020) and DynaMast (ICDE 2020) added from Crossref metadata.
+- Note on numbering: the paper's "learner seed 3" is the code's seed 2 (run
+  43674558770); the paper counts from 1.
+- Not acted on: a forecast-driven heuristic and a geography-aware Lion (new
+  baselines, not wording); Volley, P-Store, Squall, Detock, Tuba (unverified).

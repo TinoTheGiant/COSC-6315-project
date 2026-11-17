@@ -111,7 +111,7 @@
              Jennie Duggan and Aaron J. Elmore and Ashraf Aboulnaga and
              Andrew Pavlo and Michael Stonebraker},
   title   = {{E-Store}: Fine-Grained Elastic Partitioning for Distributed
-             Transaction Processing},
+             Transaction Processing Systems},
   journal = {Proceedings of the VLDB Endowment},
   volume  = {8}, number = {3}, pages = {245--256}, year = {2014},
   doi     = {10.14778/2735508.2735514}
@@ -307,7 +307,7 @@
   author    = {David Karger and Eric Lehman and Tom Leighton and
                Rina Panigrahy and Matthew Levine and Daniel Lewin},
   title     = {Consistent hashing and random trees: distributed caching
-               protocols for relieving hot spots on the World Wide Web},
+               protocols for relieving hot spots on the {World Wide Web}},
   booktitle = {Proceedings of the Twenty-Ninth Annual ACM Symposium on Theory
                of Computing (STOC)},
   pages     = {654--663}, year = {1997},
@@ -407,13 +407,14 @@
   doi     = {10.32473/flairs.v35i.130584}
 }
 
-@misc{zahavy2018elimination,
-  author       = {Tom Zahavy and Matan Haroush and Nadav Merlis and
-                  Daniel J. Mankowitz and Shie Mannor},
-  title        = {Learn What Not to Learn: Action Elimination with Deep
-                  Reinforcement Learning},
-  howpublished = {arXiv:1809.02121},
-  year         = {2018}
+@inproceedings{zahavy2018elimination,
+  author    = {Tom Zahavy and Matan Haroush and Nadav Merlis and
+               Daniel J. Mankowitz and Shie Mannor},
+  title     = {Learn What Not to Learn: Action Elimination with Deep
+               Reinforcement Learning},
+  booktitle = {Advances in Neural Information Processing Systems 31 (NeurIPS)},
+  pages     = {3562--3573},
+  year      = {2018}
 }
 
 % ------------------------------------------------ why pre-train then fine-tune
@@ -452,8 +453,8 @@
 % =====================================================================
 
 @inproceedings{atrey2019unifying,
-  author    = {Ankita Atrey and Gregory Van Seghbroeck and Higinio Mora and
-               Filip De Turck and Bruno Volckaert},
+  author    = {Ankita Atrey and Gregory {Van Seghbroeck} and Higinio Mora and
+               Filip {De Turck} and Bruno Volckaert},
   title     = {Unifying Data and Replica Placement for Data-intensive Services
                in Geographically Distributed Clouds},
   booktitle = {Proceedings of the 9th International Conference on Cloud
@@ -572,12 +573,12 @@
 }
 
 @article{costafilho2020adaptive,
-  author  = {Jos{\'e} S. Costa Filho and Denis M. Cavalcante and
+  author  = {Jos{\'e} S. {Costa Filho} and Denis M. Cavalcante and
              Leonardo O. Moreira and Javam C. Machado},
   title   = {An Adaptive Replica Placement Approach for Distributed Key-Value
              Stores},
   journal = {Concurrency and Computation: Practice and Experience},
-  volume  = {32}, number = {11}, year = {2020},
+  volume  = {32}, number = {11}, pages = {e5675}, year = {2020},
   doi     = {10.1002/cpe.5675}
 }
 
@@ -586,7 +587,7 @@
   author       = {{Cockroach Labs}},
   title        = {Follow-the-Workload Topology},
   howpublished = {CockroachDB documentation, v25.2,
-                  \url{https://www.cockroachlabs.com/docs/v25.2/topology-follow-the-workload}},
+                  \url{https://docs.cockroachlabs.com/docs/v25.2/topology-follow-the-workload}},
   note         = {Accessed 16 November 2026},
   year         = {2025}
 }
@@ -611,4 +612,23 @@
   journal = {Proceedings of the VLDB Endowment},
   volume  = {12}, number = {11}, pages = {1747--1761}, year = {2019},
   doi     = {10.14778/3342263.3342647}
+}
+
+% Added 17 November 2026 from Crossref metadata; described at title level only.
+@inproceedings{hilprecht2020partitioning,
+  author    = {Benjamin Hilprecht and Carsten Binnig and Uwe R{\"o}hm},
+  title     = {Learning a Partitioning Advisor for Cloud Databases},
+  booktitle = {Proceedings of the 2020 ACM SIGMOD International Conference on
+               Management of Data},
+  pages     = {143--157}, year = {2020},
+  doi       = {10.1145/3318464.3389704}
+}
+
+@inproceedings{abebe2020dynamast,
+  author    = {Michael Abebe and Brad Glasbergen and Khuzaima Daudjee},
+  title     = {{DynaMast}: Adaptive Dynamic Mastering for Replicated Systems},
+  booktitle = {2020 IEEE 36th International Conference on Data Engineering
+               (ICDE)},
+  pages     = {1381--1392}, year = {2020},
+  doi       = {10.1109/ICDE48307.2020.00123}
 }

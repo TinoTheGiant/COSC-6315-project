@@ -56,7 +56,7 @@ of the key alone, so that adding or removing a node moves only a small share of
 the data and no central directory is needed. CRUSH~\cite{weil2006crush} extends
 that to replicated data under user-defined failure domains, and a recent survey
 compares the family~\cite{coluzzi2023hashing}. This is what the static baseline
-in this paper is, and it is what most production systems use. It is also the
+in this paper is, and many key-value and object stores use it. It is also the
 root of the problem studied here: a function of the key cannot observe where a
 request came from.
 
@@ -101,12 +101,15 @@ let a developer declare data locality in SQL, which the database maps to
 replica placement and partitioning. In all four, geography drives placement,
 and none is presented as a learned policy.
 
-These systems share the premise of this work, that placement should follow the
+The workload-driven partitioners above (Schism, E-Store, Clay and their
+successors) share the premise of this work, that placement should follow the
 workload, and they share a limitation. Each re-solves an optimization problem
-when a trigger fires, using a cost model written by hand. None improves from the
-outcomes of its own past decisions, and none of their cost models carries a term
+when a trigger fires, using a cost model written by hand, and none improves from
+the outcomes of its own past decisions. Their cost models also carry no term
 for geographic distance, because they were designed for clusters in one data
-center where the distance between any two nodes is much the same.
+center; the geo-aware systems just described supply that term but are not
+learned. DynaMast~\cite{abebe2020dynamast} is closest to the \textsc{move\_lease}
+action: it changes which replica is the master as the workload shifts.
 
 Lion~\cite{lion2024} is the closest system to this work in intent. It observes
 that a transaction is slow mainly because it spans machines, and it therefore
@@ -173,7 +176,10 @@ part. Two of its devices recur here. When the highest-valued action is invalid
 RLRP takes the next highest, which is action masking at selection time, as the
 agent here does. And when the node count grows it reuses the trained
 weights, zero-initializing the new inputs, which is the natural route past the
-fixed region count this work assumes. Neuroshard~\cite{eldeeb2022neuroshard} learns shard assignments from past
+fixed region count this work assumes. Hilprecht et al.~\cite{hilprecht2020partitioning} learn a partitioning advisor for
+cloud databases with deep reinforcement learning, deciding how tables are
+partitioned rather than where their pieces sit geographically.
+Neuroshard~\cite{eldeeb2022neuroshard} learns shard assignments from past
 queries with deep reinforcement learning, optimizing several objectives
 together, fanout and load balance among them, and Costa Filho et al.~\cite{costafilho2020adaptive} change replica
 placement in a key-value store incrementally with deep reinforcement learning
@@ -194,8 +200,8 @@ differ in capacity, rather than across regions that differ in distance from the
 traffic. And most hold the unit of placement fixed: a fragment, an object or a
 block is placed, never split. Neuroshard learns the shard assignment itself,
 with fanout and load balance as its stated objectives.
-Mahmoud et al.~\cite{mahmoud2025rlfawm} come closest on the first axis and
-still treat fragments as given, and a tabular
+Mahmoud et al.~\cite{mahmoud2025rlfawm} come closest on the first axis and,
+as their abstract describes the method, still allocate given fragments, and a tabular
 Q-function does not extend to the state space a six-region cluster with twenty
 shards produces.
 

@@ -1,0 +1,13 @@
+# Fixed-shard policies started on 12 or 20 equal shards instead of 6. Held-out seeds 2000-2007,
+# volatility 4, primary_only, 200 windows. Runs results/runs/20261117T054022Z-*-presplit{12,20}-heldout-v4.
+shards,policy,latency_ms,gb_moved,load_imbalance,mean_tail_ms
+12,follow,177.49,448.8,0.710,652.05
+12,follow4,199.59,173.5,0.584,716.12
+12,follow8,206.78,85.3,0.519,729.33
+12,lion,183.63,40.5,0.742,561.74
+12,static,212.75,0.0,0.351,742.77
+20,follow,197.40,257.6,0.566,742.83
+20,follow4,214.64,116.2,0.466,788.15
+20,follow8,225.08,49.6,0.401,825.72
+20,lion,184.67,38.2,0.607,576.25
+20,static,229.13,0.0,0.297,824.58

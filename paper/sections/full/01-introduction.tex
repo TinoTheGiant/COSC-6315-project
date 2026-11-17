@@ -21,9 +21,8 @@ sleeps, and it moves abruptly when something local draws attention to one
 region. A placement chosen for the morning is wrong by the evening. Every
 request that has to cross an ocean to reach its data pays the round-trip time
 of that ocean, and a transaction touching several shards held in several
-regions pays it repeatedly, because the protocol that keeps such a transaction
-atomic requires more than one round of agreement between the machines
-involved. The result is that latency degrades steadily as the mismatch between
+regions pays it repeatedly, because keeping such a transaction atomic means
+coordinating every region it touches before it can commit. The result is that latency degrades steadily as the mismatch between
 placement and traffic grows.
 
 The obvious response is to move the data when the traffic moves. A simple rule
@@ -36,7 +35,8 @@ drift is slow, the simple rule is 16.9\,ms above the lowest latency any
 placement of the same shards could reach, and there is little worth learning.
 When drift is fast, the same rule falls 75.4\,ms short of that bound, 47\% of
 its own latency, because it reacts one window behind a target that has
-already moved again. The room for a learned policy is therefore largest exactly
+already moved again. The room for a learned policy, bounded above by that
+oracle, is therefore largest exactly
 where the problem is hardest, and that is a measured observation rather than an
 assumption.
 

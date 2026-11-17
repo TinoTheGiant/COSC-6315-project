@@ -7,13 +7,13 @@ Numbers: docs/results-log.md, "Training round, 15 November" and
 **Title:** Reinforcement Learning for Dynamic Data Fragmentation and Allocation
 
 Distributed databases fix how data is split into shards at design time and
-place those shards with key-based rules that never observe where requests
-originate. When the geographic center of a workload moves, as it does daily in
+place those shards by key, or by rebalancing rules that react to current load
+rather than to where the workload is heading. When the geographic center of a workload moves, as it does daily in
 multi-region services and abruptly during local events, placement drifts away
-from the traffic and transaction latency rises. We train a Deep Q-Network
+from the traffic and request latency rises. We train a Deep Q-Network
 agent that adjusts placement continuously. Its actions move a shard's
 leaseholder, move a replica, or split the shard, and its reward combines
-transaction latency, the volume of data moved, and load imbalance. We mask
+request latency, the volume of data moved, and load imbalance. We mask
 invalid actions and use multi-step returns, so that a move is credited with
 the latency it saves in later windows. The agent is trained in a simulator
 of a six-region cluster and evaluated on a six-node CockroachDB cluster with
