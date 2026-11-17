@@ -777,7 +777,11 @@ recorded in `results/recorded/cluster-eval.csv` and `tradeoff.csv`.
   [165.98, 176.21], 224.5 GB. Same seeds at w = 0.30: 163.18 / 117.8 and
   162.74 / 121.7. Higher weight, more movement and higher latency; two runs
   do not separate this from run spread (118 to 278 GB at w = 0.30). Cost at
-  w = 0.6 pending the archived summary.csv (imbalance).
+  w = 0.6 (imbalance 0.735 / 0.874 from the archived summary.csv): 1.823 /
+  1.861 against follow 1.842 (paired diffs -0.019 [-0.067, 0.028], +0.019
+  [-0.026, 0.066]) and against the w = 0.30 agents of the same learner seeds,
+  1.756 / 1.757 (+0.066 [0.014, 0.114], +0.103 [0.052, 0.155]). Recorded in
+  `results/recorded/w06.csv`.
 - Paper: Table V gains Agent 1 and CockroachDB rows; Q5 gains two
   paragraphs; weight analysis reports the trained w = 0.6 agents; abstract,
   introduction, threats and conclusion follow.

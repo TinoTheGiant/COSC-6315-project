@@ -274,10 +274,14 @@ learner seeds 1 and 3 and otherwise unchanged, reach 169.5 and 170.6\,ms on
 the same held-out seeds and move 181 and 225\,GB, against 163.2 and
 162.7\,ms and 118 and 122\,GB for the same learner seeds at $w=0.30$.
 Doubling the price of movement made them slower and made them move more.
-Two runs cannot separate the weight from run-to-run spread, which at
-$w=0.30$ spans 118 to 278\,GB, but they give no sign that the agent learns
-the trade the weight sets.
-% TODO(w06-cost): add their cost at w=0.6 once the archived summary.csv gives imbalance.
+Scored at $w=0.6$, the weight they were trained for, they cost 1.823 and
+1.861, level with the heuristic's 1.842 (paired by workload seed, both
+intervals include zero), and above the 1.756 and 1.757 of the same learner
+seeds trained at $w=0.30$, by 0.066 [0.014, 0.114] and 0.103 [0.052, 0.155].
+The agents trained at the lower weight do better at the higher one. Two runs
+cannot separate the weight from run-to-run spread, which at $w=0.30$ spans
+118 to 278\,GB, but they give no sign that the agent learns the trade the
+weight sets.
 
 \begin{table}[t]
 \caption{Objective cost as the migration weight $w$ varies, with each
