@@ -132,6 +132,12 @@ rebalances load. It is the closest published system we could adapt to this
 action space, and unlike the heuristic it weighs movement cost. Like Lion, its
 cost model has no distance term, and we omit Lion's workload predictor, so it
 plans from the last window; it does nothing in about 89\% of windows.
+\item \textbf{CockroachDB} hands placement back to the database, on the
+cluster only. From the common starting placement the harness re-enables its
+load-based lease and replica rebalancing, follow-the-workload
+included~\cite{crdb2025ftw}, and then chooses nothing. Splits and merges stay
+off, as for every policy. It is the comparison an operator would make first,
+and the simulator has no model of it.
 \item \textbf{Per-window oracle (fixed shards)} is not a policy. Each window,
 it searches every assignment of primaries to regions ($6^6$ for the six
 starting shards), with followers in the regions nearest each primary, and

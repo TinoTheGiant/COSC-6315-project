@@ -748,3 +748,36 @@ archived runs before the paper changed.
   43674558770); the paper counts from 1.
 - Not acted on: a forecast-driven heuristic and a geography-aware Lion (new
   baselines, not wording); Volley, P-Store, Squall, Detock, Tuba (unverified).
+
+## Cluster: second agent and CockroachDB; agents trained at w = 0.6 (17 November 2026)
+
+Cluster runs 44021436487 (2000), 44021534976 (2001), 44021600636 (2002),
+44021771876 (2003), commit 153f6b8, `policies: agent crdb`, model 43674067630
+(learner seed 1). Training runs 44018419041 (seed 0) and 44018524015 (seed 2),
+commit 9d5de71, `W_MIGRATION: 0.6`. Numbers copied from the job summaries;
+recorded in `results/recorded/cluster-eval.csv` and `tradeoff.csv`.
+
+- **Second agent (learner seed 1).** 202.39 / 202.52 / 190.53 / 198.00 ms
+  (mean 198.36), p95 615 / 667 / 548 / 620, GB 128.7 / 62.1 / 38.7 / 89.3,
+  cost 2.115 / 2.110 / 1.983 / 2.074. Slower than follow on every seed (25.1
+  to 35.2 ms), faster than static on every seed (3.8 to 31.9, mean 21.8,
+  9.9%). On seed 2000 its cost is above static (2.103) and Lion (2.041).
+  Offset from its simulator latency (169.00 / 166.21 / 153.91 / 175.45, from
+  the archived summary.csv): 33.4 / 36.3 / 36.6 / 22.6 ms, 19.6%.
+- **Refusals.** 120 / 108 / 134 / 1 of its 200 actions refused ("target may
+  need a Raft snapshot"); 109 / 86 / 104 / 0 repeat the refused action of the
+  previous window; longest run 43 / 18 / 43 / 1. Counted from the step lines
+  of the logs (agent episode only). Tech-debt 18.
+- **CockroachDB (ADR-0021).** 209.07 / 205.70 / 226.57 ms on 2000 / 2002 /
+  2003, GB 0, lease changes 15 / 8 / 2, cost 2.156 / 2.108 / 2.320. Seed 2001
+  failed at reset (`PlacementError`, replicas [1, 2, 5] for [1, 2, 3]),
+  tech-debt 17; rerun pending.
+- **w = 0.6 training.** Held-out (seeds 2000 to 2007, volatility 4): learner
+  seed 1 169.46 ms [163.77, 174.71], 181.3 GB; learner seed 3 170.61 ms
+  [165.98, 176.21], 224.5 GB. Same seeds at w = 0.30: 163.18 / 117.8 and
+  162.74 / 121.7. Higher weight, more movement and higher latency; two runs
+  do not separate this from run spread (118 to 278 GB at w = 0.30). Cost at
+  w = 0.6 pending the archived summary.csv (imbalance).
+- Paper: Table V gains Agent 1 and CockroachDB rows; Q5 gains two
+  paragraphs; weight analysis reports the trained w = 0.6 agents; abstract,
+  introduction, threats and conclusion follow.

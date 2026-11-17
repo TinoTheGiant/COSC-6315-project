@@ -65,3 +65,12 @@ Accounting:
   active.
 - `tests/test_harness_cluster.py` checks the settings round trip and that
   `bytes_added` counts a replica move and not a lease move.
+
+## Outcome (17 November 2026)
+
+Runs 44021436487, 44021534976, 44021600636 and 44021771876 (commit 153f6b8).
+On seeds 2000, 2002 and 2003 CockroachDB moved no replicas and 2 to 15 leases
+per episode; latency 209.07, 205.70 and 226.57 ms against static hashing's
+206.17, 213.32 and 226.82. As this ADR expected, it barely moved anything,
+and the paper reports that rather than tuning it. The seed-2001 crdb episode
+failed at reset (`PlacementError`, tech-debt 17) and is being rerun alone.

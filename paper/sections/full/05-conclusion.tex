@@ -29,10 +29,13 @@ It is 17\,ms slower than the heuristic, and at the migration weight it was train
 the heuristic still has the lower objective cost. Rescoring the same
 behavior shows the verdict turns on the price of movement: in simulation the
 agent is the cheapest policy for any migration weight between 0.49 and
-2.18. On the cluster, over four workload seeds, the heuristic is cheapest and
-the agent second on every seed, 12.6\% faster than static hashing on
-average, and the simulator is optimistic by a steady 14\% for static
-hashing and the heuristic. The Lion-style planner lost more in transfer,
+2.18, though two agents trained at twice the weight moved more data rather
+than less. On the cluster, over four workload seeds, the heuristic is
+cheapest on every seed and one agent second on every seed, 12.6\% faster
+than static hashing on average; a second agent, refused many lease moves it
+kept repeating, is 9.9\% faster and on one seed falls to last. CockroachDB's
+own rebalancer barely acted in these episodes, and the simulator is
+optimistic by a steady 14\% for static hashing and the heuristic. The Lion-style planner lost more in transfer,
 partly to lease moves the database refused onto replicas that had not yet
 caught up, a rule the simulator does not model.
 
@@ -41,24 +44,27 @@ caught up, a rule the simulator does not model.
 
 In the order they should be attempted.
 
-Add learner seeds to the cluster evaluation. Four workload seeds with one or
-two trained agents give a consistent ordering; an interval across learner
-seeds needs more of them.
+Add learner seeds to the cluster evaluation. Four workload seeds with two
+trained agents order the baselines but already disagree about the agent's
+rank; an interval across learner seeds needs more of them.
 
 Measure what fragmentation adds. No agent with splitting disabled was trained,
 so the paper cannot say whether the \textsc{split} action earns its place.
 Training two or three agents with splits masked out, and comparing them on the
 same held-out seeds, would settle it.
 
-Train at the migration weight, and the volatility, a deployment cares about.
-The weight analysis rescales fixed behavior, and an agent trained at
-volatility 4 does not carry its advantage to volatility 2 unchanged; both call
-for training under the conditions the policy will meet, or for a policy
-conditioned on them.
+Condition the policy on the migration weight and the volatility.
+The weight analysis rescales fixed behavior, two agents trained at twice the
+weight moved more rather than less, and an agent trained at
+volatility 4 does not carry its advantage to volatility 2 unchanged. The
+policy does not yet respond to the conditions it is trained or run under; a
+policy conditioned on the weight and the volatility, trained across a range of
+both, is the next thing to try.
 
 Teach the simulator the database's refusal rule. A lease transfer onto a
 replica that may need a snapshot is refused on the cluster and accepted in
-simulation. Modeling it, or retrying a refused move in the next window, would
+simulation, and one agent repeated refused moves for up to 43 windows.
+Modeling the rule, or masking a move the database has just refused, would
 remove one source of the gap between the two.
 
 Address the plateau. Held-out latency stopped improving early in at least

@@ -4,6 +4,10 @@
 # 2003 = 43954980773 (commit ac89a12). Copied from each job summary.
 # sim_ms: baselines from scripts/run_experiment.py, same seed and settings; agent from the Train run's own
 # held-out summary.csv (results/archive/43674558770/), same model, same seeds.
+# Second agent (policy agent1) from Train agent run 43674067630 (learner seed 1), and CockroachDB's own
+# rebalancer (policy crdb, ADR-0021): Actions runs 44021436487 (2000), 44021534976 (2001, crdb episode failed at
+# reset with PlacementError and is being rerun), 44021600636 (2002), 44021771876 (2003), commit 153f6b8.
+# agent1 sim_ms from results/archive/43674067630/ held-out summary.csv. crdb has no simulator counterpart.
 # refused: lease moves the database refused ("target may need a Raft snapshot").
 # p95_ms: mean over the episode's 200 steps of each step's p95 request latency, from the archived
 # step CSVs (results/archive/<run>/.../episode_<policy>.csv, column p95_ms).
@@ -24,3 +28,10 @@ seed,policy,cluster_ms,gb_moved,imbalance,cost_w030,sim_ms,refused,p95_ms
 2003,agent,199.49,98.9,0.941,2.104,168.16,0,627.60
 2003,lion,204.89,30.0,1.408,2.194,163.52,0,642.91
 2003,static,226.82,0.0,0.373,2.305,199.69,0,702.96
+2000,agent1,202.39,128.7,0.717,2.115,169.00,120,615.2
+2001,agent1,202.52,62.1,0.753,2.110,166.21,108,667.3
+2002,agent1,190.53,38.7,0.714,1.983,153.91,134,548.2
+2003,agent1,198.00,89.3,0.804,2.074,175.45,1,620.0
+2000,crdb,209.07,0.0,0.653,2.156,,0,661.6
+2002,crdb,205.70,0.0,0.507,2.108,,0,591.6
+2003,crdb,226.57,0.0,0.540,2.320,,0,696.3

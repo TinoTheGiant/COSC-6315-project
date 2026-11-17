@@ -2,7 +2,7 @@
 # panel=sim: held-out seeds 2000-2007, volatility 4, means over seeds. Agents from the four Train runs
 #   (results/recorded/heldout-rf3.csv); follow, throttled follow and random-applicable from run
 #   20261116T225729Z-f4870a4f-controls-heldout-v4 (docs/results-log.md, "Controls").
-# panel=cluster: means over workload seeds 2000-2003 (results/recorded/cluster-eval.csv).
+# panel=cluster: means over workload seeds 2000-2003 (results/recorded/cluster-eval.csv); crdb over 2000, 2002, 2003.
 panel,policy,label,latency_ms,gb_moved
 sim,agent,learner seed 1,163.18,117.8
 sim,agent,learner seed 2,170.73,278.1
@@ -15,7 +15,9 @@ sim,follow8,every 8,185.84,157.6
 sim,static,static,192.11,0.0
 sim,lion,Lion-style,179.98,28.8
 sim,random-valid,random,210.76,438.5
-cluster,agent,agent,192.36,118.5
+cluster,agent,seed 3,192.36,118.5
+cluster,agent,seed 1,198.36,79.7
 cluster,follow,follow,168.98,827.4
 cluster,static,static,220.19,0.0
 cluster,lion,Lion-style,226.76,30.0
+cluster,crdb,CockroachDB,213.78,0.0

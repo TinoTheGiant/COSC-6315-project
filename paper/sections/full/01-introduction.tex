@@ -58,9 +58,12 @@ Deep Q-Network with action masking and multi-step returns on the simulator:
 at volatility 4, on four learner seeds, it is 13.7\% faster than static
 hashing and moves a fifth of the data the heuristic moves, but it stays
 17\,ms slower than the heuristic, which keeps the lower objective cost at the
-trained migration weight. Finally we run the trained agent, unchanged, on the
-cluster on four workload seeds, where the heuristic is again cheapest and the
-agent second on every seed.
+trained migration weight, and agents trained at twice that weight move more
+data, not less. Finally we run two trained agents, unchanged, on the cluster
+on four workload seeds, beside CockroachDB's own rebalancer. The heuristic is
+again cheapest on every seed and one agent second on every seed; the other
+loses ground to lease moves the database refuses and it keeps repeating, and
+the database's rebalancer, left to itself, barely moves anything.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

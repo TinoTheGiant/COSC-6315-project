@@ -49,10 +49,12 @@ reads the resulting placement back before timing real transactions. We compare
 the agent with static hashing, a traffic-following heuristic, and a
 co-location planner modeled on Lion. In simulation the agent is 14\% faster
 than static hashing and moves about a fifth of the data the heuristic moves,
-but remains 17\,ms slower than that heuristic. On the cluster, over four workload seeds, the heuristic is cheapest and the
-agent second on every seed, the agent is 12.6\% faster than static
-hashing, and static hashing and the heuristic both run about 14\% slower than
-the simulator predicts.
+but remains 17\,ms slower than that heuristic. On the cluster, over four
+workload seeds, the heuristic is cheapest on every seed. Of two trained
+agents, one is second on every seed and 12.6\% faster than static hashing;
+the other is 9.9\% faster but loses ground to lease moves the database
+refuses. CockroachDB's own rebalancer barely acts, and static hashing and the
+heuristic both run about 14\% slower than the simulator predicts.
 \end{abstract}
 
 \begin{IEEEkeywords}

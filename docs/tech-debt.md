@@ -26,6 +26,8 @@ rank higher.
 | 14 | Pilots 2 and 3 changed N and runner cores together, so the co-located slowdown has two candidate causes | 3 | 4 | 1 | **35** | resolved by Run 6: no saturation at RF 3 (leaseholder node 15.7% of a core); pilots 2 and 3 were under-replicated |
 | 15 | `read_consistency` defaults to `nearest_replica` although every RF 3 result uses `primary_only` (ADR-0018) | 3 | 3 | 1 | **27** | open: pass the flag explicitly until the default is flipped and the affected tests updated |
 | 16 | Lion-style planner does not retry a lease move refused with "may need a Raft snapshot" (cluster evaluation 1: 20 refusals) | 2 | 3 | 2 | **15** | open: retry next window, or model the rule in the simulator |
+| 17 | A policy's episode can end with a replica move in flight; the next episode's reset then fails with `PlacementError` (cluster run 44021534976, seed 2001: crdb episode after the agent's) | 2 | 3 | 2 | **15** | open: wait for convergence, or retry placement once, before raising; until then run each policy in its own job when it matters |
+| 18 | The agent repeats a lease move the database refused: the refusal changes no observation, so the same greedy action is chosen again (learner seed 1: 86 to 109 repeats per episode, runs up to 43) | 3 | 4 | 2 | **24** | open: mask a just-refused action for a few windows, or model the refusal in the simulator (paper, future work) |
 
 ---
 
