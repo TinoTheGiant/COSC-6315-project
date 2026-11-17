@@ -590,3 +590,35 @@ caught.
   is 18.7 ms slower than static hashing.
 - Baseline rows (static, random, follow, Lion, oracle) reproduce
   `results/recorded/heldout-rf3.csv` exactly.
+
+## Cluster evaluation 2 — workload seeds 2001 to 2003 (16 November 2026)
+
+Actions 43954753671 (2001), 43954879894 (2002), 43954980773 (2003), commit
+ac89a12, same model and settings as evaluation 1. All twelve episodes PASS,
+no suspect or divergent step. Combined with evaluation 1 in
+`results/recorded/cluster-eval.csv`; simulator columns for the baselines from
+`run_experiment.py --seeds 3 --seed-start 2001` (sandbox, deterministic).
+
+| seed | follow | agent | static | Lion | cost order (w = 0.30) |
+|---|---|---|---|---|---|
+| 2000 | 167.23 | 192.79 | 206.17 | 191.63 | follow, agent, Lion, static |
+| 2001 | 175.11 | 203.60 | 234.44 | 276.40 | follow, agent, static, Lion |
+| 2002 | 160.72 | 173.54 | 213.32 | 234.12 | follow, agent, static, Lion |
+| 2003 | 172.86 | 199.49 | 226.82 | 204.89 | follow, agent, Lion, static |
+
+`Status: numerical.` Four workload seeds, one learner seed.
+
+- Follow cheapest and agent second on every seed. Agent faster than static on
+  every seed (13.4 to 39.8 ms, mean 27.8 ms, 12.6%), slower than follow on
+  every seed (12.8 to 28.5 ms), moving 14% of follow's data.
+- Simulator offset, cluster minus simulator: static +22.0 to +33.7 ms (13.7%
+  mean), follow +18.8 to +21.7 ms (13.5%), Lion +38.6 to +53.5 ms (23.8%).
+  The per-seed order of the three baselines matches the simulator on every seed.
+- Lion's extra loss is not explained by refusals: 0 refused on seed 2001,
+  where its loss is largest. Concentration (imbalance 1.24) is a hypothesis.
+- Refusals on 2002 and 2003 were in follow's episodes (6 and 4), which is why
+  its GB moved there is below the simulator's (820.1 vs 840.2; 857.3 vs 878.0).
+- Weight rescoring on the four-seed means: follow cheapest below w = 0.63,
+  agent above (until static at w = 3.9); Lion never. Per-seed crossing 0.36 to
+  0.73.
+- Retired: "agent and Lion-style cannot be separated" (seed 2000 only).

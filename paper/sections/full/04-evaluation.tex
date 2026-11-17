@@ -215,9 +215,9 @@ does not reproduce that trade. Allowed to start a move only every 4 or 8
 windows, and always to finish one, it reaches 171.8\,ms at 405.1\,GB and
 185.8\,ms at 157.6\,GB: the agent is faster than the first while moving less
 than half its data, and 20\,ms faster than the second for 26\,GB more. It buys its latency
-mostly with lease moves, which carry no data: on the cluster episode in Q5,
-131 of its 200 actions moved a lease, 55 moved a replica and 14 split a
-shard.
+mostly with lease moves, which carry no data: on the seed-2000 cluster
+episode in Q5, 131 of its 200 actions moved a lease, 55 moved a replica and
+14 split a shard.
 
 Under the objective the comparison with the heuristic is close and goes
 against the agent. With the latency and migration terms alone, at $w=0.30$,
@@ -238,7 +238,7 @@ run.
 \begin{table}[t]
 \caption{Objective cost as the migration weight $w$ varies, with each
 policy's behavior fixed. Simulator: held-out seeds, mean of the four agents,
-imbalance omitted. Cluster: one episode per policy, full
+imbalance omitted. Cluster: mean over workload seeds 2000 to 2003, full
 Eq.~\eqref{eq:objective}. Lowest in each row in bold.}
 \label{tab:weight}
 \centering
@@ -252,10 +252,10 @@ Simulator & 0.0 & 1.659 & \textbf{1.488} & 1.800 & 1.921 \\
           & 0.6 & \textbf{1.714} & 1.748 & 1.808 & 1.921 \\
           & 1.0 & \textbf{1.751} & 1.922 & 1.814 & 1.921 \\
 \addlinespace
-Cluster   & 0.0 & 2.008 & \textbf{1.775} & 2.036 & 2.103 \\
-          & 0.3 & 2.027 & \textbf{1.890} & 2.041 & 2.103 \\
-          & 0.6 & 2.046 & \textbf{2.006} & 2.045 & 2.103 \\
-          & 1.0 & 2.072 & 2.160 & \textbf{2.051} & 2.103 \\
+Cluster   & 0.0 & 2.010 & \textbf{1.785} & 2.391 & 2.243 \\
+          & 0.3 & 2.027 & \textbf{1.910} & 2.396 & 2.243 \\
+          & 0.6 & 2.045 & \textbf{2.034} & 2.400 & 2.243 \\
+          & 1.0 & \textbf{2.069} & 2.199 & 2.406 & 2.243 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -266,78 +266,80 @@ the best checkpoint fell before step 170{,}000. The oracle, at 91.0\,ms,
 remains far away.
 
 % ---------------------------------------------------------------------
-\subsection{Q5: the ordering largely carries over to the cluster}
+\subsection{Q5: the agent's place carries over to the cluster}
 
-The agent from the third learner seed, unchanged, was run on the cluster for
-a full 200-window episode on workload seed 2000, alongside follow, Lion-style
-and static, one episode each (Table~\ref{tab:clustereval}). Every episode
-passed the harness checks, with no suspect or divergent step.
+The agent from the third learner seed, unchanged, ran one 200-window cluster
+episode on each of workload seeds 2000 to 2003, as did each baseline
+(Table~\ref{tab:clustereval}). Every episode passed the harness checks, with
+no suspect or divergent step.
 
 \begin{table}[t]
-\caption{One 200-window episode per policy on the cluster, workload seed
-2000, volatility 4. Simulator column: the same seed and settings; the agent
-was not rerun in simulation on this seed alone. Source:
+\caption{Cluster, one 200-window episode per policy on each of workload
+seeds 2000 to 2003, volatility 4: means over the four seeds, with the range
+of latency. Simulator column: the same seeds and settings; the agent was not
+rerun in simulation per seed. Imb.: imbalance. Source:
 \texttt{results/recorded/cluster-eval.csv}.}
 \label{tab:clustereval}
 \centering
 \small
 \begin{tabular}{lrrrrr}
 \toprule
-Policy & Cluster ms & Sim.\ ms & GB & Imbal. & Cost \\
+Policy & Cluster ms & Sim. & GB & Imb. & Cost \\
 \midrule
-Follow     & 167.2 & 148.1 & 771.6 & 1.024 & 1.890 \\
-Agent      & 192.8 &   --  & 127.5 & 0.801 & 2.027 \\
-Lion-style & 191.6 & 153.0 &  30.0 & 1.202 & 2.041 \\
-Static     & 206.2 & 182.4 &   0.0 & 0.416 & 2.103 \\
+Follow & 169.0 (161--175) & 148.8 & 827.4 & 0.96 & 1.910 \\
+Agent  & 192.4 (174--204) &   --  & 118.5 & 0.86 & 2.028 \\
+Static & 220.2 (206--234) & 193.5 &   0.0 & 0.41 & 2.243 \\
+Lion   & 226.8 (192--276) & 183.4 &  30.0 & 1.24 & 2.396 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The order under the objective, follow, agent, Lion-style, static, is the
-order of the simulator's held-out means (Table~\ref{tab:weight}, $w=0.3$), but
-its middle is not resolved: agent and
-Lion-style differ by 0.014 in cost. The agent is 13.4\,ms (6.5\%) faster than static
-hashing and 25.6\,ms slower than the heuristic, moving 16.5\% of its data.
-Against the Lion-style planner the latency difference, 1.2\,ms, is inside
-the episode's sampling error, and the agent's lower cost comes only from lower
-imbalance, so one episode cannot separate the two.
+On every one of the four seeds the heuristic has the lowest cost and the
+agent the second lowest. The agent is faster than static hashing on every
+seed, by 13.4 to 39.8\,ms (27.8\,ms, 12.6\%, on average), and slower than the
+heuristic on every seed, by 12.8 to 28.5\,ms (23.4\,ms), whilst moving 14\%
+of its data. It is faster than the Lion-style planner on three seeds, by up
+to 72.8\,ms, and level with it on seed 2000 (1.2\,ms slower), where its lower
+imbalance still gives it the lower cost.
 
-The simulator's errors are systematic rather than random. For the two
-policies all of whose actions were applied, the cluster is slower by a
-steady margin: 23.7\,ms (13.0\%) for static hashing and 19.1\,ms (12.9\%)
-for the heuristic. Imbalance on the cluster is computed from the read-back
-placement and the requests actually sent, by the simulator's accounting rule,
-and data moved is the catalogue's account of each applied action; neither is
-measured from the database's storage. A constant
-offset of this kind does not change a ranking, which is what transfer
-requires.
+The simulator's errors are systematic rather than random. For static hashing
+and the heuristic the cluster is slower on every seed, by 22.0 to 33.7\,ms
+and 18.8 to 21.7\,ms, 13.7\% and 13.5\% on average. Cluster imbalance and data moved
+are counted from the read-back placement and the requests sent, by the
+simulator's rule, not measured from storage. An
+offset of this kind does not change an ordering, and the per-seed order of
+the three baselines on the cluster is the order the simulator gives on each
+seed.
 
-The Lion-style planner lost most in transfer, 38.6\,ms. Twenty of its 200
-actions were refused, all lease moves, each with the database's reason that
-the target ``may need a Raft snapshot''. The planner moves a replica and,
-in the next window, moves the lease onto it; CockroachDB will not transfer a
-lease to a replica it cannot confirm has caught up. The simulator has no such
-rule. The harness records a refused action as refused rather than scoring it
-as applied.
+The Lion-style planner loses more in transfer, 38.6 to 53.5\,ms (about 24\%),
+and on seeds 2001 and 2002 it is slower than static hashing, in simulation as
+on the cluster. On seed 2000, twenty of its lease moves were refused with the
+database's reason that the target ``may need a Raft snapshot'': it moves a
+replica and, in the next window, the lease onto it, and CockroachDB will not
+transfer a lease to a replica it cannot confirm has caught up. The simulator
+has no such rule. Refusals do not explain the rest of its loss, which is as
+large on seed 2001 with none. Its placements are the most concentrated
+(imbalance 1.24), where unmodeled queueing would show first; that is a
+hypothesis, not a measurement. The heuristic met the same refusal on seeds 2002 and 2003 (6
+and 4 actions), so its data moved there falls short of the simulator's.
 
-The cluster's single episode also changes the weight analysis
-(Table~\ref{tab:weight}). On seed 2000 the agent is never the cheapest
-policy: the heuristic leads up to $w=0.71$ and the Lion-style planner beyond
-it. Seed 2000 is a favorable seed for Lion-style co-location (153.0\,ms in
-simulation against its eight-seed mean of 180.0\,ms), so this is one seed
-rather than a contradiction, but it is the only cluster evidence there is.
+On the cluster's four-seed means (Table~\ref{tab:weight}) the heuristic is
+cheapest up to $w=0.63$ and the agent beyond it; the Lion-style planner never
+is. Per seed the crossing falls between 0.36 and 0.73, around the simulator's
+0.50.
 
 % ---------------------------------------------------------------------
 \subsection{Threats to validity}
 
 The simulator's cost model is analytic, and the cluster runs on one host with
 \texttt{netem} latency and no injected jitter or loss. Q1 and Q5 establish that placement
-matters on hardware and that the simulator orders the strongest and weakest
-policies as the cluster does on one seed; they do not establish that its magnitudes are right, and
-it is about 13\% optimistic where it can be compared.
+matters on hardware and that the agent's place among the policies, and the
+baselines' order on each seed, carry over; they do not establish that the
+simulator's magnitudes are right. It is about 14\% optimistic for static
+hashing and the heuristic and about 24\% for the Lion-style planner.
 
-The cluster results rest on one episode per policy and one workload seed, so
-there is no interval across workload or learner seeds.
+The cluster results rest on four workload seeds and one learner seed, one
+episode each, which supports a consistent ordering but not an interval.
 
 The weight analysis rescales fixed trajectories. It shows where the price of
 movement changes the verdict; it does not show what an agent trained at that

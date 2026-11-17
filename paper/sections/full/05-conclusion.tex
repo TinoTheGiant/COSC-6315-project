@@ -9,8 +9,8 @@ autonomous database administrator, re-fragmenting and re-allocating shards
 as a workload's geographic center of gravity moves. What it establishes is a
 measured problem statement, a cluster that confirms the premise, a learned
 policy that makes a different and cheaper trade than the obvious heuristic,
-and evidence that the simulator orders the strongest and weakest policies
-as the cluster does.
+and evidence that the agent's place among the policies carries over from
+the simulator to the cluster.
 
 On a real six-node CockroachDB cluster, gathering leaseholders in the
 issuing region rather than spreading them changes p95 latency by
@@ -27,22 +27,19 @@ slower than the heuristic, and at the migration weight it was trained with
 the heuristic still has the lower objective cost. Rescoring the same
 behavior shows the verdict turns on the price of movement: in simulation the
 agent is the cheapest policy for any migration weight between 0.50 and
-1.82. On the cluster, over one full episode per policy, the heuristic is again
-cheapest and static hashing most expensive, the agent and the Lion-style
-planner cannot be separated, and the simulator is optimistic by a steady
-13\% for the policies whose actions all applied. The one policy that lost
-more in transfer did so for a reason the simulator does not model: the
-database refused lease moves onto replicas that had not yet caught up.
+1.82. On the cluster, over four workload seeds, the heuristic is cheapest and
+the agent second on every seed, 12.6\% faster than static hashing on
+average, and the simulator is optimistic by a steady 14\% for static
+hashing and the heuristic. The Lion-style planner lost more in transfer,
+partly to lease moves the database refused onto replicas that had not yet
+caught up, a rule the simulator does not model.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
 
 In the order they should be attempted.
 
-Run the cluster evaluation on more workload seeds. One episode per policy
-supports a ranking, not an interval, and seed 2000 is a favorable seed for
-the co-location planner. This is the cheapest change that would strengthen
-the result.
+Add learner seeds to the cluster evaluation, so it has an interval.
 
 Train at the migration weight the deployment cares about. The weight
 analysis rescales fixed behavior; an agent trained at $w=0.6$ or $w=1.0$

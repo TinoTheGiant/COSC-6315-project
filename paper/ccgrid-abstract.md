@@ -2,7 +2,7 @@
 
 Double-blind: no names, institution or repository in this text.
 Numbers: docs/results-log.md, "Training round, 15 November" and
-"Cluster evaluation 1". The cluster figures rest on one episode per policy.
+"Cluster evaluation 1". The cluster figures rest on one episode per policy on each of four workload seeds.
 
 **Title:** Reinforcement Learning for Dynamic Data Fragmentation and Allocation
 
@@ -22,9 +22,9 @@ reads the resulting placement back before timing real transactions. We compare
 the agent with static hashing, a traffic-following heuristic, and a
 co-location planner modeled on Lion. In simulation the agent is 14% faster
 than static hashing and moves about a fifth of the data the heuristic moves,
-but remains 17 ms slower than that heuristic. On the cluster, over one episode per policy, the heuristic is again the
-cheapest and static hashing the most expensive, the agent is 6.5% faster
-than static hashing, and static hashing and the heuristic both run 13% slower than
+but remains 17 ms slower than that heuristic. On the cluster, over four workload seeds, the heuristic is cheapest and the
+agent second on every seed, the agent is 12.6% faster than static
+hashing, and static hashing and the heuristic both run about 14% slower than
 the simulator predicts.
 
 **Index terms:** distributed databases, data placement, fragmentation,

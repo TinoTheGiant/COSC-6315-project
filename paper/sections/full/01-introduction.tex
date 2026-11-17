@@ -59,8 +59,8 @@ at volatility 4, on four learner seeds, it is 13.7\% faster than static
 hashing and moves a fifth of the data the heuristic moves, but it stays
 17\,ms slower than the heuristic, which keeps the lower objective cost at the
 trained migration weight. Finally we run the trained agent, unchanged, on the
-cluster, where the heuristic is again cheapest and static hashing again most
-expensive, with the agent between them.
+cluster on four workload seeds, where the heuristic is again cheapest and the
+agent second on every seed.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.
