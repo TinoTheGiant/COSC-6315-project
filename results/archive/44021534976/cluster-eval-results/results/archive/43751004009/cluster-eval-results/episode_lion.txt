@@ -1,0 +1,234 @@
+reset in 77 s; lion, seed 2000, N=200, reads leaseholder
+    0 MOVE_LEASE(f0, r2)           applied   mean   242.1 p95   912.0 ms  reward  -2.480  step  25.1 s
+    1 MOVE_LEASE(f1, r2)           rejected  mean   266.1 p95   927.4 ms  reward  -2.744  step  34.2 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+    2 MOVE_REPLICA_TO(f3, r2)      applied   mean   221.0 p95   922.8 ms  reward  -2.582  step  16.7 s
+    3 MOVE_LEASE(f3, r2)           applied   mean   219.1 p95   647.7 ms  reward  -2.274  step  14.0 s
+    4 MOVE_LEASE(f4, r5)           applied   mean   254.8 p95   679.5 ms  reward  -2.647  step  15.8 s
+    5 NOOP                         no-op     mean   226.7 p95   652.1 ms  reward  -2.350  step  10.6 s
+    6 NOOP                         no-op     mean   200.9 p95   514.2 ms  reward  -2.106  step  11.1 s
+    7 NOOP                         no-op     mean   202.2 p95   577.2 ms  reward  -2.129  step  12.2 s
+    8 NOOP                         no-op     mean   180.0 p95   529.5 ms  reward  -1.912  step  11.6 s
+    9 NOOP                         no-op     mean   204.3 p95   646.4 ms  reward  -2.143  step  11.6 s
+   10 MOVE_LEASE(f1, r2)           rejected  mean   203.6 p95   651.9 ms  reward  -2.145  step  18.4 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   11 MOVE_REPLICA_TO(f4, r2)      applied   mean   179.5 p95   497.4 ms  reward  -2.195  step  12.5 s
+   12 MOVE_LEASE(f4, r2)           applied   mean   124.5 p95   527.0 ms  reward  -1.353  step  11.2 s
+   13 MOVE_REPLICA_TO(f5, r2)      applied   mean    97.4 p95   418.2 ms  reward  -1.392  step  12.4 s
+   14 MOVE_LEASE(f5, r2)           applied   mean    28.8 p95   126.4 ms  reward  -0.431  step   4.0 s
+   15 NOOP                         no-op     mean    27.5 p95   126.1 ms  reward  -0.430  step   4.2 s
+   16 NOOP                         no-op     mean    27.3 p95   126.7 ms  reward  -0.424  step   3.6 s
+   17 NOOP                         no-op     mean    43.6 p95   126.3 ms  reward  -0.565  step   5.1 s
+   18 NOOP                         no-op     mean    64.2 p95   150.5 ms  reward  -0.781  step   7.0 s
+   19 NOOP                         no-op     mean   108.1 p95   457.9 ms  reward  -1.223  step   9.0 s
+   20 MOVE_LEASE(f1, r2)           rejected  mean   135.0 p95   470.7 ms  reward  -1.506  step  16.4 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   21 NOOP                         no-op     mean   193.4 p95   604.6 ms  reward  -2.067  step  15.0 s
+   22 NOOP                         no-op     mean   247.4 p95   897.8 ms  reward  -2.611  step  21.1 s
+   23 NOOP                         no-op     mean   259.8 p95   604.9 ms  reward  -2.729  step  22.8 s
+   24 NOOP                         no-op     mean   328.1 p95   606.0 ms  reward  -3.443  step  33.7 s
+   25 NOOP                         no-op     mean   287.4 p95   927.5 ms  reward  -3.016  step  16.2 s
+   26 NOOP                         no-op     mean   315.6 p95   927.3 ms  reward  -3.282  step  18.9 s
+   27 NOOP                         no-op     mean   268.8 p95   997.6 ms  reward  -2.831  step  18.4 s
+   28 NOOP                         no-op     mean   262.4 p95   751.6 ms  reward  -2.756  step  14.2 s
+   29 NOOP                         no-op     mean   249.8 p95   604.2 ms  reward  -2.640  step  12.8 s
+   30 MOVE_LEASE(f1, r2)           rejected  mean   204.9 p95   498.7 ms  reward  -2.196  step  18.0 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   31 MOVE_LEASE(f4, r0)           applied   mean   202.6 p95   543.6 ms  reward  -2.164  step  10.9 s
+   32 MOVE_LEASE(f5, r0)           applied   mean   256.4 p95   651.6 ms  reward  -2.672  step  21.5 s
+   33 NOOP                         no-op     mean   269.0 p95   944.3 ms  reward  -2.789  step  23.3 s
+   34 NOOP                         no-op     mean   186.3 p95   544.2 ms  reward  -1.965  step  13.3 s
+   35 NOOP                         no-op     mean   148.8 p95   498.7 ms  reward  -1.601  step   9.5 s
+   36 NOOP                         no-op     mean   137.3 p95   431.2 ms  reward  -1.477  step   7.7 s
+   37 NOOP                         no-op     mean   103.6 p95   320.7 ms  reward  -1.160  step   7.4 s
+   38 NOOP                         no-op     mean    80.2 p95   248.7 ms  reward  -0.922  step   8.4 s
+   39 NOOP                         no-op     mean   100.1 p95   268.1 ms  reward  -1.102  step  10.6 s
+   40 MOVE_LEASE(f1, r2)           rejected  mean    92.5 p95   301.1 ms  reward  -1.046  step  11.9 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   41 NOOP                         no-op     mean   106.9 p95   378.8 ms  reward  -1.174  step   5.3 s
+   42 NOOP                         no-op     mean   145.2 p95   382.9 ms  reward  -1.556  step  10.8 s
+   43 NOOP                         no-op     mean   177.0 p95   649.2 ms  reward  -1.875  step  12.1 s
+   44 NOOP                         no-op     mean   196.2 p95   648.7 ms  reward  -2.075  step  10.6 s
+   45 NOOP                         no-op     mean   210.3 p95   640.7 ms  reward  -2.215  step  10.7 s
+   46 NOOP                         no-op     mean   247.4 p95   699.6 ms  reward  -2.580  step  11.0 s
+   47 NOOP                         no-op     mean   287.1 p95   926.4 ms  reward  -2.978  step  13.0 s
+   48 NOOP                         no-op     mean   284.8 p95   927.0 ms  reward  -2.968  step  16.9 s
+   49 NOOP                         no-op     mean   294.5 p95   944.9 ms  reward  -3.051  step  16.0 s
+   50 MOVE_LEASE(f1, r2)           rejected  mean   269.1 p95   926.2 ms  reward  -2.802  step  24.0 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   51 NOOP                         no-op     mean   278.1 p95   926.6 ms  reward  -2.888  step  17.5 s
+   52 NOOP                         no-op     mean   278.7 p95   945.5 ms  reward  -2.885  step  16.9 s
+   53 NOOP                         no-op     mean   211.3 p95   651.2 ms  reward  -2.227  step  19.4 s
+   54 NOOP                         no-op     mean   206.0 p95   651.7 ms  reward  -2.176  step  21.0 s
+   55 NOOP                         no-op     mean   230.4 p95   652.7 ms  reward  -2.418  step  18.2 s
+   56 NOOP                         no-op     mean   208.5 p95   651.7 ms  reward  -2.188  step  16.1 s
+   57 NOOP                         no-op     mean   215.4 p95   651.9 ms  reward  -2.251  step  17.9 s
+   58 NOOP                         no-op     mean   200.2 p95   651.9 ms  reward  -2.107  step  17.6 s
+   59 NOOP                         no-op     mean   212.6 p95   545.6 ms  reward  -2.238  step  15.5 s
+   60 MOVE_LEASE(f1, r2)           rejected  mean   198.2 p95   649.8 ms  reward  -2.114  step  21.0 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   61 MOVE_LEASE(f3, r3)           applied   mean   102.0 p95   367.5 ms  reward  -1.098  step   6.4 s
+   62 NOOP                         no-op     mean    61.9 p95   208.9 ms  reward  -0.706  step   6.3 s
+   63 NOOP                         no-op     mean    51.1 p95   207.8 ms  reward  -0.591  step   7.1 s
+   64 NOOP                         no-op     mean    53.2 p95   208.5 ms  reward  -0.620  step   7.5 s
+   65 NOOP                         no-op     mean    72.9 p95   209.1 ms  reward  -0.803  step   9.3 s
+   66 NOOP                         no-op     mean    68.0 p95   208.8 ms  reward  -0.762  step   9.0 s
+   67 NOOP                         no-op     mean    83.5 p95   415.2 ms  reward  -0.915  step  10.5 s
+   68 NOOP                         no-op     mean   110.5 p95   337.3 ms  reward  -1.193  step   6.4 s
+   69 NOOP                         no-op     mean   184.4 p95   501.9 ms  reward  -1.937  step   9.3 s
+   70 MOVE_LEASE(f1, r2)           rejected  mean   162.5 p95   416.2 ms  reward  -1.759  step  23.1 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   71 NOOP                         no-op     mean   159.6 p95   442.8 ms  reward  -1.713  step  14.3 s
+   72 NOOP                         no-op     mean   134.1 p95   415.7 ms  reward  -1.466  step  13.1 s
+   73 NOOP                         no-op     mean   157.2 p95   417.1 ms  reward  -1.685  step  14.1 s
+   74 NOOP                         no-op     mean   266.6 p95   996.4 ms  reward  -2.757  step  15.5 s
+   75 NOOP                         no-op     mean   218.1 p95   604.6 ms  reward  -2.265  step  12.1 s
+   76 NOOP                         no-op     mean   246.4 p95   604.6 ms  reward  -2.555  step  13.8 s
+   77 NOOP                         no-op     mean   248.9 p95   725.7 ms  reward  -2.574  step  10.8 s
+   78 NOOP                         no-op     mean   240.7 p95   652.0 ms  reward  -2.492  step  10.9 s
+   79 NOOP                         no-op     mean   196.8 p95   646.9 ms  reward  -2.049  step  10.1 s
+   80 MOVE_LEASE(f1, r2)           rejected  mean   183.1 p95   525.4 ms  reward  -1.928  step  17.7 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   81 MOVE_LEASE(f3, r2)           applied   mean   184.8 p95   603.6 ms  reward  -1.951  step  11.2 s
+   82 MOVE_LEASE(f4, r2)           applied   mean   168.3 p95   498.5 ms  reward  -1.797  step   9.1 s
+   83 MOVE_LEASE(f5, r2)           applied   mean   150.1 p95   431.2 ms  reward  -1.633  step   8.8 s
+   84 NOOP                         no-op     mean   125.4 p95   379.0 ms  reward  -1.408  step   8.5 s
+   85 NOOP                         no-op     mean   120.1 p95   471.1 ms  reward  -1.342  step   6.5 s
+   86 NOOP                         no-op     mean   154.1 p95   431.4 ms  reward  -1.671  step  10.9 s
+   87 NOOP                         no-op     mean   159.0 p95   543.9 ms  reward  -1.726  step  13.3 s
+   88 NOOP                         no-op     mean   154.1 p95   543.7 ms  reward  -1.690  step  13.7 s
+   89 NOOP                         no-op     mean   199.9 p95   544.5 ms  reward  -2.133  step  19.2 s
+   90 MOVE_LEASE(f1, r2)           rejected  mean   237.9 p95   544.4 ms  reward  -2.556  step  30.7 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+   91 NOOP                         no-op     mean   299.3 p95   926.3 ms  reward  -3.132  step  30.8 s
+   92 NOOP                         no-op     mean   163.8 p95   603.7 ms  reward  -1.772  step  10.5 s
+   93 NOOP                         no-op     mean   209.1 p95   604.6 ms  reward  -2.230  step  14.1 s
+   94 NOOP                         no-op     mean   247.3 p95   912.9 ms  reward  -2.600  step  16.6 s
+   95 NOOP                         no-op     mean   298.6 p95   927.5 ms  reward  -3.115  step  15.6 s
+   96 NOOP                         no-op     mean   288.3 p95   926.7 ms  reward  -3.013  step  15.9 s
+   97 NOOP                         no-op     mean   265.9 p95   921.5 ms  reward  -2.794  step  14.7 s
+   98 NOOP                         no-op     mean   309.9 p95   927.5 ms  reward  -3.238  step  19.2 s
+   99 NOOP                         no-op     mean   230.8 p95   651.9 ms  reward  -2.458  step  18.6 s
+  100 MOVE_LEASE(f1, r2)           rejected  mean   220.7 p95   652.3 ms  reward  -2.381  step  30.9 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  101 NOOP                         no-op     mean   215.9 p95   379.9 ms  reward  -2.326  step  23.9 s
+  102 NOOP                         no-op     mean   209.0 p95   651.2 ms  reward  -2.250  step  23.4 s
+  103 NOOP                         no-op     mean   213.8 p95   526.7 ms  reward  -2.297  step  24.0 s
+  104 NOOP                         no-op     mean   224.7 p95   652.8 ms  reward  -2.388  step  25.2 s
+  105 NOOP                         no-op     mean   239.0 p95   652.4 ms  reward  -2.536  step  26.1 s
+  106 NOOP                         no-op     mean   214.9 p95   652.0 ms  reward  -2.287  step  22.5 s
+  107 NOOP                         no-op     mean   208.7 p95   651.1 ms  reward  -2.227  step  22.0 s
+  108 NOOP                         no-op     mean   201.1 p95   649.9 ms  reward  -2.139  step  14.3 s
+  109 NOOP                         no-op     mean   189.8 p95   525.7 ms  reward  -2.016  step  14.7 s
+  110 MOVE_LEASE(f1, r2)           rejected  mean   157.6 p95   482.1 ms  reward  -1.735  step  19.3 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  111 MOVE_LEASE(f2, r3)           applied   mean    48.2 p95   201.1 ms  reward  -0.585  step   5.0 s
+  112 NOOP                         no-op     mean    62.4 p95   230.7 ms  reward  -0.723  step   5.3 s
+  113 NOOP                         no-op     mean    79.2 p95   254.0 ms  reward  -0.891  step   7.0 s
+  114 NOOP                         no-op     mean    46.8 p95   145.9 ms  reward  -0.560  step   6.0 s
+  115 NOOP                         no-op     mean    73.7 p95   253.7 ms  reward  -0.824  step   8.4 s
+  116 NOOP                         no-op     mean    96.5 p95   417.9 ms  reward  -1.054  step   8.7 s
+  117 NOOP                         no-op     mean   208.6 p95   544.8 ms  reward  -2.192  step  14.8 s
+  118 NOOP                         no-op     mean   238.9 p95   604.5 ms  reward  -2.499  step  13.9 s
+  119 NOOP                         no-op     mean   276.5 p95   796.4 ms  reward  -2.858  step  14.2 s
+  120 MOVE_LEASE(f1, r2)           rejected  mean   281.2 p95   802.6 ms  reward  -2.924  step  22.1 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  121 MOVE_LEASE(f2, r2)           applied   mean   291.1 p95   911.5 ms  reward  -3.051  step  17.7 s
+  122 MOVE_LEASE(f4, r0)           applied   mean   280.9 p95   604.3 ms  reward  -2.933  step  17.7 s
+  123 MOVE_LEASE(f5, r0)           applied   mean   272.1 p95   650.8 ms  reward  -2.837  step  16.8 s
+  124 NOOP                         no-op     mean   258.7 p95   922.3 ms  reward  -2.687  step  14.4 s
+  125 NOOP                         no-op     mean   228.4 p95   604.3 ms  reward  -2.385  step  11.2 s
+  126 NOOP                         no-op     mean   235.2 p95   646.8 ms  reward  -2.453  step  10.5 s
+  127 NOOP                         no-op     mean   199.5 p95   544.0 ms  reward  -2.099  step  11.6 s
+  128 NOOP                         no-op     mean   190.7 p95   651.4 ms  reward  -2.009  step  12.0 s
+  129 NOOP                         no-op     mean   177.3 p95   650.8 ms  reward  -1.882  step  10.1 s
+  130 MOVE_LEASE(f1, r2)           rejected  mean   252.2 p95   864.3 ms  reward  -2.651  step  29.6 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  131 MOVE_LEASE(f4, r2)           applied   mean   138.8 p95   471.9 ms  reward  -1.508  step  12.4 s
+  132 MOVE_LEASE(f5, r2)           applied   mean    92.8 p95   470.3 ms  reward  -1.076  step   8.1 s
+  133 NOOP                         no-op     mean    61.0 p95   201.5 ms  reward  -0.761  step   7.0 s
+  134 NOOP                         no-op     mean    51.5 p95   201.4 ms  reward  -0.665  step   6.1 s
+  135 NOOP                         no-op     mean    46.7 p95   201.4 ms  reward  -0.625  step   4.9 s
+  136 NOOP                         no-op     mean    19.1 p95   126.1 ms  reward  -0.349  step   3.4 s
+  137 NOOP                         no-op     mean   115.4 p95   497.8 ms  reward  -1.289  step   5.3 s
+  138 NOOP                         no-op     mean    79.8 p95   206.7 ms  reward  -0.933  step   4.0 s
+  139 NOOP                         no-op     mean   147.8 p95   544.6 ms  reward  -1.615  step   9.5 s
+  140 MOVE_LEASE(f1, r2)           rejected  mean   178.7 p95   604.6 ms  reward  -1.939  step  17.6 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  141 NOOP                         no-op     mean   228.4 p95   605.0 ms  reward  -2.421  step  12.8 s
+  142 NOOP                         no-op     mean   253.7 p95   925.9 ms  reward  -2.661  step  14.8 s
+  143 NOOP                         no-op     mean   267.2 p95   654.0 ms  reward  -2.812  step  16.1 s
+  144 NOOP                         no-op     mean   279.9 p95   927.9 ms  reward  -2.950  step  15.5 s
+  145 NOOP                         no-op     mean   299.4 p95   927.3 ms  reward  -3.135  step  17.2 s
+  146 NOOP                         no-op     mean   335.5 p95  1026.8 ms  reward  -3.492  step  21.7 s
+  147 NOOP                         no-op     mean   282.8 p95   928.0 ms  reward  -2.975  step  17.0 s
+  148 NOOP                         no-op     mean   250.4 p95   604.7 ms  reward  -2.638  step  15.1 s
+  149 NOOP                         no-op     mean   239.4 p95   652.3 ms  reward  -2.536  step  11.8 s
+  150 MOVE_LEASE(f1, r2)           rejected  mean   243.4 p95   652.3 ms  reward  -2.582  step  19.2 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  151 MOVE_LEASE(f4, r0)           applied   mean   208.6 p95   604.1 ms  reward  -2.218  step  11.4 s
+  152 MOVE_LEASE(f5, r0)           applied   mean   177.1 p95   525.3 ms  reward  -1.882  step  11.0 s
+  153 NOOP                         no-op     mean   103.5 p95   379.4 ms  reward  -1.148  step   6.2 s
+  154 NOOP                         no-op     mean    85.8 p95   365.4 ms  reward  -0.971  step   6.0 s
+  155 NOOP                         no-op     mean    77.2 p95   288.9 ms  reward  -0.877  step   5.7 s
+  156 NOOP                         no-op     mean    68.3 p95   208.0 ms  reward  -0.793  step   6.3 s
+  157 NOOP                         no-op     mean    68.8 p95   208.5 ms  reward  -0.786  step   6.5 s
+  158 NOOP                         no-op     mean    44.8 p95   207.0 ms  reward  -0.565  step   5.6 s
+  159 NOOP                         no-op     mean    85.4 p95   365.6 ms  reward  -0.956  step   4.6 s
+  160 MOVE_LEASE(f1, r2)           rejected  mean    84.9 p95   267.9 ms  reward  -0.977  step  12.0 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  161 MOVE_LEASE(f4, r2)           applied   mean   108.2 p95   409.2 ms  reward  -1.200  step   4.9 s
+  162 MOVE_LEASE(f5, r2)           applied   mean   114.4 p95   495.6 ms  reward  -1.273  step   6.0 s
+  163 NOOP                         no-op     mean   142.5 p95   543.3 ms  reward  -1.557  step   7.9 s
+  164 NOOP                         no-op     mean   168.6 p95   544.2 ms  reward  -1.824  step  11.5 s
+  165 NOOP                         no-op     mean   206.5 p95   545.7 ms  reward  -2.196  step  13.8 s
+  166 NOOP                         no-op     mean   287.8 p95   927.2 ms  reward  -3.005  step  16.8 s
+  167 NOOP                         no-op     mean   285.1 p95   911.9 ms  reward  -2.983  step  18.7 s
+  168 NOOP                         no-op     mean   291.1 p95   926.2 ms  reward  -3.045  step  15.7 s
+  169 NOOP                         no-op     mean   338.5 p95   927.2 ms  reward  -3.521  step  34.3 s
+  170 MOVE_LEASE(f1, r2)           rejected  mean   306.2 p95   926.6 ms  reward  -3.224  step  35.8 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  171 NOOP                         no-op     mean   333.0 p95   996.7 ms  reward  -3.440  step  31.8 s
+  172 NOOP                         no-op     mean   297.2 p95   926.9 ms  reward  -3.097  step  28.9 s
+  173 NOOP                         no-op     mean   309.7 p95   946.0 ms  reward  -3.221  step  27.2 s
+  174 NOOP                         no-op     mean   280.9 p95   926.4 ms  reward  -2.936  step  26.0 s
+  175 NOOP                         no-op     mean   201.3 p95   651.0 ms  reward  -2.141  step  10.4 s
+  176 NOOP                         no-op     mean   186.9 p95   430.7 ms  reward  -2.017  step  11.5 s
+  177 NOOP                         no-op     mean   200.5 p95   652.3 ms  reward  -2.149  step  12.4 s
+  178 NOOP                         no-op     mean   130.8 p95   367.6 ms  reward  -1.454  step  14.4 s
+  179 NOOP                         no-op     mean   156.8 p95   435.8 ms  reward  -1.700  step  14.9 s
+  180 MOVE_LEASE(f1, r2)           rejected  mean   148.0 p95   367.4 ms  reward  -1.641  step  21.3 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  181 NOOP                         no-op     mean   149.2 p95   368.4 ms  reward  -1.619  step  15.6 s
+  182 NOOP                         no-op     mean   134.5 p95   431.2 ms  reward  -1.490  step  12.1 s
+  183 NOOP                         no-op     mean   155.1 p95   484.7 ms  reward  -1.675  step  11.6 s
+  184 NOOP                         no-op     mean   167.2 p95   544.8 ms  reward  -1.808  step  15.5 s
+  185 NOOP                         no-op     mean    86.9 p95   380.0 ms  reward  -1.016  step   4.8 s
+  186 NOOP                         no-op     mean   123.5 p95   458.3 ms  reward  -1.361  step   6.0 s
+  187 NOOP                         no-op     mean   130.1 p95   431.1 ms  reward  -1.440  step   7.7 s
+  188 NOOP                         no-op     mean   174.3 p95   603.9 ms  reward  -1.890  step  11.3 s
+  189 NOOP                         no-op     mean   229.1 p95   604.6 ms  reward  -2.410  step  14.1 s
+  190 MOVE_LEASE(f1, r2)           rejected  mean   241.7 p95   928.0 ms  reward  -2.563  step  21.1 s
+        refused: refusing to transfer lease to (n3,s3):5 because target may need a Raft snapshot: local replica not raft leader
+  191 NOOP                         no-op     mean   299.8 p95   928.0 ms  reward  -3.134  step  17.1 s
+  192 NOOP                         no-op     mean   324.3 p95   926.9 ms  reward  -3.388  step  18.0 s
+  193 NOOP                         no-op     mean   272.0 p95   604.4 ms  reward  -2.856  step  17.4 s
+  194 NOOP                         no-op     mean   323.8 p95   926.7 ms  reward  -3.376  step  21.4 s
+  195 NOOP                         no-op     mean   311.4 p95   928.1 ms  reward  -3.244  step  17.3 s
+  196 NOOP                         no-op     mean   270.7 p95   652.9 ms  reward  -2.843  step  14.3 s
+  197 NOOP                         no-op     mean   228.9 p95   651.3 ms  reward  -2.419  step  11.5 s
+  198 NOOP                         no-op     mean   315.9 p95   927.0 ms  reward  -3.264  step  27.0 s
+  199 NOOP                         no-op     mean   306.8 p95   974.8 ms  reward  -3.186  step  26.0 s
+{
+ "policy": "lion",
+ "seed": 2000,
+ "steps": 200,
+ "mean_latency_ms": 191.62764674269417,
+ "gb_moved_total": 30.0,
+ "mean_step_s": 14.405933777060026,
+ "mean_imbalance": 1.202074479910137,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.0409839154179554
+}
+VERDICT: PASS, the cluster ran as an environment end to end.

@@ -1,0 +1,8 @@
+# Cluster evaluation 1: Actions 43751004009, commit 18b0c0f. One 200-window episode per policy,
+# workload seed 2000, volatility 4, RF 3, strong reads, N 200. Agent from Train agent run 43674558770.
+# sim_ms: scripts/run_experiment.py on the same seed and settings (agent not rerun).
+policy,cluster_ms,gb_moved,imbalance,sim_ms,refused
+follow,167.23,771.6,1.024,148.14,0
+agent,192.79,127.5,0.801,,0
+lion,191.63,30.0,1.202,153.01,20
+static,206.17,0.0,0.416,182.44,0

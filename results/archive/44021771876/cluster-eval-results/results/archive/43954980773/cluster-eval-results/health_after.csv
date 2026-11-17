@@ -1,0 +1,7 @@
+id,address,sql_address,build,started_at,updated_at,locality,attrs,is_available,is_live,gossiped_replicas,is_decommissioning,membership,is_draining
+1,172.28.0.11:26257,172.28.0.11:26257,v25.3.0,2026-11-16 21:21:30.213281 +0000 UTC,2026-11-17 00:22:21.331307 +0000 UTC,region=us-east-1,[],true,true,70,false,active,false
+2,172.28.0.13:26257,172.28.0.13:26257,v25.3.0,2026-11-16 21:21:33.606111 +0000 UTC,2026-11-17 00:22:21.680316 +0000 UTC,region=eu-west-1,[],true,true,76,false,active,false
+3,172.28.0.12:26257,172.28.0.12:26257,v25.3.0,2026-11-16 21:21:33.646408 +0000 UTC,2026-11-17 00:22:21.784271 +0000 UTC,region=us-west-2,[],true,true,73,false,active,false
+4,172.28.0.14:26257,172.28.0.14:26257,v25.3.0,2026-11-16 21:21:33.759018 +0000 UTC,2026-11-17 00:22:21.846288 +0000 UTC,region=eu-central-1,[],true,true,75,false,active,false
+5,172.28.0.16:26257,172.28.0.16:26257,v25.3.0,2026-11-16 21:21:34.238542 +0000 UTC,2026-11-17 00:22:19.412846 +0000 UTC,region=ap-northeast-1,[],true,true,74,false,active,false
+6,172.28.0.15:26257,172.28.0.15:26257,v25.3.0,2026-11-16 21:21:34.546566 +0000 UTC,2026-11-17 00:22:19.711052 +0000 UTC,region=ap-southeast-1,[],true,true,68,false,active,false

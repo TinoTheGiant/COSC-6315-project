@@ -1,0 +1,67 @@
+region -> store: {'us-east-1': 1, 'us-west-2': 4, 'eu-west-1': 2, 'eu-central-1': 3, 'ap-southeast-1': 5, 'ap-northeast-1': 6}
+table fragalloc: 256 cells x 16 rows, split at cells [0, 43, 85, 128, 171, 213, 256]
+replication: converged to 3 voters per range in 3 s, rebalancer frozen and verified
+
+raw SHOW RANGES rows (key format on record):
+    ('<before:/Table/104/1/10000>', 79, 6, [1, 5, 6])
+    ('…/1/688', 95, 6, [1, 5, 6])
+    ('…/1/1360', 96, 6, [1, 5, 6])
+    ('…/1/2048', 97, 6, [1, 5, 6])
+    ('…/1/2736', 98, 6, [1, 5, 6])
+    ('…/1/3408', 99, 6, [1, 5, 6])
+
+part 1: read-back against hand-issued moves
+6 fragments over 256 cells
+  f0  cells [   0,  43)  primary=r5  replicas={3,4,5}
+  f1  cells [  43,  85)  primary=r5  replicas={0,4,5}
+  f2  cells [  85, 128)  primary=r5  replicas={1,4,5}
+  f3  cells [ 128, 171)  primary=r5  replicas={2,4,5}
+  f4  cells [ 171, 213)  primary=r5  replicas={1,4,5}
+  f5  cells [ 213, 256)  primary=r5  replicas={3,4,5}
+  [PASS] boundaries match the table as split: [0, 43, 85, 128, 171, 213, 256]
+voters per range on the cluster: [3]; replicas per fragment in the simulator: 3
+  [PASS] every range holds exactly the chosen number of voters (ADR-0015): cluster [3], asked for 3
+  [PASS] lease move to a voter applies: ok
+  [PASS] voter move to an empty region applies: ok
+  [PASS] lease move to a region without a voter is refused: lease target replica not found in RangeDescriptor
+  [PASS] read-back matches intent after moves 1 to 3: no divergence
+  [PASS] split at cell 21 reads back as two fragments with one placement: 7 fragments
+read-back via details: median 7.908 s, max 8.080 s over 5 reads
+read-back via builtin: median 1.108 s, max 1.247 s over 5 reads
+  [PASS] the built-in lease source reads the same placement as DETAILS: identical
+
+part 2: executor, 15 random legal actions, seed 0, leases via builtin
+   0 SPLIT(f0)                    applied     2.93 s  ok
+   1 MOVE_REPLICA_TO(f4, r3)      applied     4.38 s  ok
+   2 MOVE_REPLICA_TO(f2, r2)      applied     4.32 s  ok
+   3 MOVE_LEASE(f6, r1)           applied     2.60 s  ok
+   4 MOVE_LEASE(f7, r3)           applied     2.46 s  ok
+   5 MOVE_LEASE(f0, r5)           applied     2.49 s  ok
+   6 MOVE_LEASE(f1, r5)           applied     2.60 s  ok
+   7 MOVE_LEASE(f0, r3)           applied     2.57 s  ok
+   8 MOVE_LEASE(f4, r1)           applied     2.46 s  ok
+   9 MOVE_REPLICA_TO(f7, r2)      applied     4.22 s  ok
+  10 MOVE_REPLICA_TO(f5, r0)      applied     4.04 s  ok
+  11 SPLIT(f3)                    applied     2.83 s  ok
+  12 MOVE_REPLICA_TO(f3, r0)      applied     4.23 s  ok
+  13 MOVE_REPLICA_TO(f4, r3)      applied     4.35 s  ok
+  14 SPLIT(f7)                    applied     3.17 s  ok
+  [PASS] every walk step applied: {'applied': 15}
+  [PASS] cluster matched the simulator's catalogue after every step: all steps agree
+executor step time: median 2.93 s, max 4.38 s
+
+final read-back:
+10 fragments over 256 cells
+  f0  cells [   0,  10)  primary=r3  replicas={3,4,5}
+  f1  cells [  10,  21)  primary=r5  replicas={3,4,5}
+  f2  cells [  21,  43)  primary=r3  replicas={2,3,4}
+  f3  cells [  43,  64)  primary=r5  replicas={0,1,5}
+  f4  cells [  64,  85)  primary=r5  replicas={1,3,5}
+  f5  cells [  85, 128)  primary=r1  replicas={1,3,5}
+  f6  cells [ 128, 171)  primary=r5  replicas={0,2,5}
+  f7  cells [ 171, 192)  primary=r1  replicas={1,4,5}
+  f8  cells [ 192, 213)  primary=r1  replicas={1,4,5}
+  f9  cells [ 213, 256)  primary=r3  replicas={2,3,4}
+
+wrote results/placement_check.json
+VERDICT: PASS, read-back and executor track the cluster exactly.

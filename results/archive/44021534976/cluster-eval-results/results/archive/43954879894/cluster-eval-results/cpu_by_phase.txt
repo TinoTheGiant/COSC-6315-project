@@ -1,0 +1,32 @@
+100% = one core (docker stats); a pinned cluster shares its k cores
+phase             node                       samples   mean %    max %
+episode:agent     crdb-ap-northeast-1            588      7.1     46.0
+episode:agent     crdb-ap-southeast-1            588      6.3     40.6
+episode:agent     crdb-eu-central-1              588      5.7     12.7
+episode:agent     crdb-eu-west-1                 588      6.4     18.1
+episode:agent     crdb-us-east-1                 588      8.1     46.1
+episode:agent     crdb-us-west-2                 588      5.9     14.7
+episode:follow    crdb-ap-northeast-1            560      7.7     72.2
+episode:follow    crdb-ap-southeast-1            560      7.4     83.9
+episode:follow    crdb-eu-central-1              560      6.0     15.8
+episode:follow    crdb-eu-west-1                 560      6.2     22.5
+episode:follow    crdb-us-east-1                 560      9.4     94.9
+episode:follow    crdb-us-west-2                 560      5.9     15.6
+episode:lion      crdb-ap-northeast-1            781      8.7    104.5
+episode:lion      crdb-ap-southeast-1            781      6.9    105.6
+episode:lion      crdb-eu-central-1              781      5.4     20.2
+episode:lion      crdb-eu-west-1                 781      5.8     15.6
+episode:lion      crdb-us-east-1                 781      8.1    103.3
+episode:lion      crdb-us-west-2                 781      5.4     16.7
+episode:static    crdb-ap-northeast-1            683      7.5     71.3
+episode:static    crdb-ap-southeast-1            683      6.5     68.7
+episode:static    crdb-eu-central-1              683      5.6     18.8
+episode:static    crdb-eu-west-1                 683      6.0     19.1
+episode:static    crdb-us-east-1                 683      7.8     71.9
+episode:static    crdb-us-west-2                 683      5.8     14.1
+idle              crdb-ap-northeast-1             16      8.4     13.9
+idle              crdb-ap-southeast-1             16      7.6     13.6
+idle              crdb-eu-central-1               16      6.9     15.1
+idle              crdb-eu-west-1                  16      7.2     10.5
+idle              crdb-us-east-1                  16     16.8     70.0
+idle              crdb-us-west-2                  16      6.9     10.7

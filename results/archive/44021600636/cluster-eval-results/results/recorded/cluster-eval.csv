@@ -1,0 +1,26 @@
+# Cluster evaluation, workload seeds 2000 to 2003. One 200-window episode per policy per seed,
+# volatility 4, RF 3, strong reads, N 200. Agent from Train agent run 43674558770, run unchanged.
+# Actions runs: 2000 = 43751004009 (commit 18b0c0f); 2001 = 43954753671, 2002 = 43954879894,
+# 2003 = 43954980773 (commit ac89a12). Copied from each job summary.
+# sim_ms: baselines from scripts/run_experiment.py, same seed and settings; agent from the Train run's own
+# held-out summary.csv (results/archive/43674558770/), same model, same seeds.
+# refused: lease moves the database refused ("target may need a Raft snapshot").
+# p95_ms: mean over the episode's 200 steps of each step's p95 request latency, from the archived
+# step CSVs (results/archive/<run>/.../episode_<policy>.csv, column p95_ms).
+seed,policy,cluster_ms,gb_moved,imbalance,cost_w030,sim_ms,refused,p95_ms
+2000,follow,167.23,771.6,1.024,1.890,148.14,0,522.49
+2000,agent,192.79,127.5,0.801,2.027,161.82,0,614.22
+2000,lion,191.63,30.0,1.202,2.041,153.01,20,588.56
+2000,static,206.17,0.0,0.416,2.103,182.44,0,651.91
+2001,follow,175.11,860.6,0.903,1.971,154.06,0,589.92
+2001,agent,203.60,110.6,0.772,2.130,172.05,0,707.10
+2001,lion,276.40,30.0,1.237,2.892,222.88,0,927.36
+2001,static,234.44,0.0,0.414,2.386,200.73,0,783.36
+2002,follow,160.72,820.1,0.983,1.829,141.96,6,506.35
+2002,agent,173.54,136.9,0.931,1.849,145.98,0,524.03
+2002,lion,234.12,30.0,1.095,2.455,194.02,0,635.96
+2002,static,213.32,0.0,0.441,2.177,191.29,0,621.00
+2003,follow,172.86,857.3,0.916,1.949,151.16,4,589.55
+2003,agent,199.49,98.9,0.941,2.104,168.16,0,627.60
+2003,lion,204.89,30.0,1.408,2.194,163.52,0,642.91
+2003,static,226.82,0.0,0.373,2.305,199.69,0,702.96

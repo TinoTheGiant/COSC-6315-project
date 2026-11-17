@@ -1,0 +1,4 @@
+| policy | steps | mean ms | mean p95 ms | GB moved | GB observed | lease changes | imbalance | cost (w=0.30) | s/step | suspect | divergent |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| agent | 200 | 190.53 | 548.2 | 38.7 | 38.7 | 42 | 0.714 | 1.983 | 17.5 | 0 | 0 |
+| crdb | 200 | 205.70 | 591.6 | 0.0 | 0.0 | 8 | 0.507 | 2.108 | 14.2 | 0 | 6 |

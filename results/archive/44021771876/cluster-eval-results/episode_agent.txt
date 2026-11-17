@@ -1,0 +1,218 @@
+reset in 63 s; agent, seed 2003, N=200, reads leaseholder
+    0 MOVE_LEASE(f4, r5)           applied   mean   135.5 p95   455.0 ms  reward  -1.440  step  13.1 s
+    1 MOVE_LEASE(f1, r2)           applied   mean   135.1 p95   433.1 ms  reward  -1.435  step  13.8 s
+    2 MOVE_LEASE(f5, r1)           applied   mean   162.8 p95   425.9 ms  reward  -1.706  step  14.7 s
+    3 MOVE_LEASE(f4, r0)           applied   mean   129.1 p95   397.2 ms  reward  -1.375  step  12.3 s
+    4 MOVE_LEASE(f5, r5)           applied   mean   156.0 p95   575.0 ms  reward  -1.622  step  12.8 s
+    5 MOVE_LEASE(f5, r0)           applied   mean   115.7 p95   365.3 ms  reward  -1.228  step  10.7 s
+    6 MOVE_LEASE(f5, r5)           applied   mean   121.9 p95   418.1 ms  reward  -1.284  step   5.3 s
+    7 MOVE_LEASE(f5, r0)           applied   mean   138.0 p95   577.6 ms  reward  -1.448  step   6.2 s
+    8 MOVE_LEASE(f5, r1)           applied   mean    99.7 p95   378.5 ms  reward  -1.060  step   5.2 s
+    9 MOVE_LEASE(f5, r0)           applied   mean   140.3 p95   468.3 ms  reward  -1.482  step   6.2 s
+   10 MOVE_LEASE(f2, r3)           applied   mean   138.5 p95   497.4 ms  reward  -1.454  step   5.9 s
+   11 MOVE_LEASE(f2, r2)           applied   mean   163.8 p95   602.9 ms  reward  -1.714  step   6.9 s
+   12 MOVE_LEASE(f2, r3)           applied   mean   163.1 p95   510.5 ms  reward  -1.701  step   7.0 s
+   13 MOVE_LEASE(f2, r2)           applied   mean   183.4 p95   603.2 ms  reward  -1.915  step   8.5 s
+   14 MOVE_REPLICA_TO(f0, r5)      applied   mean   182.3 p95   578.4 ms  reward  -2.218  step   8.5 s
+   15 MOVE_LEASE(f3, r4)           applied   mean   198.8 p95   577.9 ms  reward  -2.068  step   7.3 s
+   16 SPLIT(f5)                    applied   mean   211.9 p95   501.6 ms  reward  -2.202  step   9.7 s
+   17 SPLIT(f6)                    applied   mean   192.9 p95   559.6 ms  reward  -2.011  step  10.3 s
+   18 SPLIT(f7)                    applied   mean   248.5 p95   658.4 ms  reward  -2.558  step   9.9 s
+   19 SPLIT(f7)                    applied   mean   243.7 p95   648.0 ms  reward  -2.506  step   9.1 s
+   20 MOVE_LEASE(f6, r5)           applied   mean   179.2 p95   577.3 ms  reward  -1.873  step  13.2 s
+   21 MOVE_LEASE(f6, r0)           applied   mean   186.8 p95   630.0 ms  reward  -1.930  step  12.3 s
+   22 SPLIT(f7)                    applied   mean   207.3 p95   648.5 ms  reward  -2.126  step  12.5 s
+   23 MOVE_LEASE(f4, r5)           applied   mean   198.4 p95   583.7 ms  reward  -2.037  step  13.2 s
+   24 MOVE_REPLICA_TO(f8, r2)      applied   mean   170.3 p95   583.6 ms  reward  -1.762  step  12.6 s
+   25 SPLIT(f6)                    applied   mean   176.8 p95   583.1 ms  reward  -1.824  step  13.1 s
+   26 MOVE_LEASE(f8, r1)           applied   mean   190.1 p95   649.8 ms  reward  -1.945  step   8.1 s
+   27 MOVE_REPLICA_TO(f3, r2)      applied   mean   180.1 p95   648.2 ms  reward  -2.158  step   9.5 s
+   28 MOVE_REPLICA_TO(f10, r3)     applied   mean   179.5 p95   551.4 ms  reward  -1.877  step  19.1 s
+   29 MOVE_LEASE(f4, r0)           applied   mean   158.1 p95   398.2 ms  reward  -1.679  step  16.2 s
+   30 MOVE_LEASE(f3, r2)           applied   mean   149.4 p95   396.0 ms  reward  -1.594  step  15.7 s
+   31 MOVE_LEASE(f4, r5)           applied   mean   158.6 p95   438.8 ms  reward  -1.670  step  16.5 s
+   32 MOVE_LEASE(f4, r0)           applied   mean   136.0 p95   395.9 ms  reward  -1.481  step  14.4 s
+   33 MOVE_REPLICA_TO(f8, r4)      applied   mean   173.7 p95   504.3 ms  reward  -1.842  step  19.6 s
+   34 MOVE_REPLICA_TO(f8, r0)      applied   mean   135.5 p95   493.1 ms  reward  -1.447  step   7.2 s
+   35 MOVE_LEASE(f2, r3)           applied   mean   155.9 p95   543.0 ms  reward  -1.634  step   5.9 s
+   36 MOVE_REPLICA_TO(f11, r3)     applied   mean   291.9 p95   926.0 ms  reward  -3.065  step  30.1 s
+   37 MOVE_LEASE(f4, r5)           applied   mean   289.8 p95   925.8 ms  reward  -2.988  step  26.7 s
+   38 MOVE_REPLICA_TO(f8, r4)      applied   mean   324.8 p95   993.0 ms  reward  -3.356  step  29.6 s
+   39 MOVE_LEASE(f11, r3)          applied   mean   290.9 p95   925.0 ms  reward  -3.011  step  26.5 s
+   40 MOVE_LEASE(f0, r1)           applied   mean   313.8 p95   925.5 ms  reward  -3.216  step  28.6 s
+   41 MOVE_REPLICA_TO(f5, r3)      applied   mean   302.6 p95   925.7 ms  reward  -3.246  step  29.4 s
+   42 MOVE_LEASE(f2, r2)           applied   mean   308.4 p95  1025.4 ms  reward  -3.170  step  27.3 s
+   43 MOVE_LEASE(f3, r4)           applied   mean   262.0 p95   658.4 ms  reward  -2.686  step  24.1 s
+   44 MOVE_LEASE(f3, r2)           applied   mean   284.9 p95  1025.1 ms  reward  -2.916  step  31.0 s
+   45 MOVE_LEASE(f3, r4)           applied   mean   229.1 p95   603.3 ms  reward  -2.334  step  25.4 s
+   46 MOVE_LEASE(f3, r2)           applied   mean   225.7 p95   827.3 ms  reward  -2.310  step  25.5 s
+   47 MOVE_LEASE(f3, r4)           applied   mean   149.4 p95   498.5 ms  reward  -1.556  step  17.5 s
+   48 MOVE_LEASE(f3, r2)           applied   mean   218.3 p95   795.3 ms  reward  -2.229  step  15.3 s
+   49 MOVE_REPLICA_TO(f6, r4)      applied   mean   139.6 p95   498.1 ms  reward  -1.480  step  11.8 s
+   50 MOVE_REPLICA_TO(f6, r1)      applied   mean   165.2 p95   433.4 ms  reward  -1.758  step  15.8 s
+   51 MOVE_REPLICA_TO(f6, r4)      applied   mean   153.7 p95   410.5 ms  reward  -1.640  step  16.6 s
+   52 MOVE_REPLICA_TO(f6, r1)      applied   mean   126.5 p95   395.0 ms  reward  -1.342  step  14.8 s
+   53 MOVE_LEASE(f4, r0)           applied   mean   127.3 p95   395.1 ms  reward  -1.337  step  13.2 s
+   54 MOVE_LEASE(f4, r5)           applied   mean   142.7 p95   497.2 ms  reward  -1.483  step   6.5 s
+   55 MOVE_LEASE(f4, r0)           applied   mean   129.6 p95   437.3 ms  reward  -1.358  step   6.3 s
+   56 MOVE_LEASE(f2, r3)           applied   mean   135.0 p95   437.9 ms  reward  -1.407  step   6.8 s
+   57 MOVE_LEASE(f2, r2)           applied   mean   141.9 p95   477.0 ms  reward  -1.480  step   6.6 s
+   58 MOVE_LEASE(f2, r3)           applied   mean   173.2 p95   543.5 ms  reward  -1.785  step   7.1 s
+   59 MOVE_REPLICA_TO(f11, r5)     applied   mean   194.3 p95   795.3 ms  reward  -2.028  step   9.4 s
+   60 MOVE_LEASE(f2, r2)           applied   mean   188.4 p95   543.6 ms  reward  -1.955  step   9.3 s
+   61 MOVE_LEASE(f2, r3)           applied   mean   196.1 p95   593.0 ms  reward  -2.012  step   6.9 s
+   62 MOVE_LEASE(f2, r2)           applied   mean   221.8 p95   602.3 ms  reward  -2.269  step  10.0 s
+   63 MOVE_LEASE(f6, r1)           applied   mean   215.7 p95   590.3 ms  reward  -2.214  step   7.1 s
+   64 MOVE_LEASE(f10, r1)          applied   mean   236.2 p95   602.7 ms  reward  -2.434  step  14.6 s
+   65 SPLIT(f10)                   applied   mean   322.5 p95  1025.3 ms  reward  -3.317  step  27.9 s
+   66 MOVE_REPLICA_TO(f12, r0)     applied   mean   304.2 p95  1024.7 ms  reward  -3.196  step  26.7 s
+   67 SPLIT(f7)                    applied   mean   253.6 p95   677.0 ms  reward  -2.629  step  18.5 s
+   68 MOVE_LEASE(f8, r1)           applied   mean   262.4 p95   720.3 ms  reward  -2.712  step  20.1 s
+   69 MOVE_REPLICA_TO(f9, r2)      applied   mean   228.2 p95   650.6 ms  reward  -2.367  step  14.6 s
+   70 MOVE_LEASE(f6, r0)           applied   mean   255.3 p95   645.9 ms  reward  -2.617  step  23.7 s
+   71 MOVE_LEASE(f4, r5)           applied   mean   222.0 p95   649.7 ms  reward  -2.265  step  11.9 s
+   72 MOVE_REPLICA_TO(f11, r4)     applied   mean   202.8 p95   641.5 ms  reward  -2.089  step  12.1 s
+   73 MOVE_REPLICA_TO(f4, r3)      applied   mean   102.6 p95   432.7 ms  reward  -1.407  step   8.7 s
+   74 MOVE_LEASE(f5, r3)           applied   mean    81.3 p95   371.3 ms  reward  -0.916  step   5.5 s
+   75 MOVE_LEASE(f12, r0)          applied   mean    65.6 p95   338.7 ms  reward  -0.770  step   6.2 s
+   76 MOVE_LEASE(f5, r1)           applied   mean    57.0 p95   288.2 ms  reward  -0.688  step   5.1 s
+   77 MOVE_LEASE(f5, r3)           applied   mean    56.6 p95   317.7 ms  reward  -0.681  step   6.0 s
+   78 MOVE_LEASE(f5, r1)           applied   mean   107.7 p95   402.8 ms  reward  -1.156  step  11.3 s
+   79 MOVE_LEASE(f5, r3)           applied   mean   196.3 p95   546.6 ms  reward  -2.022  step  19.2 s
+   80 MOVE_LEASE(f0, r0)           applied   mean   221.2 p95   603.6 ms  reward  -2.283  step  19.7 s
+   81 MOVE_REPLICA_TO(f11, r5)     applied   mean   198.4 p95   603.3 ms  reward  -2.062  step  19.1 s
+   82 MOVE_REPLICA_TO(f8, r4)      applied   mean   241.8 p95   603.9 ms  reward  -2.514  step  20.5 s
+   83 SPLIT(f7)                    applied   mean   253.1 p95  1021.0 ms  reward  -2.615  step  21.9 s
+   84 MOVE_REPLICA_TO(f12, r0)     applied   mean   248.4 p95   819.3 ms  reward  -2.540  step  12.3 s
+   85 MOVE_REPLICA_TO(f11, r5)     applied   mean   244.3 p95   678.5 ms  reward  -2.504  step  11.8 s
+   86 SPLIT(f8)                    applied   mean   255.1 p95   603.8 ms  reward  -2.603  step   9.8 s
+   87 MOVE_LEASE(f4, r0)           applied   mean   208.9 p95   593.5 ms  reward  -2.161  step   9.2 s
+   88 MOVE_REPLICA_TO(f6, r3)      applied   mean   194.8 p95   603.2 ms  reward  -2.053  step  11.0 s
+   89 MOVE_REPLICA_TO(f11, r5)     applied   mean   218.3 p95   568.3 ms  reward  -2.262  step  10.5 s
+   90 MOVE_LEASE(f13, r5)          applied   mean   226.8 p95   924.8 ms  reward  -2.340  step  10.9 s
+   91 MOVE_LEASE(f4, r3)           applied   mean   190.5 p95   578.4 ms  reward  -1.979  step  10.2 s
+   92 MOVE_REPLICA_TO(f0, r2)      applied   mean   193.1 p95   604.0 ms  reward  -2.309  step  13.1 s
+   93 MOVE_REPLICA_TO(f8, r4)      applied   mean   212.5 p95   681.1 ms  reward  -2.212  step  12.6 s
+   94 MOVE_REPLICA_TO(f9, r2)      applied   mean   219.9 p95   671.3 ms  reward  -2.279  step  13.5 s
+   95 MOVE_LEASE(f4, r5)           applied   mean   231.0 p95   649.1 ms  reward  -2.364  step  10.8 s
+   96 MOVE_LEASE(f4, r3)           applied   mean   253.8 p95   775.1 ms  reward  -2.613  step  13.6 s
+   97 MOVE_LEASE(f4, r5)           applied   mean   188.2 p95   547.2 ms  reward  -1.945  step  10.1 s
+   98 MOVE_LEASE(f1, r3)           applied   mean   174.9 p95   543.5 ms  reward  -1.811  step   9.1 s
+   99 MOVE_LEASE(f1, r2)           applied   mean   197.0 p95   649.6 ms  reward  -2.037  step  10.4 s
+  100 MOVE_LEASE(f1, r3)           applied   mean   187.1 p95   598.9 ms  reward  -1.934  step   8.8 s
+  101 MOVE_LEASE(f1, r2)           applied   mean   150.2 p95   540.2 ms  reward  -1.580  step   7.9 s
+  102 MOVE_LEASE(f4, r0)           applied   mean   144.4 p95   493.4 ms  reward  -1.527  step   7.5 s
+  103 MOVE_LEASE(f5, r0)           applied   mean   241.0 p95   613.7 ms  reward  -2.510  step  21.9 s
+  104 MOVE_REPLICA_TO(f10, r3)     applied   mean   244.3 p95   818.6 ms  reward  -2.556  step  24.7 s
+  105 MOVE_LEASE(f4, r5)           applied   mean   272.9 p95   924.9 ms  reward  -2.818  step  23.4 s
+  106 MOVE_LEASE(f4, r0)           applied   mean   266.4 p95   925.7 ms  reward  -2.765  step  25.1 s
+  107 MOVE_LEASE(f13, r0)          applied   mean   254.1 p95   925.7 ms  reward  -2.658  step  25.3 s
+  108 SPLIT(f10)                   applied   mean   269.5 p95   925.6 ms  reward  -2.799  step  26.4 s
+  109 MOVE_REPLICA_TO(f11, r2)     applied   mean   203.9 p95   603.5 ms  reward  -2.135  step  11.8 s
+  110 MOVE_REPLICA_TO(f12, r0)     applied   mean   201.6 p95   622.5 ms  reward  -2.106  step   9.2 s
+  111 MOVE_LEASE(f11, r3)          applied   mean   203.9 p95   543.1 ms  reward  -2.126  step   9.3 s
+  112 MOVE_REPLICA_TO(f8, r2)      applied   mean   209.5 p95   542.6 ms  reward  -2.193  step  10.5 s
+  113 MOVE_REPLICA_TO(f14, r3)     applied   mean   233.6 p95   650.9 ms  reward  -2.423  step  11.6 s
+  114 MOVE_REPLICA_TO(f4, r1)      applied   mean   228.5 p95   905.0 ms  reward  -2.666  step  12.9 s
+  115 MOVE_REPLICA_TO(f6, r4)      applied   mean   151.2 p95   510.4 ms  reward  -1.638  step  15.5 s
+  116 MOVE_REPLICA_TO(f10, r2)     applied   mean   157.4 p95   510.5 ms  reward  -1.670  step  14.4 s
+  117 MOVE_REPLICA_TO(f9, r3)      applied   mean   156.1 p95   509.9 ms  reward  -1.648  step  10.2 s
+  118 MOVE_LEASE(f3, r4)           applied   mean   171.1 p95   562.0 ms  reward  -1.779  step   8.9 s
+  119 MOVE_LEASE(f5, r3)           applied   mean   216.3 p95   647.9 ms  reward  -2.229  step  11.9 s
+  120 MOVE_LEASE(f3, r2)           rejected  mean   174.8 p95   548.0 ms  reward  -1.841  step  19.1 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+  121 MOVE_LEASE(f3, r2)           applied   mean   144.6 p95   365.5 ms  reward  -1.573  step  12.3 s
+  122 MOVE_REPLICA_TO(f10, r5)     applied   mean   139.7 p95   378.0 ms  reward  -1.518  step  12.7 s
+  123 MOVE_LEASE(f4, r5)           applied   mean   246.1 p95   925.0 ms  reward  -2.516  step  24.9 s
+  124 NOOP                         no-op     mean   257.6 p95   868.8 ms  reward  -2.623  step  25.6 s
+  125 MOVE_LEASE(f5, r1)           applied   mean   215.0 p95   560.5 ms  reward  -2.214  step  21.8 s
+  126 MOVE_REPLICA_TO(f6, r1)      applied   mean   229.2 p95   602.6 ms  reward  -2.402  step  23.6 s
+  127 MOVE_LEASE(f6, r1)           applied   mean   220.7 p95   543.7 ms  reward  -2.295  step  20.3 s
+  128 MOVE_REPLICA_TO(f14, r5)     applied   mean   215.5 p95   543.7 ms  reward  -2.251  step  21.0 s
+  129 MOVE_REPLICA_TO(f14, r3)     applied   mean   147.6 p95   542.9 ms  reward  -1.545  step  10.2 s
+  130 MOVE_LEASE(f4, r0)           applied   mean   139.7 p95   461.4 ms  reward  -1.479  step   7.0 s
+  131 MOVE_LEASE(f2, r3)           applied   mean   180.4 p95   749.9 ms  reward  -1.867  step   7.7 s
+  132 MOVE_LEASE(f2, r2)           applied   mean   171.8 p95   637.8 ms  reward  -1.792  step   7.6 s
+  133 MOVE_REPLICA_TO(f7, r3)      applied   mean   176.1 p95   467.1 ms  reward  -1.839  step   8.5 s
+  134 MOVE_REPLICA_TO(f10, r3)     applied   mean   101.2 p95   422.2 ms  reward  -1.103  step  10.2 s
+  135 MOVE_LEASE(f7, r3)           applied   mean   188.2 p95   578.5 ms  reward  -1.959  step  16.5 s
+  136 MOVE_LEASE(f7, r0)           applied   mean   219.4 p95   648.5 ms  reward  -2.286  step  19.5 s
+  137 MOVE_LEASE(f2, r3)           applied   mean   250.5 p95   925.4 ms  reward  -2.586  step  22.2 s
+  138 MOVE_LEASE(f2, r2)           applied   mean   285.8 p95   999.1 ms  reward  -2.941  step  26.9 s
+  139 MOVE_LEASE(f2, r3)           applied   mean   286.3 p95   924.8 ms  reward  -2.936  step  26.1 s
+  140 MOVE_LEASE(f2, r2)           applied   mean   357.3 p95  1095.2 ms  reward  -3.658  step  35.0 s
+  141 MOVE_REPLICA_TO(f14, r5)     applied   mean   187.6 p95   649.5 ms  reward  -1.985  step  10.7 s
+  142 MOVE_LEASE(f8, r2)           applied   mean   156.9 p95   438.0 ms  reward  -1.681  step  11.7 s
+  143 SPLIT(f11)                   applied   mean   169.5 p95   468.3 ms  reward  -1.811  step  13.6 s
+  144 MOVE_REPLICA_TO(f12, r0)     applied   mean   153.4 p95   438.3 ms  reward  -1.656  step  13.7 s
+  145 MOVE_LEASE(f12, r0)          applied   mean   128.5 p95   364.9 ms  reward  -1.399  step  10.8 s
+  146 MOVE_LEASE(f5, r0)           applied   mean   142.1 p95   438.2 ms  reward  -1.532  step  10.3 s
+  147 MOVE_LEASE(f15, r5)          applied   mean   113.5 p95   589.4 ms  reward  -1.243  step   7.5 s
+  148 SPLIT(f16)                   applied   mean   233.4 p95   795.9 ms  reward  -2.410  step  23.2 s
+  149 MOVE_REPLICA_TO(f15, r3)     applied   mean   217.7 p95   850.8 ms  reward  -2.263  step  23.9 s
+  150 MOVE_LEASE(f2, r3)           applied   mean   186.1 p95   607.7 ms  reward  -1.933  step  17.8 s
+  151 MOVE_LEASE(f2, r2)           applied   mean   337.1 p95   970.6 ms  reward  -3.444  step  36.4 s
+  152 MOVE_LEASE(f18, r1)          applied   mean   320.6 p95   970.4 ms  reward  -3.301  step  35.0 s
+  153 MOVE_LEASE(f15, r0)          applied   mean   314.0 p95   970.6 ms  reward  -3.249  step  34.1 s
+  154 MOVE_LEASE(f2, r3)           applied   mean   242.6 p95   600.3 ms  reward  -2.492  step  22.8 s
+  155 MOVE_LEASE(f2, r2)           applied   mean   252.1 p95   701.5 ms  reward  -2.624  step  24.1 s
+  156 MOVE_LEASE(f2, r3)           applied   mean   243.6 p95   679.1 ms  reward  -2.517  step  22.1 s
+  157 MOVE_LEASE(f2, r2)           applied   mean   185.2 p95   591.1 ms  reward  -1.932  step   8.6 s
+  158 MOVE_LEASE(f17, r1)          applied   mean   207.8 p95   542.9 ms  reward  -2.166  step   9.1 s
+  159 MOVE_LEASE(f2, r3)           applied   mean   198.8 p95   542.8 ms  reward  -2.058  step   9.0 s
+  160 MOVE_REPLICA_TO(f18, r2)     applied   mean   214.8 p95   599.1 ms  reward  -2.275  step  11.0 s
+  161 MOVE_LEASE(f2, r2)           applied   mean   211.3 p95   603.5 ms  reward  -2.201  step  11.5 s
+  162 MOVE_REPLICA_TO(f2, r0)      applied   mean   250.4 p95   904.9 ms  reward  -2.896  step  13.2 s
+  163 MOVE_REPLICA_TO(f17, r5)     applied   mean   259.3 p95   649.9 ms  reward  -2.679  step  14.0 s
+  164 MOVE_REPLICA_TO(f17, r2)     applied   mean   211.3 p95   650.2 ms  reward  -2.209  step  11.0 s
+  165 MOVE_REPLICA_TO(f17, r5)     applied   mean   232.8 p95   650.7 ms  reward  -2.419  step  13.0 s
+  166 MOVE_LEASE(f2, r3)           applied   mean   231.5 p95   650.7 ms  reward  -2.396  step  11.5 s
+  167 MOVE_LEASE(f2, r2)           applied   mean   254.3 p95   873.8 ms  reward  -2.630  step  12.5 s
+  168 MOVE_REPLICA_TO(f12, r4)     applied   mean   218.4 p95   650.1 ms  reward  -2.292  step  11.4 s
+  169 MOVE_REPLICA_TO(f9, r1)      applied   mean   224.7 p95   651.2 ms  reward  -2.340  step  13.7 s
+  170 MOVE_LEASE(f2, r3)           applied   mean   209.3 p95   648.2 ms  reward  -2.170  step  11.2 s
+  171 MOVE_LEASE(f2, r2)           applied   mean    62.3 p95   318.1 ms  reward  -0.745  step   5.2 s
+  172 MOVE_LEASE(f13, r0)          applied   mean    65.2 p95   318.1 ms  reward  -0.778  step   5.3 s
+  173 MOVE_REPLICA_TO(f15, r1)     applied   mean   185.1 p95   796.2 ms  reward  -1.947  step  19.9 s
+  174 MOVE_REPLICA_TO(f15, r3)     applied   mean   165.9 p95   796.2 ms  reward  -1.757  step  18.2 s
+  175 NOOP                         no-op     mean   108.7 p95   422.5 ms  reward  -1.184  step  11.5 s
+  176 NOOP                         no-op     mean   120.0 p95   422.5 ms  reward  -1.306  step  10.7 s
+  177 NOOP                         no-op     mean   252.2 p95   603.6 ms  reward  -2.613  step  22.7 s
+  178 NOOP                         no-op     mean   216.2 p95   548.9 ms  reward  -2.263  step  21.4 s
+  179 NOOP                         no-op     mean   130.9 p95   422.2 ms  reward  -1.394  step   6.0 s
+  180 NOOP                         no-op     mean   151.0 p95   421.8 ms  reward  -1.598  step   8.7 s
+  181 NOOP                         no-op     mean   197.1 p95   543.1 ms  reward  -2.052  step  10.2 s
+  182 NOOP                         no-op     mean   180.8 p95   478.2 ms  reward  -1.895  step   7.7 s
+  183 MOVE_LEASE(f18, r2)          applied   mean   203.4 p95   578.4 ms  reward  -2.123  step  10.1 s
+  184 NOOP                         no-op     mean   194.6 p95   548.4 ms  reward  -2.049  step   9.7 s
+  185 NOOP                         no-op     mean   212.4 p95   613.6 ms  reward  -2.220  step   9.9 s
+  186 NOOP                         no-op     mean   236.1 p95   775.7 ms  reward  -2.447  step  11.0 s
+  187 NOOP                         no-op     mean   226.6 p95   649.9 ms  reward  -2.357  step  11.2 s
+  188 MOVE_REPLICA_TO(f10, r0)     applied   mean   231.7 p95   649.0 ms  reward  -2.410  step  13.0 s
+  189 MOVE_REPLICA_TO(f10, r3)     applied   mean   230.3 p95   648.8 ms  reward  -2.402  step  13.3 s
+  190 NOOP                         no-op     mean   259.0 p95   908.0 ms  reward  -2.680  step  14.9 s
+  191 NOOP                         no-op     mean   250.7 p95   650.8 ms  reward  -2.595  step  13.4 s
+  192 NOOP                         no-op     mean   231.8 p95   795.7 ms  reward  -2.409  step  14.0 s
+  193 NOOP                         no-op     mean   208.7 p95   613.6 ms  reward  -2.182  step  10.4 s
+  194 NOOP                         no-op     mean   218.6 p95   794.8 ms  reward  -2.272  step  12.7 s
+  195 NOOP                         no-op     mean   194.9 p95   578.5 ms  reward  -2.042  step   9.5 s
+  196 NOOP                         no-op     mean   161.7 p95   613.5 ms  reward  -1.710  step   8.4 s
+  197 NOOP                         no-op     mean   137.6 p95   437.9 ms  reward  -1.472  step   7.3 s
+  198 NOOP                         no-op     mean   156.4 p95   497.5 ms  reward  -1.653  step   8.2 s
+  199 NOOP                         no-op     mean   125.9 p95   422.2 ms  reward  -1.348  step   7.0 s
+{
+ "policy": "agent",
+ "seed": 2003,
+ "steps": 200,
+ "mean_latency_ms": 198.00430859165095,
+ "gb_moved_total": 89.296875,
+ "gb_observed_total": 89.296875,
+ "lease_changes_total": 107,
+ "mean_p95_ms": 619.9643026350003,
+ "mean_step_s": 14.276230396670003,
+ "mean_imbalance": 0.8038661764958535,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.0738242348160947
+}
+VERDICT: PASS, the cluster ran as an environment end to end.

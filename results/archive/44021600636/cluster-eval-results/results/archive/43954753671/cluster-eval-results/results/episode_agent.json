@@ -1,0 +1,12 @@
+{
+ "policy": "agent",
+ "seed": 2001,
+ "steps": 200,
+ "mean_latency_ms": 203.60416197269987,
+ "gb_moved_total": 110.625,
+ "mean_step_s": 13.220831352810007,
+ "mean_imbalance": 0.772212101822045,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.1298565799092035
+}

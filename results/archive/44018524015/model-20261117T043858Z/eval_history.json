@@ -1,0 +1,602 @@
+[
+  {
+    "timestep": 10000,
+    "mean_latency_ms": 190.72614458688966,
+    "mean_tail_latency_ms": 661.4179104477612,
+    "gb_moved": 230.3125
+  },
+  {
+    "timestep": 20000,
+    "mean_latency_ms": 176.79361726184717,
+    "mean_tail_latency_ms": 569.5174129353234,
+    "gb_moved": 229.21875
+  },
+  {
+    "timestep": 30000,
+    "mean_latency_ms": 189.71883746807978,
+    "mean_tail_latency_ms": 651.7611940298507,
+    "gb_moved": 43.828125
+  },
+  {
+    "timestep": 40000,
+    "mean_latency_ms": 176.8669220657549,
+    "mean_tail_latency_ms": 572.6019900497512,
+    "gb_moved": 78.671875
+  },
+  {
+    "timestep": 50000,
+    "mean_latency_ms": 189.31463419302307,
+    "mean_tail_latency_ms": 631.6849087893864,
+    "gb_moved": 224.53125
+  },
+  {
+    "timestep": 60000,
+    "mean_latency_ms": 186.09066186512746,
+    "mean_tail_latency_ms": 613.8424543946932,
+    "gb_moved": 217.734375
+  },
+  {
+    "timestep": 70000,
+    "mean_latency_ms": 180.22027070106583,
+    "mean_tail_latency_ms": 597.3300165837479,
+    "gb_moved": 127.265625
+  },
+  {
+    "timestep": 80000,
+    "mean_latency_ms": 176.13502237954376,
+    "mean_tail_latency_ms": 587.8242122719735,
+    "gb_moved": 13.125
+  },
+  {
+    "timestep": 90000,
+    "mean_latency_ms": 170.19721386256234,
+    "mean_tail_latency_ms": 526.3714759535656,
+    "gb_moved": 263.359375
+  },
+  {
+    "timestep": 100000,
+    "mean_latency_ms": 191.58485780466245,
+    "mean_tail_latency_ms": 655.5008291873963,
+    "gb_moved": 101.796875
+  },
+  {
+    "timestep": 110000,
+    "mean_latency_ms": 188.85300635156497,
+    "mean_tail_latency_ms": 656.3134328358209,
+    "gb_moved": 28.125
+  },
+  {
+    "timestep": 120000,
+    "mean_latency_ms": 180.86596813796885,
+    "mean_tail_latency_ms": 613.5323383084577,
+    "gb_moved": 29.296875
+  },
+  {
+    "timestep": 130000,
+    "mean_latency_ms": 184.4979492956381,
+    "mean_tail_latency_ms": 620.5456053067993,
+    "gb_moved": 161.171875
+  },
+  {
+    "timestep": 140000,
+    "mean_latency_ms": 173.79187934131986,
+    "mean_tail_latency_ms": 574.5920398009949,
+    "gb_moved": 69.453125
+  },
+  {
+    "timestep": 150000,
+    "mean_latency_ms": 160.67566160377996,
+    "mean_tail_latency_ms": 500.4494195688226,
+    "gb_moved": 218.359375
+  },
+  {
+    "timestep": 160000,
+    "mean_latency_ms": 179.57268092273694,
+    "mean_tail_latency_ms": 592.7728026533997,
+    "gb_moved": 44.53125
+  },
+  {
+    "timestep": 170000,
+    "mean_latency_ms": 167.1759628143772,
+    "mean_tail_latency_ms": 541.9004975124378,
+    "gb_moved": 56.875
+  },
+  {
+    "timestep": 180000,
+    "mean_latency_ms": 165.29099312505707,
+    "mean_tail_latency_ms": 520.1956882255389,
+    "gb_moved": 166.5625
+  },
+  {
+    "timestep": 190000,
+    "mean_latency_ms": 177.56866347104994,
+    "mean_tail_latency_ms": 570.021558872305,
+    "gb_moved": 79.84375
+  },
+  {
+    "timestep": 200000,
+    "mean_latency_ms": 167.2719733075165,
+    "mean_tail_latency_ms": 527.4477611940298,
+    "gb_moved": 36.640625
+  },
+  {
+    "timestep": 210000,
+    "mean_latency_ms": 165.14666775336352,
+    "mean_tail_latency_ms": 522.5771144278607,
+    "gb_moved": 57.109375
+  },
+  {
+    "timestep": 220000,
+    "mean_latency_ms": 173.22286103052406,
+    "mean_tail_latency_ms": 560.0497512437811,
+    "gb_moved": 292.109375
+  },
+  {
+    "timestep": 230000,
+    "mean_latency_ms": 173.47772822634337,
+    "mean_tail_latency_ms": 545.4643449419568,
+    "gb_moved": 257.96875
+  },
+  {
+    "timestep": 240000,
+    "mean_latency_ms": 182.71812204480935,
+    "mean_tail_latency_ms": 620.4543946932007,
+    "gb_moved": 178.28125
+  },
+  {
+    "timestep": 250000,
+    "mean_latency_ms": 186.38421107427425,
+    "mean_tail_latency_ms": 638.0431177446103,
+    "gb_moved": 95.078125
+  },
+  {
+    "timestep": 260000,
+    "mean_latency_ms": 178.21469687586514,
+    "mean_tail_latency_ms": 603.5688225538971,
+    "gb_moved": 206.171875
+  },
+  {
+    "timestep": 270000,
+    "mean_latency_ms": 175.36471190290604,
+    "mean_tail_latency_ms": 567.7247097844113,
+    "gb_moved": 255.15625
+  },
+  {
+    "timestep": 280000,
+    "mean_latency_ms": 195.6144937177777,
+    "mean_tail_latency_ms": 654.8009950248756,
+    "gb_moved": 95.15625
+  },
+  {
+    "timestep": 290000,
+    "mean_latency_ms": 186.83430100521,
+    "mean_tail_latency_ms": 649.0696517412936,
+    "gb_moved": 76.171875
+  },
+  {
+    "timestep": 300000,
+    "mean_latency_ms": 172.02104802760027,
+    "mean_tail_latency_ms": 558.3996683250415,
+    "gb_moved": 97.65625
+  },
+  {
+    "timestep": 310000,
+    "mean_latency_ms": 178.81259876001118,
+    "mean_tail_latency_ms": 573.1641791044776,
+    "gb_moved": 51.25
+  },
+  {
+    "timestep": 320000,
+    "mean_latency_ms": 174.42227746868517,
+    "mean_tail_latency_ms": 593.2537313432836,
+    "gb_moved": 66.953125
+  },
+  {
+    "timestep": 330000,
+    "mean_latency_ms": 180.68855260625028,
+    "mean_tail_latency_ms": 612.8640132669983,
+    "gb_moved": 102.5
+  },
+  {
+    "timestep": 340000,
+    "mean_latency_ms": 173.31503737133457,
+    "mean_tail_latency_ms": 577.4046434494195,
+    "gb_moved": 183.203125
+  },
+  {
+    "timestep": 350000,
+    "mean_latency_ms": 174.67042741739422,
+    "mean_tail_latency_ms": 572.5737976782752,
+    "gb_moved": 60.703125
+  },
+  {
+    "timestep": 360000,
+    "mean_latency_ms": 187.21544732658083,
+    "mean_tail_latency_ms": 622.8955223880597,
+    "gb_moved": 43.671875
+  },
+  {
+    "timestep": 370000,
+    "mean_latency_ms": 174.9001765434506,
+    "mean_tail_latency_ms": 578.4378109452737,
+    "gb_moved": 210.15625
+  },
+  {
+    "timestep": 380000,
+    "mean_latency_ms": 182.62161005364996,
+    "mean_tail_latency_ms": 604.3515754560531,
+    "gb_moved": 97.5
+  },
+  {
+    "timestep": 390000,
+    "mean_latency_ms": 174.66022636621278,
+    "mean_tail_latency_ms": 565.8208955223881,
+    "gb_moved": 90.15625
+  },
+  {
+    "timestep": 400000,
+    "mean_latency_ms": 182.1651034305606,
+    "mean_tail_latency_ms": 608.893864013267,
+    "gb_moved": 72.8125
+  },
+  {
+    "timestep": 410000,
+    "mean_latency_ms": 176.7309003256449,
+    "mean_tail_latency_ms": 600.2321724709785,
+    "gb_moved": 237.890625
+  },
+  {
+    "timestep": 420000,
+    "mean_latency_ms": 176.20439398880634,
+    "mean_tail_latency_ms": 591.0762852404645,
+    "gb_moved": 76.328125
+  },
+  {
+    "timestep": 430000,
+    "mean_latency_ms": 171.7479690728383,
+    "mean_tail_latency_ms": 567.4527363184079,
+    "gb_moved": 175.0
+  },
+  {
+    "timestep": 440000,
+    "mean_latency_ms": 170.15924965002523,
+    "mean_tail_latency_ms": 552.4792703150912,
+    "gb_moved": 71.171875
+  },
+  {
+    "timestep": 450000,
+    "mean_latency_ms": 177.6975686250711,
+    "mean_tail_latency_ms": 616.5671641791045,
+    "gb_moved": 166.25
+  },
+  {
+    "timestep": 460000,
+    "mean_latency_ms": 175.1632937933924,
+    "mean_tail_latency_ms": 570.2023217247097,
+    "gb_moved": 121.71875
+  },
+  {
+    "timestep": 470000,
+    "mean_latency_ms": 177.8049663897656,
+    "mean_tail_latency_ms": 596.6965174129353,
+    "gb_moved": 242.265625
+  },
+  {
+    "timestep": 480000,
+    "mean_latency_ms": 169.31232356638665,
+    "mean_tail_latency_ms": 559.4593698175788,
+    "gb_moved": 87.65625
+  },
+  {
+    "timestep": 490000,
+    "mean_latency_ms": 174.3767669579338,
+    "mean_tail_latency_ms": 583.9950248756219,
+    "gb_moved": 126.25
+  },
+  {
+    "timestep": 500000,
+    "mean_latency_ms": 175.72635938943503,
+    "mean_tail_latency_ms": 575.2321724709784,
+    "gb_moved": 71.328125
+  },
+  {
+    "timestep": 510000,
+    "mean_latency_ms": 178.994643095261,
+    "mean_tail_latency_ms": 602.106135986733,
+    "gb_moved": 148.4375
+  },
+  {
+    "timestep": 520000,
+    "mean_latency_ms": 176.28018782691234,
+    "mean_tail_latency_ms": 589.6882255389718,
+    "gb_moved": 147.03125
+  },
+  {
+    "timestep": 530000,
+    "mean_latency_ms": 168.10224100489015,
+    "mean_tail_latency_ms": 543.8490878938641,
+    "gb_moved": 684.140625
+  },
+  {
+    "timestep": 540000,
+    "mean_latency_ms": 182.99020561336428,
+    "mean_tail_latency_ms": 620.2885572139304,
+    "gb_moved": 121.796875
+  },
+  {
+    "timestep": 550000,
+    "mean_latency_ms": 188.6171674967676,
+    "mean_tail_latency_ms": 639.0895522388059,
+    "gb_moved": 85.234375
+  },
+  {
+    "timestep": 560000,
+    "mean_latency_ms": 176.33938794797396,
+    "mean_tail_latency_ms": 584.0182421227197,
+    "gb_moved": 97.734375
+  },
+  {
+    "timestep": 570000,
+    "mean_latency_ms": 170.18388689480733,
+    "mean_tail_latency_ms": 565.3913764510779,
+    "gb_moved": 220.234375
+  },
+  {
+    "timestep": 580000,
+    "mean_latency_ms": 167.04945548402907,
+    "mean_tail_latency_ms": 549.7462686567164,
+    "gb_moved": 105.78125
+  },
+  {
+    "timestep": 590000,
+    "mean_latency_ms": 173.70752002498224,
+    "mean_tail_latency_ms": 593.0845771144278,
+    "gb_moved": 91.25
+  },
+  {
+    "timestep": 600000,
+    "mean_latency_ms": 171.61646005858347,
+    "mean_tail_latency_ms": 565.9253731343283,
+    "gb_moved": 180.390625
+  },
+  {
+    "timestep": 610000,
+    "mean_latency_ms": 180.22076110674266,
+    "mean_tail_latency_ms": 602.8175787728027,
+    "gb_moved": 150.9375
+  },
+  {
+    "timestep": 620000,
+    "mean_latency_ms": 179.06284826517262,
+    "mean_tail_latency_ms": 616.9253731343283,
+    "gb_moved": 159.765625
+  },
+  {
+    "timestep": 630000,
+    "mean_latency_ms": 170.86659951252804,
+    "mean_tail_latency_ms": 558.7910447761195,
+    "gb_moved": 119.921875
+  },
+  {
+    "timestep": 640000,
+    "mean_latency_ms": 174.156787242781,
+    "mean_tail_latency_ms": 581.3648424543948,
+    "gb_moved": 93.984375
+  },
+  {
+    "timestep": 650000,
+    "mean_latency_ms": 182.3505509158716,
+    "mean_tail_latency_ms": 611.9618573797678,
+    "gb_moved": 213.28125
+  },
+  {
+    "timestep": 660000,
+    "mean_latency_ms": 178.63369648135927,
+    "mean_tail_latency_ms": 598.4709784411276,
+    "gb_moved": 108.125
+  },
+  {
+    "timestep": 670000,
+    "mean_latency_ms": 175.07516062776332,
+    "mean_tail_latency_ms": 577.5771144278607,
+    "gb_moved": 183.75
+  },
+  {
+    "timestep": 680000,
+    "mean_latency_ms": 173.35178955518506,
+    "mean_tail_latency_ms": 586.379767827529,
+    "gb_moved": 91.328125
+  },
+  {
+    "timestep": 690000,
+    "mean_latency_ms": 180.29145968550085,
+    "mean_tail_latency_ms": 629.4295190713101,
+    "gb_moved": 144.921875
+  },
+  {
+    "timestep": 700000,
+    "mean_latency_ms": 170.87569412606717,
+    "mean_tail_latency_ms": 566.5140961857379,
+    "gb_moved": 80.859375
+  },
+  {
+    "timestep": 710000,
+    "mean_latency_ms": 174.83010103854497,
+    "mean_tail_latency_ms": 580.9684908789387,
+    "gb_moved": 197.578125
+  },
+  {
+    "timestep": 720000,
+    "mean_latency_ms": 175.8104497371372,
+    "mean_tail_latency_ms": 596.4112769485904,
+    "gb_moved": 404.0625
+  },
+  {
+    "timestep": 730000,
+    "mean_latency_ms": 169.5749717141272,
+    "mean_tail_latency_ms": 557.4610281923714,
+    "gb_moved": 191.953125
+  },
+  {
+    "timestep": 740000,
+    "mean_latency_ms": 173.3541190588842,
+    "mean_tail_latency_ms": 579.69320066335,
+    "gb_moved": 82.8125
+  },
+  {
+    "timestep": 750000,
+    "mean_latency_ms": 163.52435476423952,
+    "mean_tail_latency_ms": 530.2802653399667,
+    "gb_moved": 85.15625
+  },
+  {
+    "timestep": 760000,
+    "mean_latency_ms": 177.73666518719403,
+    "mean_tail_latency_ms": 598.7412935323383,
+    "gb_moved": 142.8125
+  },
+  {
+    "timestep": 770000,
+    "mean_latency_ms": 168.14902205639314,
+    "mean_tail_latency_ms": 547.837479270315,
+    "gb_moved": 154.140625
+  },
+  {
+    "timestep": 780000,
+    "mean_latency_ms": 175.7174238240956,
+    "mean_tail_latency_ms": 580.2587064676617,
+    "gb_moved": 118.046875
+  },
+  {
+    "timestep": 790000,
+    "mean_latency_ms": 166.07202561562755,
+    "mean_tail_latency_ms": 547.8739635157546,
+    "gb_moved": 102.8125
+  },
+  {
+    "timestep": 800000,
+    "mean_latency_ms": 178.31660572584607,
+    "mean_tail_latency_ms": 600.6517412935323,
+    "gb_moved": 205.859375
+  },
+  {
+    "timestep": 810000,
+    "mean_latency_ms": 173.17932216238864,
+    "mean_tail_latency_ms": 569.8822553897181,
+    "gb_moved": 131.25
+  },
+  {
+    "timestep": 820000,
+    "mean_latency_ms": 166.59722198026563,
+    "mean_tail_latency_ms": 547.5041459369817,
+    "gb_moved": 224.296875
+  },
+  {
+    "timestep": 830000,
+    "mean_latency_ms": 174.69315929553508,
+    "mean_tail_latency_ms": 574.7412935323383,
+    "gb_moved": 103.984375
+  },
+  {
+    "timestep": 840000,
+    "mean_latency_ms": 172.86768100758266,
+    "mean_tail_latency_ms": 564.3946932006634,
+    "gb_moved": 142.1875
+  },
+  {
+    "timestep": 850000,
+    "mean_latency_ms": 178.65786181691922,
+    "mean_tail_latency_ms": 604.5124378109452,
+    "gb_moved": 203.203125
+  },
+  {
+    "timestep": 860000,
+    "mean_latency_ms": 180.82410792407597,
+    "mean_tail_latency_ms": 629.0713101160862,
+    "gb_moved": 209.84375
+  },
+  {
+    "timestep": 870000,
+    "mean_latency_ms": 173.5122780037054,
+    "mean_tail_latency_ms": 587.9668325041459,
+    "gb_moved": 135.390625
+  },
+  {
+    "timestep": 880000,
+    "mean_latency_ms": 172.11502292660126,
+    "mean_tail_latency_ms": 576.8490878938641,
+    "gb_moved": 86.171875
+  },
+  {
+    "timestep": 890000,
+    "mean_latency_ms": 172.764974383657,
+    "mean_tail_latency_ms": 575.6334991708127,
+    "gb_moved": 131.09375
+  },
+  {
+    "timestep": 900000,
+    "mean_latency_ms": 174.93260059763531,
+    "mean_tail_latency_ms": 592.4179104477612,
+    "gb_moved": 167.578125
+  },
+  {
+    "timestep": 910000,
+    "mean_latency_ms": 170.2395563659217,
+    "mean_tail_latency_ms": 568.056384742952,
+    "gb_moved": 249.21875
+  },
+  {
+    "timestep": 920000,
+    "mean_latency_ms": 168.10827894088195,
+    "mean_tail_latency_ms": 552.7064676616916,
+    "gb_moved": 143.515625
+  },
+  {
+    "timestep": 930000,
+    "mean_latency_ms": 170.54725667617436,
+    "mean_tail_latency_ms": 577.922056384743,
+    "gb_moved": 100.390625
+  },
+  {
+    "timestep": 940000,
+    "mean_latency_ms": 169.65172853026556,
+    "mean_tail_latency_ms": 556.2205638474294,
+    "gb_moved": 90.3125
+  },
+  {
+    "timestep": 950000,
+    "mean_latency_ms": 172.84372397814647,
+    "mean_tail_latency_ms": 576.8805970149255,
+    "gb_moved": 175.9375
+  },
+  {
+    "timestep": 960000,
+    "mean_latency_ms": 179.24191996870618,
+    "mean_tail_latency_ms": 599.8208955223881,
+    "gb_moved": 211.25
+  },
+  {
+    "timestep": 970000,
+    "mean_latency_ms": 181.40125377540585,
+    "mean_tail_latency_ms": 594.4344941956883,
+    "gb_moved": 149.140625
+  },
+  {
+    "timestep": 980000,
+    "mean_latency_ms": 170.24783810294045,
+    "mean_tail_latency_ms": 558.8009950248756,
+    "gb_moved": 168.515625
+  },
+  {
+    "timestep": 990000,
+    "mean_latency_ms": 168.71389207962304,
+    "mean_tail_latency_ms": 552.3582089552239,
+    "gb_moved": 143.59375
+  },
+  {
+    "timestep": 1000000,
+    "mean_latency_ms": 178.26121462958085,
+    "mean_tail_latency_ms": 601.8457711442787,
+    "gb_moved": 182.96875
+  }
+]

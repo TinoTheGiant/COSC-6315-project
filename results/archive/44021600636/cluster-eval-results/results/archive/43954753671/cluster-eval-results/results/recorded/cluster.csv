@@ -1,0 +1,5 @@
+# Cluster pilot gate, Run 6: Actions 43751092905, commit 18b0c0f, RF 3, strong reads, 4 cores.
+# Copied from the job summary (docs/results-log.md, Run 6).
+case,transactions,p50_ms,p95_ms
+co-located,200,293.6,441.7
+spread,200,1059.0,1779.5

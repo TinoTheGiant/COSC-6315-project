@@ -1,0 +1,337 @@
+reset in 133 s; agent, seed 2000, N=200, reads leaseholder
+    0 MOVE_REPLICA_TO(f4, r1)      applied   mean   263.7 p95   925.8 ms  reward  -2.983  step  27.8 s
+    1 MOVE_LEASE(f2, r4)           applied   mean   159.4 p95   498.2 ms  reward  -1.662  step  18.2 s
+    2 MOVE_LEASE(f2, r2)           applied   mean   233.1 p95   920.5 ms  reward  -2.368  step  16.1 s
+    3 MOVE_REPLICA_TO(f4, r5)      applied   mean   229.6 p95   692.9 ms  reward  -2.620  step  16.2 s
+    4 MOVE_LEASE(f1, r2)           applied   mean   268.9 p95   679.0 ms  reward  -2.754  step  17.5 s
+    5 MOVE_LEASE(f5, r0)           applied   mean   237.4 p95   650.1 ms  reward  -2.431  step  13.3 s
+    6 MOVE_REPLICA_TO(f3, r2)      applied   mean   220.2 p95   603.5 ms  reward  -2.574  step  13.6 s
+    7 SPLIT(f2)                    applied   mean   215.9 p95   548.4 ms  reward  -2.231  step  14.0 s
+    8 SPLIT(f2)                    applied   mean   178.3 p95   613.2 ms  reward  -1.860  step  13.8 s
+    9 MOVE_LEASE(f5, r2)           applied   mean   216.5 p95   651.4 ms  reward  -2.258  step  12.8 s
+   10 SPLIT(f2)                    applied   mean   204.9 p95   650.8 ms  reward  -2.136  step  13.6 s
+   11 MOVE_REPLICA_TO(f7, r0)      applied   mean   135.8 p95   378.5 ms  reward  -1.755  step  10.5 s
+   12 MOVE_LEASE(f7, r0)           applied   mean    69.0 p95   216.0 ms  reward  -0.799  step   7.5 s
+   13 MOVE_LEASE(f7, r4)           applied   mean    75.1 p95   319.3 ms  reward  -0.850  step   8.3 s
+   14 MOVE_REPLICA_TO(f4, r1)      applied   mean    63.5 p95   318.4 ms  reward  -0.806  step  10.6 s
+   15 SPLIT(f7)                    applied   mean    74.2 p95   216.2 ms  reward  -0.841  step  11.3 s
+   16 MOVE_LEASE(f8, r1)           applied   mean    58.3 p95   207.9 ms  reward  -0.684  step   8.6 s
+   17 MOVE_REPLICA_TO(f0, r3)      applied   mean    76.6 p95   317.2 ms  reward  -1.156  step  12.2 s
+   18 MOVE_LEASE(f8, r0)           applied   mean    98.4 p95   334.6 ms  reward  -1.082  step  12.4 s
+   19 MOVE_LEASE(f8, r1)           applied   mean   114.1 p95   324.9 ms  reward  -1.238  step  11.2 s
+   20 SPLIT(f4)                    applied   mean   146.2 p95   477.2 ms  reward  -1.558  step  11.2 s
+   21 MOVE_LEASE(f8, r1)           applied   mean   210.4 p95   604.1 ms  reward  -2.184  step  15.6 s
+   22 MOVE_LEASE(f4, r1)           applied   mean   240.3 p95   626.2 ms  reward  -2.503  step  20.9 s
+   23 MOVE_REPLICA_TO(f9, r3)      applied   mean   245.4 p95   603.5 ms  reward  -2.692  step  24.3 s
+   24 MOVE_REPLICA_TO(f6, r1)      applied   mean   293.8 p95   604.4 ms  reward  -3.197  step  33.6 s
+   25 MOVE_LEASE(f4, r2)           rejected  mean   274.2 p95   926.2 ms  reward  -2.857  step  24.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   26 MOVE_REPLICA_TO(f5, r0)      applied   mean   293.9 p95   836.4 ms  reward  -3.069  step  20.4 s
+   27 MOVE_LEASE(f7, r4)           applied   mean   254.7 p95   630.5 ms  reward  -2.617  step  16.7 s
+   28 MOVE_LEASE(f4, r2)           rejected  mean   241.3 p95   908.4 ms  reward  -2.501  step  20.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   29 MOVE_LEASE(f8, r0)           applied   mean   250.4 p95   613.4 ms  reward  -2.581  step  13.0 s
+   30 MOVE_LEASE(f5, r0)           applied   mean   214.4 p95   543.3 ms  reward  -2.203  step  11.7 s
+   31 MOVE_LEASE(f4, r2)           rejected  mean   219.7 p95   613.4 ms  reward  -2.284  step  17.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   32 SPLIT(f10)                   applied   mean   298.0 p95   925.8 ms  reward  -3.067  step  25.7 s
+   33 SPLIT(f10)                   applied   mean   305.0 p95  1046.8 ms  reward  -3.136  step  27.5 s
+   34 SPLIT(f10)                   applied   mean   260.3 p95   925.8 ms  reward  -2.674  step  16.8 s
+   35 MOVE_REPLICA_TO(f9, r2)      applied   mean   224.8 p95   633.0 ms  reward  -2.473  step  14.3 s
+   36 SPLIT(f10)                   applied   mean   229.1 p95   626.1 ms  reward  -2.356  step  16.4 s
+   37 SPLIT(f1)                    applied   mean   181.7 p95   563.4 ms  reward  -1.887  step  16.3 s
+   38 MOVE_LEASE(f8, r2)           rejected  mean   191.8 p95   563.1 ms  reward  -2.000  step  27.2 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   39 MOVE_LEASE(f8, r2)           rejected  mean   185.4 p95   548.8 ms  reward  -1.936  step  26.6 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   40 MOVE_LEASE(f8, r2)           rejected  mean   191.5 p95   626.1 ms  reward  -1.995  step  18.7 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   41 SPLIT(f8)                    applied   mean   165.5 p95   530.6 ms  reward  -1.718  step  11.6 s
+   42 MOVE_REPLICA_TO(f6, r3)      applied   mean   162.7 p95   556.3 ms  reward  -1.754  step  14.1 s
+   43 MOVE_LEASE(f9, r3)           applied   mean   162.2 p95   542.8 ms  reward  -1.707  step  11.5 s
+   44 MOVE_REPLICA_TO(f10, r2)     applied   mean   164.0 p95   500.7 ms  reward  -1.880  step  11.9 s
+   45 MOVE_REPLICA_TO(f4, r1)      applied   mean   177.0 p95   532.9 ms  reward  -1.888  step  12.5 s
+   46 SPLIT(f10)                   applied   mean   184.5 p95   525.4 ms  reward  -1.921  step  11.1 s
+   47 MOVE_REPLICA_TO(f14, r4)     applied   mean   240.4 p95   835.9 ms  reward  -2.501  step  16.6 s
+   48 MOVE_LEASE(f2, r3)           applied   mean   252.5 p95   836.7 ms  reward  -2.584  step  16.8 s
+   49 MOVE_LEASE(f0, r2)           applied   mean   260.1 p95   926.4 ms  reward  -2.684  step  16.5 s
+   50 MOVE_REPLICA_TO(f5, r0)      applied   mean   250.1 p95   755.6 ms  reward  -2.613  step  20.1 s
+   51 MOVE_LEASE(f17, r1)          applied   mean   244.9 p95   758.2 ms  reward  -2.522  step  18.1 s
+   52 MOVE_LEASE(f14, r4)          applied   mean   260.9 p95   756.1 ms  reward  -2.683  step  18.1 s
+   53 MOVE_LEASE(f14, r0)          applied   mean   209.9 p95   543.4 ms  reward  -2.159  step  21.9 s
+   54 MOVE_LEASE(f7, r3)           applied   mean   203.4 p95   533.1 ms  reward  -2.078  step  22.5 s
+   55 MOVE_LEASE(f2, r2)           applied   mean   224.0 p95   533.1 ms  reward  -2.298  step  19.5 s
+   56 MOVE_LEASE(f2, r3)           applied   mean   201.0 p95   543.7 ms  reward  -2.068  step  17.5 s
+   57 SPLIT(f10)                   applied   mean   206.4 p95   690.6 ms  reward  -2.115  step  20.3 s
+   58 MOVE_LEASE(f17, r1)          applied   mean   183.4 p95   532.9 ms  reward  -1.907  step  17.7 s
+   59 MOVE_LEASE(f2, r2)           applied   mean   241.2 p95   633.3 ms  reward  -2.495  step  17.5 s
+   60 SPLIT(f10)                   applied   mean   237.4 p95   650.9 ms  reward  -2.457  step  16.6 s
+   61 MOVE_REPLICA_TO(f16, r1)     applied   mean   157.9 p95   444.8 ms  reward  -1.652  step  12.4 s
+   62 MOVE_LEASE(f8, r2)           rejected  mean   162.1 p95   563.0 ms  reward  -1.691  step  24.8 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   63 MOVE_REPLICA_TO(f19, r3)     applied   mean   139.7 p95   465.3 ms  reward  -1.604  step  20.3 s
+   64 MOVE_REPLICA_TO(f5, r3)      applied   mean   132.7 p95   525.0 ms  reward  -1.416  step  19.8 s
+   65 MOVE_REPLICA_TO(f18, r2)     applied   mean   156.0 p95   525.2 ms  reward  -1.694  step  21.9 s
+   66 MOVE_REPLICA_TO(f1, r5)      applied   mean   131.5 p95   504.8 ms  reward  -1.525  step  19.8 s
+   67 MOVE_LEASE(f5, r3)           applied   mean    92.4 p95   321.4 ms  reward  -0.994  step  13.7 s
+   68 MOVE_LEASE(f6, r3)           applied   mean    95.1 p95   321.4 ms  reward  -1.049  step   8.3 s
+   69 MOVE_REPLICA_TO(f18, r4)     applied   mean   153.4 p95   497.4 ms  reward  -1.716  step  13.4 s
+   70 MOVE_REPLICA_TO(f9, r1)      applied   mean   152.4 p95   369.9 ms  reward  -1.810  step  19.0 s
+   71 MOVE_REPLICA_TO(f10, r5)     applied   mean   147.0 p95   366.7 ms  reward  -1.611  step  18.1 s
+   72 MOVE_LEASE(f8, r2)           rejected  mean   130.0 p95   365.4 ms  reward  -1.462  step  22.5 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   73 MOVE_REPLICA_TO(f10, r2)     applied   mean   166.0 p95   493.2 ms  reward  -1.779  step  20.2 s
+   74 MOVE_REPLICA_TO(f19, r4)     applied   mean   249.7 p95   825.5 ms  reward  -2.732  step  19.3 s
+   75 MOVE_REPLICA_TO(f10, r5)     applied   mean   218.1 p95   653.4 ms  reward  -2.265  step  16.4 s
+   76 MOVE_REPLICA_TO(f18, r0)     applied   mean   234.2 p95   653.8 ms  reward  -2.496  step  17.7 s
+   77 MOVE_LEASE(f17, r1)          applied   mean   257.3 p95   731.0 ms  reward  -2.651  step  13.3 s
+   78 MOVE_REPLICA_TO(f18, r4)     applied   mean   262.5 p95   731.1 ms  reward  -2.782  step  16.1 s
+   79 MOVE_REPLICA_TO(f18, r0)     applied   mean   219.0 p95   672.1 ms  reward  -2.336  step  15.3 s
+   80 MOVE_REPLICA_TO(f18, r4)     applied   mean   220.9 p95   670.1 ms  reward  -2.353  step  15.7 s
+   81 MOVE_LEASE(f8, r2)           rejected  mean   226.1 p95   650.0 ms  reward  -2.351  step  20.7 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   82 MOVE_LEASE(f8, r2)           rejected  mean   201.3 p95   632.9 ms  reward  -2.111  step  18.7 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   83 MOVE_LEASE(f8, r2)           rejected  mean   204.0 p95   632.8 ms  reward  -2.130  step  18.8 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   84 MOVE_LEASE(f8, r2)           rejected  mean   181.8 p95   563.0 ms  reward  -1.906  step  19.5 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   85 MOVE_LEASE(f8, r2)           rejected  mean   165.6 p95   562.8 ms  reward  -1.744  step  16.0 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   86 MOVE_LEASE(f8, r2)           rejected  mean   196.8 p95   562.7 ms  reward  -2.062  step  19.2 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   87 MOVE_LEASE(f8, r2)           rejected  mean   193.0 p95   562.9 ms  reward  -2.018  step  21.3 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   88 MOVE_LEASE(f8, r2)           rejected  mean   182.4 p95   518.3 ms  reward  -1.917  step  21.3 s
+        refused: refusing to transfer lease to (n3,s3):9 because target may need a Raft snapshot: local replica not raft leader
+   89 MOVE_LEASE(f15, r5)          applied   mean   192.5 p95   548.4 ms  reward  -1.996  step  18.5 s
+   90 MOVE_REPLICA_TO(f19, r2)     applied   mean   201.3 p95   515.4 ms  reward  -2.238  step  24.0 s
+   91 MOVE_LEASE(f4, r1)           applied   mean   246.8 p95   810.3 ms  reward  -2.539  step  26.8 s
+   92 MOVE_LEASE(f4, r2)           rejected  mean   146.4 p95   548.5 ms  reward  -1.551  step  17.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   93 MOVE_LEASE(f4, r2)           rejected  mean   180.7 p95   586.8 ms  reward  -1.895  step  20.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   94 MOVE_LEASE(f4, r2)           rejected  mean   206.3 p95   810.8 ms  reward  -2.151  step  23.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   95 MOVE_LEASE(f4, r2)           rejected  mean   236.6 p95   810.4 ms  reward  -2.454  step  23.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   96 MOVE_LEASE(f4, r2)           rejected  mean   242.1 p95   820.5 ms  reward  -2.502  step  23.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   97 MOVE_LEASE(f4, r2)           rejected  mean   225.4 p95   791.4 ms  reward  -2.344  step  22.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   98 MOVE_LEASE(f4, r2)           rejected  mean   265.5 p95   811.3 ms  reward  -2.738  step  26.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+   99 MOVE_LEASE(f4, r2)           rejected  mean   207.2 p95   605.6 ms  reward  -2.157  step  25.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  100 MOVE_LEASE(f4, r2)           rejected  mean   196.8 p95   533.1 ms  reward  -2.059  step  31.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  101 MOVE_LEASE(f4, r2)           rejected  mean   171.4 p95   532.5 ms  reward  -1.814  step  29.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  102 MOVE_LEASE(f4, r2)           rejected  mean   157.5 p95   532.6 ms  reward  -1.672  step  27.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  103 MOVE_LEASE(f4, r2)           rejected  mean   167.5 p95   533.0 ms  reward  -1.769  step  28.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  104 MOVE_LEASE(f4, r2)           rejected  mean   197.7 p95   605.3 ms  reward  -2.065  step  31.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  105 MOVE_LEASE(f4, r2)           rejected  mean   183.9 p95   606.1 ms  reward  -1.930  step  30.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  106 MOVE_LEASE(f4, r2)           rejected  mean   190.6 p95   606.7 ms  reward  -1.995  step  28.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  107 MOVE_LEASE(f4, r2)           rejected  mean   203.7 p95   651.0 ms  reward  -2.126  step  30.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  108 MOVE_LEASE(f4, r2)           rejected  mean   235.2 p95   633.2 ms  reward  -2.456  step  24.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  109 MOVE_LEASE(f4, r2)           rejected  mean   206.8 p95   544.0 ms  reward  -2.173  step  24.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  110 MOVE_LEASE(f4, r2)           rejected  mean   207.3 p95   549.1 ms  reward  -2.161  step  21.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  111 MOVE_LEASE(f4, r2)           rejected  mean   170.9 p95   562.8 ms  reward  -1.796  step  26.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  112 MOVE_LEASE(f4, r2)           rejected  mean   150.1 p95   383.3 ms  reward  -1.587  step  23.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  113 MOVE_LEASE(f4, r2)           rejected  mean   137.6 p95   383.5 ms  reward  -1.464  step  21.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  114 MOVE_LEASE(f4, r2)           rejected  mean   121.8 p95   396.5 ms  reward  -1.303  step  22.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  115 MOVE_LEASE(f4, r2)           rejected  mean   122.9 p95   379.1 ms  reward  -1.322  step  22.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  116 MOVE_LEASE(f4, r2)           rejected  mean    93.9 p95   377.6 ms  reward  -1.040  step  17.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  117 MOVE_LEASE(f4, r2)           rejected  mean   168.6 p95   548.2 ms  reward  -1.770  step  22.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  118 MOVE_LEASE(f4, r2)           rejected  mean   187.9 p95   513.1 ms  reward  -1.973  step  21.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  119 MOVE_LEASE(f4, r2)           rejected  mean   208.4 p95   549.1 ms  reward  -2.178  step  21.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  120 MOVE_LEASE(f4, r2)           rejected  mean   213.6 p95   821.3 ms  reward  -2.226  step  22.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  121 MOVE_LEASE(f4, r2)           rejected  mean   226.3 p95   811.3 ms  reward  -2.350  step  23.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  122 MOVE_LEASE(f4, r2)           rejected  mean   231.3 p95   549.3 ms  reward  -2.401  step  24.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  123 MOVE_LEASE(f4, r2)           rejected  mean   237.7 p95   604.1 ms  reward  -2.466  step  24.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  124 MOVE_LEASE(f4, r2)           rejected  mean   259.2 p95   822.4 ms  reward  -2.678  step  24.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  125 MOVE_LEASE(f4, r2)           rejected  mean   224.6 p95   549.0 ms  reward  -2.325  step  19.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  126 MOVE_REPLICA_TO(f5, r0)      applied   mean   252.1 p95   674.5 ms  reward  -2.622  step  15.4 s
+  127 MOVE_LEASE(f4, r2)           rejected  mean   218.4 p95   533.3 ms  reward  -2.268  step  20.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  128 MOVE_LEASE(f4, r2)           rejected  mean   228.3 p95   673.3 ms  reward  -2.362  step  21.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  129 MOVE_LEASE(f4, r2)           rejected  mean   219.8 p95   632.9 ms  reward  -2.287  step  19.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  130 MOVE_LEASE(f4, r2)           rejected  mean   304.4 p95  1026.2 ms  reward  -3.161  step  35.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  131 MOVE_LEASE(f4, r2)           rejected  mean   225.5 p95   603.8 ms  reward  -2.341  step  23.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  132 MOVE_LEASE(f4, r2)           rejected  mean   202.4 p95   562.8 ms  reward  -2.113  step  22.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  133 MOVE_LEASE(f4, r2)           rejected  mean   183.3 p95   404.4 ms  reward  -1.918  step  24.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  134 MOVE_LEASE(f4, r2)           rejected  mean   183.4 p95   562.7 ms  reward  -1.923  step  25.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  135 MOVE_LEASE(f4, r2)           rejected  mean   171.3 p95   562.6 ms  reward  -1.792  step  24.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  136 MOVE_LEASE(f4, r2)           rejected  mean   156.3 p95   410.3 ms  reward  -1.646  step  25.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  137 MOVE_LEASE(f4, r2)           rejected  mean   163.9 p95   488.8 ms  reward  -1.725  step  16.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  138 MOVE_REPLICA_TO(f19, r4)     applied   mean   152.2 p95   512.2 ms  reward  -1.733  step  13.2 s
+  139 MOVE_LEASE(f4, r2)           rejected  mean   176.0 p95   499.2 ms  reward  -1.840  step  17.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  140 MOVE_LEASE(f4, r2)           rejected  mean   171.7 p95   548.8 ms  reward  -1.800  step  17.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  141 MOVE_LEASE(f4, r2)           rejected  mean   179.8 p95   498.8 ms  reward  -1.883  step  19.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  142 MOVE_LEASE(f4, r2)           rejected  mean   185.6 p95   678.3 ms  reward  -1.940  step  21.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  143 MOVE_LEASE(f4, r2)           rejected  mean   213.5 p95   529.5 ms  reward  -2.223  step  23.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  144 MOVE_LEASE(f4, r2)           rejected  mean   229.0 p95   670.5 ms  reward  -2.374  step  22.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  145 MOVE_LEASE(f4, r2)           rejected  mean   251.4 p95   888.6 ms  reward  -2.599  step  24.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  146 MOVE_LEASE(f4, r2)           rejected  mean   284.0 p95   959.3 ms  reward  -2.924  step  28.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  147 MOVE_LEASE(f4, r2)           rejected  mean   251.4 p95   885.9 ms  reward  -2.601  step  24.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  148 MOVE_LEASE(f4, r2)           rejected  mean   211.6 p95   548.6 ms  reward  -2.205  step  22.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  149 MOVE_LEASE(f4, r2)           rejected  mean   227.6 p95   673.8 ms  reward  -2.362  step  20.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  150 MOVE_LEASE(f4, r2)           rejected  mean   247.0 p95   720.1 ms  reward  -2.557  step  22.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  151 MOVE_LEASE(f4, r2)           rejected  mean   211.8 p95   632.6 ms  reward  -2.200  step  19.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  152 MOVE_LEASE(f4, r2)           rejected  mean   208.4 p95   632.7 ms  reward  -2.173  step  20.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  153 MOVE_LEASE(f4, r2)           rejected  mean   186.8 p95   562.7 ms  reward  -1.956  step  19.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  154 MOVE_LEASE(f4, r2)           rejected  mean   181.0 p95   562.5 ms  reward  -1.889  step  21.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  155 MOVE_LEASE(f4, r2)           rejected  mean   173.3 p95   562.6 ms  reward  -1.817  step  23.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  156 MOVE_LEASE(f4, r2)           rejected  mean   190.3 p95   562.6 ms  reward  -1.987  step  26.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  157 MOVE_LEASE(f4, r2)           rejected  mean   200.7 p95   562.9 ms  reward  -2.089  step  27.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  158 MOVE_LEASE(f4, r2)           rejected  mean   171.8 p95   562.6 ms  reward  -1.806  step  27.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  159 MOVE_LEASE(f4, r2)           rejected  mean   149.8 p95   513.0 ms  reward  -1.575  step  17.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  160 MOVE_LEASE(f4, r2)           rejected  mean   167.0 p95   478.4 ms  reward  -1.754  step  18.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  161 MOVE_LEASE(f4, r2)           rejected  mean   155.4 p95   461.3 ms  reward  -1.635  step  16.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  162 MOVE_LEASE(f4, r2)           rejected  mean   170.5 p95   477.5 ms  reward  -1.788  step  18.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  163 MOVE_LEASE(f4, r2)           rejected  mean   184.5 p95   562.9 ms  reward  -1.925  step  17.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  164 MOVE_LEASE(f4, r2)           rejected  mean   164.7 p95   548.1 ms  reward  -1.732  step  19.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  165 MOVE_LEASE(f4, r2)           rejected  mean   177.6 p95   512.5 ms  reward  -1.858  step  20.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  166 MOVE_LEASE(f4, r2)           rejected  mean   229.8 p95   670.3 ms  reward  -2.378  step  23.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  167 MOVE_LEASE(f4, r2)           rejected  mean   224.7 p95   678.3 ms  reward  -2.331  step  25.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  168 MOVE_LEASE(f4, r2)           rejected  mean   234.6 p95   879.1 ms  reward  -2.431  step  23.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  169 MOVE_LEASE(f4, r2)           rejected  mean   304.1 p95   889.5 ms  reward  -3.123  step  40.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  170 MOVE_LEASE(f4, r2)           rejected  mean   276.8 p95   879.3 ms  reward  -2.851  step  35.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  171 MOVE_LEASE(f4, r2)           rejected  mean   327.5 p95   925.8 ms  reward  -3.363  step  41.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  172 MOVE_LEASE(f4, r2)           rejected  mean   295.3 p95   925.4 ms  reward  -3.048  step  38.1 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  173 MOVE_LEASE(f4, r2)           rejected  mean   301.3 p95   925.7 ms  reward  -3.113  step  35.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  174 MOVE_LEASE(f4, r2)           rejected  mean   274.7 p95   888.9 ms  reward  -2.859  step  34.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  175 MOVE_LEASE(f4, r2)           rejected  mean   208.8 p95   633.4 ms  reward  -2.173  step  18.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  176 MOVE_LEASE(f4, r2)           rejected  mean   203.1 p95   543.8 ms  reward  -2.115  step  19.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  177 MOVE_LEASE(f4, r2)           rejected  mean   210.4 p95   633.2 ms  reward  -2.192  step  19.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  178 MOVE_LEASE(f4, r2)           rejected  mean   190.9 p95   511.2 ms  reward  -1.993  step  29.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  179 MOVE_LEASE(f4, r2)           rejected  mean   202.4 p95   603.3 ms  reward  -2.106  step  28.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  180 MOVE_LEASE(f4, r2)           rejected  mean   198.4 p95   632.4 ms  reward  -2.067  step  28.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  181 MOVE_LEASE(f4, r2)           rejected  mean   190.8 p95   511.2 ms  reward  -1.995  step  28.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  182 MOVE_LEASE(f15, r0)          applied   mean   174.5 p95   487.8 ms  reward  -1.807  step  16.9 s
+  183 MOVE_LEASE(f15, r5)          applied   mean   163.8 p95   498.5 ms  reward  -1.704  step  13.4 s
+  184 MOVE_LEASE(f4, r2)           rejected  mean   204.8 p95   514.6 ms  reward  -2.130  step  22.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  185 MOVE_LEASE(f4, r2)           rejected  mean   173.5 p95   512.4 ms  reward  -1.821  step  18.6 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  186 MOVE_LEASE(f4, r2)           rejected  mean   165.8 p95   472.4 ms  reward  -1.746  step  16.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  187 MOVE_LEASE(f4, r2)           rejected  mean   140.5 p95   477.4 ms  reward  -1.491  step  16.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  188 MOVE_LEASE(f4, r2)           rejected  mean   174.5 p95   548.3 ms  reward  -1.832  step  18.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  189 MOVE_LEASE(f4, r2)           rejected  mean   191.2 p95   548.5 ms  reward  -1.989  step  22.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  190 MOVE_LEASE(f4, r2)           rejected  mean   201.2 p95   888.8 ms  reward  -2.096  step  21.3 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  191 MOVE_LEASE(f4, r2)           rejected  mean   240.4 p95   879.1 ms  reward  -2.489  step  24.4 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  192 MOVE_LEASE(f4, r2)           rejected  mean   259.1 p95   888.6 ms  reward  -2.677  step  24.7 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  193 MOVE_LEASE(f4, r2)           rejected  mean   224.6 p95   548.9 ms  reward  -2.331  step  22.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  194 MOVE_LEASE(f4, r2)           rejected  mean   289.7 p95   889.1 ms  reward  -2.979  step  28.2 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  195 MOVE_LEASE(f4, r2)           rejected  mean   283.6 p95   959.3 ms  reward  -2.921  step  24.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  196 MOVE_LEASE(f4, r2)           rejected  mean   251.7 p95   878.4 ms  reward  -2.599  step  22.8 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  197 MOVE_LEASE(f4, r2)           rejected  mean   223.4 p95   673.0 ms  reward  -2.312  step  20.0 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  198 MOVE_LEASE(f4, r2)           rejected  mean   323.8 p95   925.7 ms  reward  -3.351  step  36.5 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+  199 MOVE_LEASE(f4, r2)           rejected  mean   305.6 p95   925.5 ms  reward  -3.174  step  34.9 s
+        refused: refusing to transfer lease to (n3,s3):1 because target may need a Raft snapshot: local replica not raft leader
+{
+ "policy": "agent",
+ "seed": 2000,
+ "steps": 200,
+ "mean_latency_ms": 202.39371144422526,
+ "gb_moved_total": 128.671875,
+ "gb_observed_total": 128.671875,
+ "lease_changes_total": 33,
+ "mean_p95_ms": 615.2231807199905,
+ "mean_step_s": 20.830779024204986,
+ "mean_imbalance": 0.7166466084017742,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.11490255653243
+}
+VERDICT: PASS, the cluster ran as an environment end to end.

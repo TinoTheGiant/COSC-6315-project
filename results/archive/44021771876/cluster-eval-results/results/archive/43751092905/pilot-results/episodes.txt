@@ -1,0 +1,57 @@
+reset in 42 s; static, seed 2000, N=200, reads leaseholder
+    0 NOOP                         no-op     mean   214.3 p95   608.3 ms  reward  -2.175  step   9.1 s
+    1 NOOP                         no-op     mean   224.5 p95   652.8 ms  reward  -2.271  step   9.7 s
+    2 NOOP                         no-op     mean   228.8 p95   922.8 ms  reward  -2.326  step  13.6 s
+    3 NOOP                         no-op     mean   230.0 p95   653.5 ms  reward  -2.330  step  12.5 s
+    4 NOOP                         no-op     mean   263.6 p95   679.9 ms  reward  -2.681  step  15.0 s
+{
+ "policy": "static",
+ "seed": 2000,
+ "steps": 5,
+ "mean_latency_ms": 232.23273155599736,
+ "gb_moved_total": 0.0,
+ "mean_step_s": 11.970030412399955,
+ "mean_imbalance": 0.3422634424909855,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.356553659809072
+}
+VERDICT: PASS, the cluster ran as an environment end to end.
+reset in 46 s; follow, seed 2000, N=200, reads leaseholder
+    0 MOVE_LEASE(f3, r5)           applied   mean   167.6 p95   544.1 ms  reward  -1.729  step   8.5 s
+    1 MOVE_REPLICA_TO(f2, r5)      applied   mean   200.2 p95   604.9 ms  reward  -2.363  step  11.4 s
+    2 MOVE_LEASE(f2, r5)           applied   mean   107.7 p95   427.4 ms  reward  -1.177  step   7.0 s
+    3 MOVE_REPLICA_TO(f1, r4)      applied   mean   122.5 p95   478.4 ms  reward  -1.613  step   8.5 s
+    4 MOVE_LEASE(f1, r4)           applied   mean   128.9 p95   467.9 ms  reward  -1.385  step   6.2 s
+{
+ "policy": "follow",
+ "seed": 2000,
+ "steps": 5,
+ "mean_latency_ms": 145.39141858599692,
+ "gb_moved_total": 19.921875,
+ "mean_step_s": 8.34111230100002,
+ "mean_imbalance": 0.7994173948711808,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 1.536844206597087
+}
+VERDICT: PASS, the cluster ran as an environment end to end.
+reset in 46 s; lion, seed 2000, N=200, reads leaseholder
+    0 MOVE_REPLICA_TO(f1, r0)      applied   mean   214.4 p95   608.3 ms  reward  -2.471  step  10.4 s
+    1 MOVE_LEASE(f1, r0)           applied   mean   227.6 p95   652.7 ms  reward  -2.314  step  10.0 s
+    2 MOVE_REPLICA_TO(f2, r0)      applied   mean   230.8 p95   927.6 ms  reward  -2.669  step  15.3 s
+    3 MOVE_LEASE(f2, r0)           applied   mean   216.6 p95   649.6 ms  reward  -2.252  step  11.1 s
+    4 MOVE_REPLICA_TO(f3, r0)      applied   mean   237.4 p95   679.4 ms  reward  -2.771  step  15.1 s
+{
+ "policy": "lion",
+ "seed": 2000,
+ "steps": 5,
+ "mean_latency_ms": 225.3445640340003,
+ "gb_moved_total": 30.0,
+ "mean_step_s": 12.373542805600028,
+ "mean_imbalance": 0.6178897664632645,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.3197346169863295
+}
+VERDICT: PASS, the cluster ran as an environment end to end.

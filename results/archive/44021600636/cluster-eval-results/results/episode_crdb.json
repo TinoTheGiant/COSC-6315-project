@@ -1,0 +1,15 @@
+{
+ "policy": "crdb",
+ "seed": 2002,
+ "steps": 200,
+ "mean_latency_ms": 205.69749889099916,
+ "gb_moved_total": 0.0,
+ "gb_observed_total": 0.0,
+ "lease_changes_total": 8,
+ "mean_p95_ms": 591.5943309050135,
+ "mean_step_s": 14.239669175449972,
+ "mean_imbalance": 0.5073103612628302,
+ "suspect_steps": 0,
+ "divergent_steps": 6,
+ "cost_w030": 2.1077060250362747
+}

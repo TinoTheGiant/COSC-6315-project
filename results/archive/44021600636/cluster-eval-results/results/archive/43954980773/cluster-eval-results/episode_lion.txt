@@ -1,0 +1,214 @@
+reset in 70 s; lion, seed 2003, N=200, reads leaseholder
+    0 MOVE_LEASE(f0, r1)           applied   mean   148.2 p95   498.9 ms  reward  -1.577  step  14.2 s
+    1 MOVE_REPLICA_TO(f3, r1)      applied   mean   158.6 p95   498.5 ms  reward  -1.988  step  18.5 s
+    2 MOVE_LEASE(f3, r1)           applied   mean   168.9 p95   498.0 ms  reward  -1.807  step  17.0 s
+    3 MOVE_REPLICA_TO(f4, r1)      applied   mean   144.7 p95   464.9 ms  reward  -1.866  step  16.5 s
+    4 MOVE_LEASE(f4, r1)           applied   mean   168.7 p95   497.6 ms  reward  -1.810  step  14.7 s
+    5 MOVE_LEASE(f5, r1)           applied   mean   156.8 p95   463.5 ms  reward  -1.710  step  15.1 s
+    6 NOOP                         no-op     mean   194.1 p95   548.0 ms  reward  -2.076  step   8.9 s
+    7 NOOP                         no-op     mean   211.4 p95   828.4 ms  reward  -2.243  step   8.6 s
+    8 NOOP                         no-op     mean   161.4 p95   458.9 ms  reward  -1.760  step   8.2 s
+    9 NOOP                         no-op     mean   170.5 p95   459.0 ms  reward  -1.836  step   6.7 s
+   10 MOVE_REPLICA_TO(f2, r1)      applied   mean   202.6 p95   798.0 ms  reward  -2.465  step  10.1 s
+   11 MOVE_LEASE(f2, r1)           applied   mean   206.3 p95   648.9 ms  reward  -2.205  step   7.7 s
+   12 NOOP                         no-op     mean   208.8 p95   589.8 ms  reward  -2.234  step   7.7 s
+   13 NOOP                         no-op     mean   203.2 p95   700.8 ms  reward  -2.185  step   7.4 s
+   14 NOOP                         no-op     mean   212.5 p95   686.9 ms  reward  -2.288  step   8.3 s
+   15 NOOP                         no-op     mean   224.2 p95   698.3 ms  reward  -2.399  step   9.9 s
+   16 NOOP                         no-op     mean   232.2 p95   697.6 ms  reward  -2.474  step   8.6 s
+   17 NOOP                         no-op     mean   215.9 p95   697.8 ms  reward  -2.321  step   8.9 s
+   18 NOOP                         no-op     mean   260.9 p95   797.6 ms  reward  -2.750  step  12.6 s
+   19 NOOP                         no-op     mean   246.1 p95   798.6 ms  reward  -2.597  step  10.9 s
+   20 MOVE_LEASE(f2, r2)           applied   mean   200.0 p95   698.4 ms  reward  -2.123  step  16.6 s
+   21 NOOP                         no-op     mean   199.4 p95   798.2 ms  reward  -2.105  step  15.3 s
+   22 NOOP                         no-op     mean   193.9 p95   648.5 ms  reward  -2.053  step  13.2 s
+   23 NOOP                         no-op     mean   162.0 p95   499.5 ms  reward  -1.738  step  11.8 s
+   24 NOOP                         no-op     mean   178.5 p95   549.1 ms  reward  -1.910  step  12.3 s
+   25 NOOP                         no-op     mean   183.9 p95   697.4 ms  reward  -1.970  step  13.2 s
+   26 NOOP                         no-op     mean   193.0 p95   564.9 ms  reward  -2.066  step   9.3 s
+   27 NOOP                         no-op     mean   189.8 p95   548.5 ms  reward  -2.044  step   7.9 s
+   28 NOOP                         no-op     mean    62.4 p95   226.1 ms  reward  -0.764  step   4.9 s
+   29 NOOP                         no-op     mean    64.2 p95   225.3 ms  reward  -0.786  step   4.5 s
+   30 MOVE_LEASE(f2, r3)           applied   mean    70.2 p95   313.3 ms  reward  -0.833  step   5.9 s
+   31 MOVE_LEASE(f3, r3)           applied   mean    61.2 p95   240.3 ms  reward  -0.750  step   5.1 s
+   32 NOOP                         no-op     mean    65.2 p95   198.3 ms  reward  -0.787  step   5.5 s
+   33 NOOP                         no-op     mean    85.5 p95   398.8 ms  reward  -0.973  step   7.1 s
+   34 NOOP                         no-op     mean   199.1 p95   549.8 ms  reward  -2.121  step   6.4 s
+   35 NOOP                         no-op     mean   182.4 p95   646.9 ms  reward  -1.945  step   7.5 s
+   36 NOOP                         no-op     mean   297.5 p95   998.8 ms  reward  -3.108  step  28.3 s
+   37 NOOP                         no-op     mean   275.7 p95   998.0 ms  reward  -2.881  step  26.0 s
+   38 NOOP                         no-op     mean   314.5 p95   998.7 ms  reward  -3.260  step  27.6 s
+   39 NOOP                         no-op     mean   275.7 p95   927.9 ms  reward  -2.902  step  25.1 s
+   40 MOVE_LEASE(f2, r1)           applied   mean   314.1 p95   998.5 ms  reward  -3.268  step  29.7 s
+   41 MOVE_LEASE(f3, r1)           applied   mean   299.2 p95   997.7 ms  reward  -3.142  step  28.9 s
+   42 NOOP                         no-op     mean   211.9 p95   648.1 ms  reward  -2.261  step  17.5 s
+   43 NOOP                         no-op     mean   210.9 p95   648.3 ms  reward  -2.254  step  17.5 s
+   44 NOOP                         no-op     mean   198.7 p95   577.8 ms  reward  -2.137  step  21.8 s
+   45 NOOP                         no-op     mean   193.2 p95   548.3 ms  reward  -2.089  step  21.2 s
+   46 NOOP                         no-op     mean   200.0 p95   548.5 ms  reward  -2.156  step  21.6 s
+   47 NOOP                         no-op     mean   166.2 p95   398.6 ms  reward  -1.821  step  18.6 s
+   48 NOOP                         no-op     mean   162.3 p95   548.2 ms  reward  -1.765  step  13.5 s
+   49 NOOP                         no-op     mean   113.7 p95   290.1 ms  reward  -1.295  step  10.6 s
+   50 NOOP                         no-op     mean    83.4 p95   464.4 ms  reward  -0.984  step   4.5 s
+   51 NOOP                         no-op     mean    66.9 p95   259.5 ms  reward  -0.824  step   4.2 s
+   52 NOOP                         no-op     mean    57.0 p95   199.9 ms  reward  -0.721  step   3.8 s
+   53 NOOP                         no-op     mean    69.2 p95   379.2 ms  reward  -0.835  step   4.3 s
+   54 NOOP                         no-op     mean   166.0 p95   498.0 ms  reward  -1.821  step   6.5 s
+   55 NOOP                         no-op     mean   165.7 p95   458.6 ms  reward  -1.800  step   6.5 s
+   56 NOOP                         no-op     mean   174.0 p95   498.2 ms  reward  -1.885  step   7.0 s
+   57 NOOP                         no-op     mean   191.8 p95   797.6 ms  reward  -2.061  step   8.9 s
+   58 NOOP                         no-op     mean   199.7 p95   499.9 ms  reward  -2.143  step   7.3 s
+   59 NOOP                         no-op     mean   208.7 p95   699.9 ms  reward  -2.226  step   7.2 s
+   60 NOOP                         no-op     mean   210.0 p95   697.5 ms  reward  -2.262  step   8.9 s
+   61 NOOP                         no-op     mean   193.1 p95   633.0 ms  reward  -2.079  step   7.5 s
+   62 NOOP                         no-op     mean   238.1 p95   697.8 ms  reward  -2.521  step   9.6 s
+   63 NOOP                         no-op     mean   229.1 p95   697.2 ms  reward  -2.441  step   8.9 s
+   64 NOOP                         no-op     mean   144.6 p95   499.6 ms  reward  -1.592  step   6.4 s
+   65 NOOP                         no-op     mean   204.1 p95   648.6 ms  reward  -2.174  step  17.6 s
+   66 NOOP                         no-op     mean   183.7 p95   647.3 ms  reward  -1.983  step  16.2 s
+   67 NOOP                         no-op     mean   147.5 p95   548.4 ms  reward  -1.621  step  11.9 s
+   68 NOOP                         no-op     mean   147.2 p95   500.0 ms  reward  -1.622  step  13.8 s
+   69 NOOP                         no-op     mean   128.0 p95   358.9 ms  reward  -1.421  step   9.6 s
+   70 NOOP                         no-op     mean   186.0 p95   547.8 ms  reward  -2.017  step  16.7 s
+   71 NOOP                         no-op     mean   228.2 p95   896.6 ms  reward  -2.413  step  12.3 s
+   72 NOOP                         no-op     mean   217.9 p95   797.5 ms  reward  -2.335  step  12.1 s
+   73 NOOP                         no-op     mean   232.7 p95   797.9 ms  reward  -2.472  step  17.4 s
+   74 NOOP                         no-op     mean   227.8 p95   644.2 ms  reward  -2.420  step  18.1 s
+   75 NOOP                         no-op     mean   257.3 p95   798.5 ms  reward  -2.719  step  23.2 s
+   76 NOOP                         no-op     mean   241.9 p95   798.9 ms  reward  -2.566  step  22.1 s
+   77 NOOP                         no-op     mean   257.0 p95   798.5 ms  reward  -2.713  step  24.8 s
+   78 NOOP                         no-op     mean   226.5 p95   645.5 ms  reward  -2.413  step  15.7 s
+   79 NOOP                         no-op     mean   186.3 p95   495.1 ms  reward  -2.008  step  14.9 s
+   80 NOOP                         no-op     mean   192.8 p95   547.9 ms  reward  -2.078  step  14.8 s
+   81 NOOP                         no-op     mean   189.5 p95   607.1 ms  reward  -2.043  step  12.8 s
+   82 NOOP                         no-op     mean   184.3 p95   501.2 ms  reward  -1.999  step  12.8 s
+   83 NOOP                         no-op     mean   184.0 p95   578.2 ms  reward  -1.987  step  13.8 s
+   84 NOOP                         no-op     mean   238.0 p95   898.5 ms  reward  -2.519  step  10.1 s
+   85 NOOP                         no-op     mean   223.8 p95   697.7 ms  reward  -2.381  step   9.9 s
+   86 NOOP                         no-op     mean   218.2 p95   697.2 ms  reward  -2.326  step   9.6 s
+   87 NOOP                         no-op     mean   239.7 p95   701.8 ms  reward  -2.542  step   9.6 s
+   88 NOOP                         no-op     mean   231.4 p95   698.4 ms  reward  -2.458  step   9.5 s
+   89 NOOP                         no-op     mean   248.8 p95   797.8 ms  reward  -2.635  step   9.6 s
+   90 MOVE_LEASE(f2, r2)           applied   mean   233.7 p95   745.5 ms  reward  -2.463  step   9.5 s
+   91 NOOP                         no-op     mean   197.9 p95   548.0 ms  reward  -2.105  step   8.3 s
+   92 NOOP                         no-op     mean   212.6 p95   547.3 ms  reward  -2.257  step  10.2 s
+   93 NOOP                         no-op     mean   209.9 p95   796.5 ms  reward  -2.237  step   9.6 s
+   94 NOOP                         no-op     mean   201.7 p95   547.7 ms  reward  -2.156  step  11.0 s
+   95 NOOP                         no-op     mean   197.6 p95   797.3 ms  reward  -2.113  step  10.8 s
+   96 NOOP                         no-op     mean   207.9 p95   549.0 ms  reward  -2.215  step  10.9 s
+   97 NOOP                         no-op     mean   177.8 p95   547.7 ms  reward  -1.912  step   7.8 s
+   98 NOOP                         no-op     mean   180.0 p95   547.7 ms  reward  -1.935  step   7.1 s
+   99 NOOP                         no-op     mean   223.0 p95   644.1 ms  reward  -2.348  step   8.4 s
+  100 NOOP                         no-op     mean   182.5 p95   549.1 ms  reward  -1.961  step   7.0 s
+  101 NOOP                         no-op     mean   194.1 p95   500.6 ms  reward  -2.074  step   6.2 s
+  102 NOOP                         no-op     mean   177.0 p95   529.7 ms  reward  -1.907  step   7.2 s
+  103 NOOP                         no-op     mean   257.0 p95   898.4 ms  reward  -2.697  step  20.2 s
+  104 NOOP                         no-op     mean   250.8 p95   697.7 ms  reward  -2.634  step  21.9 s
+  105 NOOP                         no-op     mean   294.2 p95   928.9 ms  reward  -3.066  step  23.8 s
+  106 NOOP                         no-op     mean   290.7 p95   998.3 ms  reward  -3.035  step  24.6 s
+  107 NOOP                         no-op     mean   285.8 p95   998.4 ms  reward  -2.999  step  25.2 s
+  108 NOOP                         no-op     mean   290.0 p95   998.1 ms  reward  -3.041  step  25.5 s
+  109 NOOP                         no-op     mean   227.1 p95   697.7 ms  reward  -2.399  step  10.1 s
+  110 NOOP                         no-op     mean   224.1 p95   797.3 ms  reward  -2.385  step   8.7 s
+  111 NOOP                         no-op     mean   237.7 p95   698.2 ms  reward  -2.523  step   8.7 s
+  112 NOOP                         no-op     mean   233.9 p95   698.8 ms  reward  -2.487  step   9.6 s
+  113 NOOP                         no-op     mean   253.3 p95   797.7 ms  reward  -2.663  step  11.5 s
+  114 NOOP                         no-op     mean   225.1 p95   697.8 ms  reward  -2.380  step   9.9 s
+  115 NOOP                         no-op     mean   242.3 p95   798.1 ms  reward  -2.552  step  23.5 s
+  116 NOOP                         no-op     mean   241.9 p95   798.2 ms  reward  -2.547  step  21.8 s
+  117 NOOP                         no-op     mean   207.5 p95   797.7 ms  reward  -2.197  step  14.2 s
+  118 NOOP                         no-op     mean   177.2 p95   457.9 ms  reward  -1.892  step  10.6 s
+  119 NOOP                         no-op     mean   198.9 p95   500.7 ms  reward  -2.109  step  10.0 s
+  120 MOVE_LEASE(f2, r1)           applied   mean   192.8 p95   498.3 ms  reward  -2.072  step  11.6 s
+  121 NOOP                         no-op     mean   162.3 p95   498.6 ms  reward  -1.777  step  14.2 s
+  122 NOOP                         no-op     mean   158.1 p95   498.4 ms  reward  -1.734  step  13.7 s
+  123 NOOP                         no-op     mean   294.2 p95   899.0 ms  reward  -3.089  step  27.7 s
+  124 NOOP                         no-op     mean   286.9 p95   898.0 ms  reward  -3.015  step  28.1 s
+  125 NOOP                         no-op     mean   278.8 p95   897.8 ms  reward  -2.936  step  23.7 s
+  126 NOOP                         no-op     mean   271.6 p95   897.7 ms  reward  -2.870  step  24.4 s
+  127 NOOP                         no-op     mean   273.1 p95   898.2 ms  reward  -2.894  step  21.9 s
+  128 NOOP                         no-op     mean   246.2 p95   527.0 ms  reward  -2.618  step  19.7 s
+  129 NOOP                         no-op     mean   169.1 p95   458.5 ms  reward  -1.837  step   8.2 s
+  130 NOOP                         no-op     mean   177.5 p95   500.2 ms  reward  -1.933  step   7.5 s
+  131 NOOP                         no-op     mean   202.8 p95   799.1 ms  reward  -2.172  step   8.0 s
+  132 NOOP                         no-op     mean   206.2 p95   728.8 ms  reward  -2.211  step   8.1 s
+  133 NOOP                         no-op     mean   212.8 p95   675.6 ms  reward  -2.274  step   8.0 s
+  134 NOOP                         no-op     mean   157.0 p95   457.4 ms  reward  -1.720  step  13.3 s
+  135 NOOP                         no-op     mean   225.4 p95   500.0 ms  reward  -2.399  step  15.7 s
+  136 NOOP                         no-op     mean   230.5 p95   644.5 ms  reward  -2.461  step  17.3 s
+  137 NOOP                         no-op     mean   252.9 p95   898.4 ms  reward  -2.687  step  19.8 s
+  138 NOOP                         no-op     mean   274.3 p95   897.9 ms  reward  -2.896  step  23.2 s
+  139 NOOP                         no-op     mean   269.3 p95   897.7 ms  reward  -2.845  step  22.8 s
+  140 NOOP                         no-op     mean   310.6 p95   899.9 ms  reward  -3.255  step  29.7 s
+  141 NOOP                         no-op     mean   177.4 p95   498.5 ms  reward  -1.925  step  10.5 s
+  142 NOOP                         no-op     mean   175.3 p95   498.4 ms  reward  -1.906  step  13.3 s
+  143 NOOP                         no-op     mean   183.2 p95   498.8 ms  reward  -1.988  step  14.6 s
+  144 NOOP                         no-op     mean   170.5 p95   498.4 ms  reward  -1.850  step  13.8 s
+  145 NOOP                         no-op     mean   192.6 p95   498.7 ms  reward  -2.076  step  12.4 s
+  146 NOOP                         no-op     mean   206.1 p95   500.8 ms  reward  -2.203  step  11.8 s
+  147 NOOP                         no-op     mean   239.7 p95   897.9 ms  reward  -2.549  step  17.6 s
+  148 NOOP                         no-op     mean   222.2 p95   548.4 ms  reward  -2.362  step  14.2 s
+  149 NOOP                         no-op     mean   237.7 p95   643.0 ms  reward  -2.520  step  13.6 s
+  150 NOOP                         no-op     mean   254.5 p95   643.6 ms  reward  -2.686  step  16.9 s
+  151 NOOP                         no-op     mean   195.3 p95   577.5 ms  reward  -2.097  step  21.5 s
+  152 NOOP                         no-op     mean   189.6 p95   577.8 ms  reward  -2.058  step  20.7 s
+  153 NOOP                         no-op     mean   190.4 p95   577.9 ms  reward  -2.063  step  20.0 s
+  154 NOOP                         no-op     mean   182.6 p95   398.5 ms  reward  -1.974  step  13.5 s
+  155 NOOP                         no-op     mean   184.3 p95   500.5 ms  reward  -1.998  step  14.3 s
+  156 NOOP                         no-op     mean   201.3 p95   648.1 ms  reward  -2.164  step  13.1 s
+  157 NOOP                         no-op     mean   214.4 p95   698.1 ms  reward  -2.294  step   8.2 s
+  158 NOOP                         no-op     mean   230.9 p95   744.9 ms  reward  -2.464  step   8.6 s
+  159 NOOP                         no-op     mean   243.9 p95   797.5 ms  reward  -2.585  step   9.4 s
+  160 MOVE_LEASE(f2, r2)           applied   mean   227.5 p95   797.6 ms  reward  -2.425  step   8.8 s
+  161 NOOP                         no-op     mean   201.8 p95   647.1 ms  reward  -2.157  step   7.9 s
+  162 NOOP                         no-op     mean   240.4 p95   797.1 ms  reward  -2.537  step   9.8 s
+  163 NOOP                         no-op     mean   232.7 p95   797.8 ms  reward  -2.456  step  10.5 s
+  164 NOOP                         no-op     mean   192.6 p95   643.9 ms  reward  -2.049  step   7.5 s
+  165 NOOP                         no-op     mean   196.9 p95   500.3 ms  reward  -2.100  step   9.6 s
+  166 NOOP                         no-op     mean   183.3 p95   500.0 ms  reward  -1.976  step   9.2 s
+  167 NOOP                         no-op     mean   190.8 p95   546.6 ms  reward  -2.041  step   9.9 s
+  168 NOOP                         no-op     mean   167.9 p95   499.7 ms  reward  -1.818  step   7.5 s
+  169 NOOP                         no-op     mean   210.2 p95   729.2 ms  reward  -2.230  step  10.1 s
+  170 NOOP                         no-op     mean   196.0 p95   547.0 ms  reward  -2.097  step   8.7 s
+  171 NOOP                         no-op     mean   206.9 p95   798.5 ms  reward  -2.197  step  17.8 s
+  172 NOOP                         no-op     mean   231.1 p95   798.5 ms  reward  -2.448  step  20.6 s
+  173 NOOP                         no-op     mean   246.3 p95   798.5 ms  reward  -2.596  step  14.1 s
+  174 NOOP                         no-op     mean   240.2 p95   797.7 ms  reward  -2.525  step  13.9 s
+  175 NOOP                         no-op     mean   234.4 p95   797.8 ms  reward  -2.478  step  16.7 s
+  176 NOOP                         no-op     mean   256.0 p95   798.3 ms  reward  -2.694  step  18.9 s
+  177 NOOP                         no-op     mean   203.7 p95   604.9 ms  reward  -2.154  step  16.7 s
+  178 NOOP                         no-op     mean   179.9 p95   499.6 ms  reward  -1.927  step  14.9 s
+  179 NOOP                         no-op     mean   191.8 p95   604.9 ms  reward  -2.049  step   7.0 s
+  180 MOVE_LEASE(f2, r1)           applied   mean   207.7 p95   698.0 ms  reward  -2.228  step   8.8 s
+  181 NOOP                         no-op     mean   240.1 p95   697.2 ms  reward  -2.542  step  10.3 s
+  182 NOOP                         no-op     mean   214.7 p95   499.7 ms  reward  -2.295  step   8.1 s
+  183 NOOP                         no-op     mean   240.2 p95   697.9 ms  reward  -2.549  step   9.2 s
+  184 NOOP                         no-op     mean   219.1 p95   697.0 ms  reward  -2.358  step   8.6 s
+  185 NOOP                         no-op     mean   225.2 p95   797.3 ms  reward  -2.412  step   8.4 s
+  186 NOOP                         no-op     mean   262.2 p95   824.3 ms  reward  -2.762  step  11.4 s
+  187 NOOP                         no-op     mean   233.1 p95   797.8 ms  reward  -2.480  step   9.6 s
+  188 NOOP                         no-op     mean   247.3 p95   797.1 ms  reward  -2.616  step  10.2 s
+  189 NOOP                         no-op     mean   209.2 p95   564.4 ms  reward  -2.241  step   9.4 s
+  190 MOVE_LEASE(f2, r2)           applied   mean   230.1 p95   897.5 ms  reward  -2.439  step  12.6 s
+  191 NOOP                         no-op     mean   210.8 p95   547.9 ms  reward  -2.252  step  11.1 s
+  192 NOOP                         no-op     mean   187.2 p95   547.4 ms  reward  -2.012  step  11.4 s
+  193 NOOP                         no-op     mean   188.7 p95   501.4 ms  reward  -2.024  step   8.7 s
+  194 NOOP                         no-op     mean   196.6 p95   548.0 ms  reward  -2.098  step   9.0 s
+  195 NOOP                         no-op     mean   177.9 p95   547.6 ms  reward  -1.913  step   7.2 s
+  196 NOOP                         no-op     mean   173.4 p95   500.2 ms  reward  -1.873  step   6.2 s
+  197 NOOP                         no-op     mean   167.3 p95   500.2 ms  reward  -1.818  step   6.2 s
+  198 NOOP                         no-op     mean   208.8 p95   798.3 ms  reward  -2.224  step   9.1 s
+  199 NOOP                         no-op     mean   191.1 p95   499.3 ms  reward  -2.050  step   8.3 s
+{
+ "policy": "lion",
+ "seed": 2003,
+ "steps": 200,
+ "mean_latency_ms": 204.8942836700486,
+ "gb_moved_total": 30.0,
+ "mean_step_s": 12.936700785439962,
+ "mean_imbalance": 1.4079610836136414,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.1942389450618505
+}
+VERDICT: PASS, the cluster ran as an environment end to end.

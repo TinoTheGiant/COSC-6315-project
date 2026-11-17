@@ -1,0 +1,12 @@
+# Training round, 15 November 2026: Train agent runs 43674067630, 43674455394, 43674558770, 43674597349,
+# commit 6babfc6, volatility 4, 1e6 steps, w 0.30, primary_only, held-out seeds 2000-2007. From the job summaries.
+policy,learner_seed_run,latency_ms,gb_moved
+agent,43674067630,163.18,117.8
+agent,43674455394,170.73,278.1
+agent,43674558770,162.74,121.7
+agent,43674597349,166.88,216.7
+static,,192.11,0.0
+random,,195.46,134.6
+follow,,148.81,867.7
+lion,,179.98,28.8
+best,,91.02,0.0
