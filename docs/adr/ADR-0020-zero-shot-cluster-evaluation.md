@@ -1,7 +1,7 @@
 # ADR-0020: Evaluate the trained agent on the cluster unchanged; defer fine-tuning
 
-**Status:** Proposed, 16 November 2026. Records what the CCGrid submission
-already does; needs Tino's sign-off, and the instructor's if she wants it.
+**Status:** Accepted, 16 November 2026, by Tino. Records what the CCGrid
+submission does: zero-shot evaluation on the cluster, fine-tuning deferred.
 **Date:** 2026-11-16
 **Deciders:** Tino Kaseke (instructor informed)
 
@@ -78,7 +78,7 @@ supports and states its limit.
 ## Action Items
 
 1. [x] Fig. 1 and Section III-J describe zero-shot evaluation (16 November).
-2. [ ] Tino accepts or amends this ADR.
-3. [ ] If time allows before 1 December: cluster episodes on workload seeds
-       2001 and 2002, which strengthen the zero-shot result more than a short
-       fine-tune would.
+2. [x] Tino accepted this ADR (16 November).
+3. [x] Cluster episodes on workload seeds 2001 to 2003 (Actions 43954753671,
+       43954879894, 43954980773). The agent is second to the heuristic on all
+       four seeds, which the paper now reports instead of one episode.
