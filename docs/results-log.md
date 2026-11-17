@@ -686,3 +686,26 @@ No new runs. From existing evidence:
   the archived step CSVs, four seeds: follow 552.1, agent 618.2, static 689.8,
   Lion 698.7; agent below static on every seed. Step-CSV means reproduce the
   recorded cluster means to the hundredth on all sixteen episodes.
+
+## Agents at volatility 2, unchanged (17 November 2026)
+
+The four archived best models (trained at volatility 4) run at volatility 2
+on held-out seeds 2000 to 2007, `primary_only`, on Tino's laptop
+(`results/runs/20261117T051144Z-1ead496b-gen-v2-*`,
+`results/recorded/generalization-v2.csv`). Reproduction check first: the same
+code and the learner-seed-2 model at volatility 4 give 162.74 ms / 121.67 GB,
+the recorded figures exactly.
+
+| policy | ms | GB | imbalance | mean p95 |
+|---|---|---|---|---|
+| agents (4 learner seeds) | 170.50, 166.47, 166.40, 167.53 (mean 167.73) | 127.0, 252.6, 100.8, 368.4 | 0.82 to 0.97 | 532 to 572 |
+| follow | 126.93 | 877.4 | 0.888 | 458.0 |
+| Lion-style | 177.24 | 25.0 | 1.075 | 517.4 |
+| static | 192.83 | 0.0 | 0.333 | 631.4 |
+| oracle | 88.56 | | | |
+
+`Status: numerical.` The agent holds its latency (167.7 against 165.9 at
+volatility 4) and stays ahead of static and Lion-style, but follow improves
+under slower drift and leads by 41 ms. The trained policy does not adapt its
+trade to the slower workload. Not claimed: anything about an agent trained at
+volatility 2.
