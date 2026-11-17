@@ -785,3 +785,14 @@ recorded in `results/recorded/cluster-eval.csv` and `tradeoff.csv`.
 - Paper: Table V gains Agent 1 and CockroachDB rows; Q5 gains two
   paragraphs; weight analysis reports the trained w = 0.6 agents; abstract,
   introduction, threats and conclusion follow.
+
+## Archive trimmed (17 November 2026)
+
+The cluster artifacts of runs 43954753671, 43954879894, 43954980773 and
+44021436487 to 44021771876 carried a copy of the checked-out `results/`
+(recorded tables, runs and, for the 4402 runs, the whole archive), about
+55 MB each. Those nested copies are removed; each run keeps its own episode
+CSV/JSON, logs and health files. `cluster-eval.yml` now uploads only
+`results/*.csv` and `results/*.json`. `agent-runs.csv`, `baselines-heldout.csv`,
+`score_objective.py` and `plot_agent_frontier.py` are marked superseded (early
+round, commit f459c44; not used by the paper).

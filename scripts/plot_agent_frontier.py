@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Latency against data movement, for every policy at one volatility.
+"""SUPERSEDED. Reads the early-round tables agent-runs.csv and
+baselines-heldout.csv (commit f459c44); kept as a record, not used by the paper.
+Current numbers: results/recorded/heldout-rf3.csv, tradeoff.csv, w06.csv.
+
+Latency against data movement, for every policy at one volatility.
 
     python scripts/plot_agent_frontier.py --volatility 4.0
 

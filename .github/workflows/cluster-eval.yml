@@ -328,8 +328,11 @@ jobs:
         if: always()
         with:
           name: cluster-eval-results
+          # Only this run's outputs: results/ also holds the checked-out recorded
+          # tables and archive, which would be copied into every artifact.
           path: |
-            results/
+            results/*.csv
+            results/*.json
             latency.txt
             episode_*.txt
             comparison.txt

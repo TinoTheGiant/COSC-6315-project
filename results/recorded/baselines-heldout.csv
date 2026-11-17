@@ -1,3 +1,4 @@
+# SUPERSEDED: early round (commit f459c44), before the simulator changes of 15-17 Nov; not used by the paper.
 # Baselines on held-out seeds 2000-2007, 200 windows, commit f459c44.
 # Measured locally and verified to reproduce the CI runs digest-for-digest.
 volatility,policy,latency_ms,gb_moved,imbalance

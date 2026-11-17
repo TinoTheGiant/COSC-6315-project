@@ -1,4 +1,8 @@
-"""Score every recorded policy under the training objective.
+"""SUPERSEDED. Reads the early-round tables agent-runs.csv and
+baselines-heldout.csv (commit f459c44); kept as a record, not used by the paper.
+Current numbers: results/recorded/heldout-rf3.csv, tradeoff.csv, w06.csv.
+
+Score every recorded policy under the training objective.
 
 The objective the agent minimises is
 

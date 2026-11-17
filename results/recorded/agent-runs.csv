@@ -1,3 +1,4 @@
+# SUPERSEDED: early round (commit f459c44), before the simulator changes of 15-17 Nov; not used by the paper.
 # Transcribed from the Train agent workflow job summaries and run archives,
 # commit f459c44. Every row names the Actions run it came from.
 # Baselines for these rows are the held-out seed block 2000-2007, NOT the
