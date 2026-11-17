@@ -14,8 +14,9 @@ the simulator to the cluster.
 
 On a real six-node CockroachDB cluster, gathering leaseholders in the
 issuing region rather than spreading them changes p95 latency by
-1337.8\,ms. A reactive heuristic that follows the traffic is at the
-per-window oracle under slow drift and 57.5\,ms above it under fast drift,
+1337.8\,ms. A reactive heuristic that follows the traffic is 16.9\,ms above
+an exact per-window oracle under slow drift and 75.4\,ms above it under fast
+drift,
 so the case for a learned policy is conditional on volatility, and this work
 measures the condition.
 
@@ -37,27 +38,14 @@ caught up, a rule the simulator does not model.
 % ---------------------------------------------------------------------
 \subsection{Future work}
 
-In the order they should be attempted.
-
-Add learner seeds to the cluster evaluation, so it has an interval.
-
-Train at the migration weight the deployment cares about. The weight
-analysis rescales fixed behavior; an agent trained at $w=0.6$ or $w=1.0$
-should move less again, and whether it stays the cheapest policy is the
-question the rescoring raises but cannot answer.
-
-Teach the simulator the database's refusal rule. A lease transfer onto a
-replica that may need a snapshot is refused on the cluster and accepted in
-simulation. Modeling it, or retrying a refused move in the next window,
-would remove the largest single source of transfer loss measured here.
-
-Address the plateau. Held-out latency stopped improving early in at least three of four runs,
-so the lever is not more steps. Double Q-learning, a dueling head and
-prioritized replay, as combined in Rainbow \cite{hessel2018rainbow}, are the
-obvious next components, together with choosing the best checkpoint on more
-than three evaluation episodes and on the objective rather than latency alone.
-
-Fine-tune on the cluster. The harness already executes actions, reads the
-placement back and measures real transactions with the reward the simulator
-uses, which is the apparatus fine-tuning needs; at about 15\,s per step on
-the present runner the budget, not the code, is the constraint.
+In the order they should be attempted. Add learner seeds to the cluster
+evaluation, so it has an interval, and train an agent with splitting
+disabled, to measure what fragmentation adds. Train at the migration weight a
+deployment cares about, which the rescoring in Table~\ref{tab:weight} can
+suggest but not answer. Teach the simulator the database's refusal rule, or
+retry a refused move in the next window. Address the plateau with the other
+Rainbow components~\cite{hessel2018rainbow}, and choose the checkpoint on
+more evaluation episodes and on the objective rather than latency alone.
+Finally, fine-tune on the cluster: the harness already executes actions,
+reads placement back and computes the simulator's reward, and at about 15\,s
+a step the budget, not the code, is the constraint.

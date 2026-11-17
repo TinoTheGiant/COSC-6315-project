@@ -52,11 +52,12 @@ from fragalloc.policies import (  # noqa: E402
     StaticHashPolicy,
     ThrottledFollowPolicy,
 )
+from fragalloc.oracle import exact_oracle  # noqa: E402
 from fragalloc.simulator import ClusterSimulator  # noqa: E402
 
 #: Policies the runner knows how to build. ``best`` is not a policy; it is the
-#: per-window lower bound on latency, computed by relocating every primary for
-#: free. It is reported as a reference line, never as a competitor.
+#: exact per-window minimum latency at fixed shard boundaries (fragalloc.oracle).
+#: It is reported as a reference line, never as a competitor.
 POLICY_FACTORIES = {
     "static": lambda space, seed: StaticHashPolicy(space),
     "random": lambda space, seed: RandomPolicy(space, seed=seed),
@@ -158,17 +159,12 @@ def run_episode(cfg: FragAllocConfig, policy_key: str, seed: int) -> pd.DataFram
     for window_index in range(cfg.episode.windows_per_episode + 1):
         window = sim.last.window
         if policy_key == "best":
-            # Free, instantaneous relocation of every primary, at the shard
-            # boundaries this episode started with. Unreachable by two
-            # constructions: it pays no migration cost, and it sees the window
-            # it is optimizing for. It is NOT a global optimum, because it
-            # never splits a shard. A policy that splits can legitimately beat
-            # it, and the figure label says "fixed shards" for that reason.
-            catalog = sim.catalog.copy()
-            demand = catalog.aggregate_cells(window.reads + window.writes)
-            target = (demand @ sim.topology.rtt).argmin(axis=1)
-            for fragment in range(catalog.n_fragments):
-                catalog.set_primary(fragment, int(target[fragment]))
+            # Exact per-window minimum at the shard boundaries this episode
+            # started with: every primary and follower placed for free, the
+            # whole window seen in advance (fragalloc.oracle). A lower bound
+            # on any policy that does not split; a policy that splits changes
+            # the boundaries and can score below it.
+            catalog, _ = exact_oracle(sim.catalog, window, sim.generator, sim.topology, cfg.cost)
             cost = evaluate(catalog, window, sim.generator, sim.topology, cfg.cost)
         else:
             cost = sim.last.cost
@@ -276,10 +272,9 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
         "## Aggregate over seeds",
         "",
         "Mean of the per-seed episode means, with a 95% percentile bootstrap",
-        "interval over seeds. `best` is the lowest latency reachable by moving",
-        "every lease for free each window at the starting shard boundaries. It",
-        "is not an achievable policy, and it is not a global optimum either: a",
-        "policy that splits a shard can sit below it.",
+        "interval over seeds. `best` is the exact per-window minimum latency at",
+        "the starting shard boundaries, with movement free. It is not an",
+        "achievable policy; only a policy that splits a shard can sit below it.",
         "",
         f"| Policy | Mean latency (ms) | 95% CI | p{tail_percentile:g} (ms) |"
         " GB moved | Cross-region txns |",
@@ -290,7 +285,7 @@ def report(summary: pd.DataFrame, manifest: dict, tail_percentile: float) -> str
     order += sorted(present - set(order))
     label = {"static": "Static hash", "random": "Random", "follow": "Follow traffic",
              "lion": "Lion-style co-location",
-             "best": "Best per window (fixed shards)", "agent": "Learned policy"}
+             "best": "Per-window oracle (fixed shards)", "agent": "Learned policy"}
     tail_col = f"p{tail_percentile:g}_latency_ms"
     for policy in order:
         group = summary[summary.policy == policy]

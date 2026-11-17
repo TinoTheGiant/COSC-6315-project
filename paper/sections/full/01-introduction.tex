@@ -32,11 +32,10 @@ and move it towards the region reading it. We implement that rule as a baseline
 and call it \emph{follow traffic}. The question this paper asks is whether
 anything is gained by replacing it with a policy learned from experience, and
 the answer turns out to depend entirely on how fast the workload moves. When
-drift is slow, the simple rule is within 2\,ms of a free per-window oracle,
-and there is little worth learning. When
-drift is fast, the same rule falls 57.5\,ms short of an oracle that re-places every shard for
-free each window, which is 36\%
-of its own latency, because it reacts one window behind a target that has
+drift is slow, the simple rule is 16.9\,ms above the lowest latency any
+placement of the same shards could reach, and there is little worth learning.
+When drift is fast, the same rule falls 75.4\,ms short of that bound, 47\% of
+its own latency, because it reacts one window behind a target that has
 already moved again. The room for a learned policy is therefore largest exactly
 where the problem is hardest, and that is a measured observation rather than an
 assumption.
@@ -48,7 +47,8 @@ with a flat action space of 261 declarative actions. We establish five reference
 points against which any learned policy must be judged: static hash
 partitioning, which never moves anything; a random control; the
 follow-traffic heuristic; a co-location planner modeled on Lion; and a
-per-window oracle that relocates every primary for free. We measure how the
+per-window oracle that finds, by exhaustive search, the lowest latency any
+placement of the starting shards could reach. We measure how the
 gap between the heuristic and that oracle widens
 with workload volatility. We verify on a real six-node CockroachDB cluster, with
 wide-area latency injected between the nodes, that placement changes

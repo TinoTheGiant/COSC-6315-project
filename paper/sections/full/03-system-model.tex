@@ -133,13 +133,13 @@ action space, and unlike the heuristic it weighs movement cost. Like Lion, its
 cost model has no distance term, and we omit Lion's workload predictor, so it
 plans from the last window; it does nothing in 90 to 95\% of windows.
 \item \textbf{Per-window oracle (fixed shards)} is not a policy. Each window,
-it sets every shard's primary, for free and instantly, to the region with the
-lowest demand-weighted round-trip time for that shard, adding a replica there
-if needed, at the shard boundaries the episode started with. No real policy
-can match it, because it pays no movement cost and sees the window it is
-optimizing. It is not a lower bound either: it places each shard on its own,
-from read and write demand alone, ignoring the commit and quorum costs that
-couple shards, and it never splits.
+it searches every assignment of primaries to regions ($6^6$ for the six
+starting shards), with followers in the regions nearest each primary, and
+keeps the one with the lowest latency under the full cost model, commit
+coordination included. Movement is free and the window is seen in advance.
+With strong reads only commit coordination couples shards, so the search is
+exact, and it is a lower bound on the latency of any placement of the
+starting shards; only a policy that splits can score below it.
 \end{itemize}
 
 \subsection{The agent}
@@ -157,8 +157,9 @@ first 30\% of training. Every $10^4$ steps the policy is scored on three
 evaluation seeds, and the checkpoint with the lowest mean latency is kept.
 
 Two additions to the plain form are used, each because a measured failure
-called for it. Inapplicable actions are masked, both when the agent selects an
-action and in the maximum taken by its bootstrap target, which removed an
+called for it. Inapplicable actions are masked~\cite{huang2022masking,zahavy2018elimination},
+both when the agent selects an action and in the maximum taken by its
+bootstrap target, which removed an
 inapplicable share that had reached 80\% to 90\% without it. And returns are
 accumulated over three steps rather than one, because a move is charged in
 full when it is made whilst the latency it buys arrives in later windows. The

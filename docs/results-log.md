@@ -639,3 +639,33 @@ into `results/archive/` (55 MB). The four training runs' held-out
   161.82, 172.05, 145.98, 168.16 ms (mean 162.0). Cluster minus simulator:
   +27.6 to +31.6 ms, 18.7% on average, between the baselines' 14% and Lion's
   24%.
+
+## Exact per-window oracle (17 November 2026)
+
+The greedy "per-window oracle" (each primary to its demand-weighted nearest
+region, shard by shard) is replaced by an exhaustive search over all 6^6
+primary assignments with followers nearest each primary
+(`src/fragalloc/oracle.py`). With strong reads only two-phase commit couples
+shards, so the search is exact: a true lower bound on any placement of the
+starting shards. `tests/test_oracle.py` checks it against `cost.evaluate` on
+sampled assignments (catches a planted error in the commit term and in the
+follower wait), against 300 random placements, and against the greedy rule.
+
+Sweep rerun (`results/runs/20261117T042521Z-*`); policies unchanged to the
+digit, oracle only:
+
+| volatility | old oracle | exact oracle | follow | gap (95% paired CI) |
+|---|---|---|---|---|
+| 0.5 | 118.7 | 100.1 | 117.0 | 16.9 [13.6, 20.5] |
+| 1 | 118.0 | 99.3 | 119.8 | 20.4 [16.5, 24.5] |
+| 2 | 111.5 | 93.4 | 137.4 | 43.9 [37.8, 50.1] |
+| 4 | 102.8 | 85.0 | 160.4 | 75.4 [70.2, 82.9] |
+
+Held-out seeds 2000 to 2007: oracle 76.47 ms (was 91.02).
+
+- Retired: "under slow drift follow is within 2 ms of / below the oracle" and
+  "the oracle is not a minimum". Follow is 16.9 ms (14%) above a true bound at
+  volatility 0.5; the gap still grows with volatility.
+- Also in this change: splitting claim narrowed (no split-disabled agent was
+  trained), SLOG and the two masking papers cited, simulator's instant
+  migration and split renumbering added to threats to validity.

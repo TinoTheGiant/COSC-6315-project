@@ -93,11 +93,12 @@ placement against network cost in the same setting. Both reach the joint framing
 this work uses, and both reach it with a solver rather than a learned policy.
 Akkio~\cite{annamalai2018akkio}, in production at Facebook, migrates small
 units of data between datacenters to cut access latency and cross-datacenter
-traffic. Fluidity~\cite{kostler2023fluidity} moves the replicas of a replicated state
+traffic, and SLOG~\cite{ren2019slog} gives each granule of data a home region
+by where it is accessed. Fluidity~\cite{kostler2023fluidity} moves the replicas of a replicated state
 machine at run time towards the locations its client requests come from, and
 CockroachDB's multi-region abstractions~\cite{vanbenschoten2022multiregion}
 let a developer declare data locality in SQL, which the database maps to
-replica placement and partitioning. In all three, geography drives placement,
+replica placement and partitioning. In all four, geography drives placement,
 and none is presented as a learned policy.
 
 These systems share the premise of this work, that placement should follow the
@@ -200,12 +201,12 @@ shards produces.
 
 \subsection{Positioning}
 
-This work learns fragmentation and geographic placement \emph{jointly}, as one
-policy, for transactional workloads. The workload-driven partitioners re-solve a
+This work gives one learned policy both fragmentation and geographic
+placement actions, for transactional workloads. The workload-driven partitioners re-solve a
 hand-written cost model and do not learn from their own outcomes. Lion learns a
 forecast but not a policy, and its cost model is denominated in bytes rather
 than in distance. GeoTP optimizes execution against a fixed placement. The
-learned administration systems address knobs, plans and indexes. Akkio, Fluidity and CockroachDB's multi-region design see geography but are
+learned administration systems address knobs, plans and indexes. Akkio, SLOG, Fluidity and CockroachDB's multi-region design see geography but are
 not presented as learned policies.
 The learned placement systems address storage tiers, edge nodes and, in RLRP,
 the even spread of load within one cluster, not a transactional workload whose
@@ -215,14 +216,14 @@ itself.
 Stating the contribution precisely: the agent chooses, in one action space,
 where a shard's primary copy sits, where its replicas sit, and where the
 boundary between two shards falls, and it is rewarded on a cost that combines
-transaction latency, the volume of data moved, and load imbalance.
+transaction latency, the volume of data moved, and load imbalance. That
+splitting is what earns its result is not shown: splits are at the midpoint,
+irreversible and capped at 20 shards, and no agent with splitting disabled was
+trained for comparison.
 
-Two qualifications. First, it is not claimed to be new. Searches of Semantic Scholar, OpenAlex and arXiv returned no paper that learns
-fragmentation and geographic placement jointly for transactional workloads;
-IEEE Xplore and the ACM Digital Library were reached only through those
-aggregators, so the search does not reach as far as a novelty claim would
-require. Second, the agent described
-here is trained and measured, and on latency alone it does not outperform the
-hand-written heuristic it is meant to replace. What this paper establishes is
-the problem, the measurement apparatus, the baselines, and the conditions under
-which a learned policy has room to win.
+It is not claimed to be new: searches of Semantic Scholar, OpenAlex and arXiv
+found no paper that learns fragmentation and geographic placement jointly for
+transactional workloads, but IEEE Xplore and the ACM Digital Library were
+reached only through them. And on latency alone the agent does not beat the
+heuristic it is meant to replace. What this paper establishes is the problem,
+the apparatus, the baselines, and when a learned policy has room to win.

@@ -115,10 +115,10 @@ run on a cluster that had not finished replicating, and are not reported.
 \toprule
 Vol. & Static & Random & Follow & Lion & Oracle & Follow GB \\
 \midrule
-0.5 & 196.8 & 196.4 & 117.0 & 183.0 & 118.7 & 322.5 \\
-1.0 & 196.3 & 201.6 & 119.8 & 181.7 & 118.0 & 632.6 \\
-2.0 & 195.5 & 201.6 & 137.4 & 173.3 & 111.5 & 900.2 \\
-4.0 & 196.1 & 203.0 & 160.4 & 177.8 & 102.8 & 873.7 \\
+0.5 & 196.8 & 196.4 & 117.0 & 183.0 & 100.1 & 322.5 \\
+1.0 & 196.3 & 201.6 & 119.8 & 181.7 &  99.3 & 632.6 \\
+2.0 & 195.5 & 201.6 & 137.4 & 173.3 &  93.4 & 900.2 \\
+4.0 & 196.1 & 203.0 & 160.4 & 177.8 &  85.0 & 873.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -143,7 +143,7 @@ a factor of eight.
 
 Static hashing is flat, 195.5 to 196.8\,ms. It never tracked the workload, so
 it does not degrade as the workload moves faster. The oracle improves, from
-118.7 to 102.8\,ms, because a more volatile workload is a more sharply
+100.1 to 85.0\,ms, because a more volatile workload is a more sharply
 concentrated one, and a concentrated workload is easier to serve if the data
 is in the right place. Faster drift makes the problem harder for a policy and
 easier for an oracle.
@@ -164,14 +164,12 @@ oracle, the room available to a better policy. Seed block 0 to 7.}
 \end{figure*}
 
 
-The gap between the heuristic and the oracle is $-1.7$\,ms at volatility 0.5,
-1.7\,ms at volatility 1, 25.8\,ms at 2 and 57.5\,ms at 4 (paired 95\%
-interval [54.3, 61.6]\,ms), where it is 36\% of the heuristic's own latency. At slow drift the heuristic is slightly
-\emph{below} the oracle, which shows the oracle is not a minimum: it places
-each shard on its own and ignores the commit and quorum costs that couple
-them. Under slow drift, then, a reactive rule is already as
-good as the reference, and there is nothing worth learning. Under fast drift
-there is a great deal. The case for a learned policy is conditional on
+The gap between the heuristic and the oracle is 16.9\,ms at volatility 0.5,
+20.4\,ms at 1, 43.9\,ms at 2 and 75.4\,ms at 4 (paired 95\% interval [70.2,
+82.9]\,ms), where it is 47\% of the heuristic's own latency. Under slow drift
+a reactive rule is within 15\% of the lowest latency the starting shards
+allow, and there is little worth learning. Under fast drift there is a great
+deal. The case for a learned policy is conditional on
 volatility, and the condition is measured rather than assumed. The
 Lion-style planner, which re-plans on a fixed period and moves little data
 (15 to 24\,GB), sits between static hashing and the heuristic at every
@@ -202,7 +200,7 @@ Static hash   & 192.1 &   0.0 \\
 Random        & 195.5 & 134.6 \\
 Follow traffic& 148.8 & 867.7 \\
 Lion-style    & 180.0 &  28.8 \\
-Oracle        &  91.0 &   n/a \\
+Oracle        &  76.5 &   n/a \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -260,7 +258,7 @@ Cluster   & 0.0 & 2.010 & \textbf{1.785} & 2.391 & 2.243 \\
 
 Training has plateaued rather than run short: held-out latency stays between
 about 160 and 190\,ms from step 50{,}000 to $10^6$, and in three of four runs
-the best checkpoint fell before step 170{,}000. The oracle, at 91.0\,ms,
+the best checkpoint fell before step 170{,}000. The oracle, at 76.5\,ms,
 remains far away.
 
 % ---------------------------------------------------------------------
@@ -340,6 +338,10 @@ planner.
 
 The cluster results rest on four workload seeds and one learner seed, one
 episode each, which supports a consistent ordering but not an interval.
+
+The simulator completes a move within the window it is issued, and a split
+renumbers the shards after it, so the agent's observation of a given shard
+index changes meaning mid-episode. Neither is true of a real cluster.
 
 The weight analysis rescales fixed trajectories. It shows where the price of
 movement changes the verdict; it does not show what an agent trained at that
