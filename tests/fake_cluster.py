@@ -98,7 +98,7 @@ class FakeCluster:
             return [(st, st, f"region={n}") for n, st in
                     zip(self.stores.region_names, self.stores.store_of_region)]
 
-        m = re.match(r"SET CLUSTER SETTING ([\w.]+) = '?([\w]+)'?$", s)
+        m = re.match(r"SET CLUSTER SETTING ([\w.]+) = '?([\w ]+?)'?$", s)
         if m:
             if m[1] not in self.ignored_settings:
                 self.settings[m[1]] = m[2]

@@ -39,6 +39,7 @@ Start here depending on what you need.
 | [0018](adr/ADR-0018-read-consistency-parity.md) | Which replica serves a read, in the simulator and on the cluster |
 | [0019](adr/ADR-0019-cluster-load-accounting.md) | Where the cluster environment's load imbalance comes from |
 | [0020](adr/ADR-0020-zero-shot-cluster-evaluation.md) | Evaluate the trained agent on the cluster unchanged; defer fine-tuning |
+| [0021](adr/ADR-0021-cockroachdb-rebalancing-baseline.md) | CockroachDB's own rebalancing as a cluster baseline |
 
 ## Reading order for someone new
 

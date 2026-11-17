@@ -108,43 +108,24 @@ outcomes of its own past decisions, and none of their cost models carries a term
 for geographic distance, because they were designed for clusters in one data
 center where the distance between any two nodes is much the same.
 
-Lion~\cite{lion2024} is the closest system to this work in intent. It observes
-that a transaction is slow mainly because it spans machines, and it therefore
-arranges replicas so that some single node holds a copy of every partition a
-given transaction touches, allowing that transaction to commit locally rather
-than through the multi-round agreement protocol that a distributed commit
-requires. A graph-based analyzer groups partitions that are accessed together,
-a cost model assigns those groups to nodes subject to a load-balance
-constraint, and an LSTM predictor forecasts the workload so that replicas are
-provisioned before the shift rather than after it. Lion reports up to 2.7 times
-higher throughput and 76.4\% better scalability than the approaches it is
-compared against.
+Lion~\cite{lion2024} is the closest system in intent. It arranges replicas so
+that some single node holds every partition a transaction touches, letting it
+commit locally: a graph analyzer groups partitions accessed together, a cost
+model assigns the groups to nodes under a load-balance constraint, and an LSTM
+forecasts the workload so replicas are provisioned before a shift. Lion reports
+up to 2.7 times the throughput of the approaches it is compared against. It
+shows that adapting to a moving workload pays, and that migration cost and
+load balance belong in the objective. It leaves three openings: a hand-written
+cost model decides, so it does not learn from its own outcomes; that model is
+in bytes, with no distance term; and partitions are never split.
 
-Lion shows that adapting placement to a moving workload is worth real
-throughput, that migration cost and load balance belong in the objective, and
-that anticipating a shift beats reacting to one. It also leaves three openings. The adaptation is a heuristic pipeline rather
-than a learned policy: the LSTM forecasts, but a hand-written cost model
-decides, so the system never improves from the outcomes of its own decisions.
-Geographic distance does not appear in its cost function, which is expressed in
-bytes moved, so two placements that differ by an ocean score identically.
-Fragment boundaries are fixed, so Lion moves replicas of a partition but never
-splits one.
-
-GeoTP~\cite{geotp2025} supplies the geographic dimension that Lion does not
-have. It targets database middleware connecting heterogeneous data sources
-across regions, where the dominant costs are the network latency between the
-middleware and its data sources and the length of time a transaction holds
-locks whilst waiting on remote work. GeoTP reduces both: a decentralized
-prepare phase cuts the number of network round trips a distributed transaction
-needs, and a latency-aware scheduler delays lock acquisition so that the
-contention window is shorter.
-
-GeoTP shows that latency awareness is worth building a scheduler around, and
-its cost accounting is the model for the one used here. It optimizes the
-execution of transactions against a given placement, however, and does not
-change where the data sits. The two papers are therefore complementary, and
-the gap between them is where this work sits: Lion adapts placement without
-seeing geography, GeoTP sees geography without adapting placement.
+GeoTP~\cite{geotp2025} supplies the geography Lion lacks. For middleware over
+data sources in several regions, a decentralized prepare phase cuts the round
+trips of a distributed transaction and a latency-aware scheduler shortens the
+time locks are held. Its cost accounting is the model for the one used here,
+but it optimizes execution against a given placement and never moves data.
+Lion adapts placement without seeing geography; GeoTP sees geography without
+adapting placement; this work sits between them.
 
 \subsection{Learning to administer a database}
 
@@ -164,16 +145,12 @@ Placement has received less attention within this family than tuning or
 optimization. RLRP~\cite{lu2022rlrp} is the nearest in method: a Deep Q-Network
 places the replicas of each virtual node in an object store, a second agent
 migrates replicas when a node joins, and the whole is validated on a real
-system, Ceph. Its objective is fairness. The reward is the negative standard
-deviation of node load, or, on heterogeneous hardware, the reciprocal of mean
-read response time. A placement is decided once, when a virtual node is created
-or the cluster changes size, the volume of data moved does not enter the
-reward, and the nodes share one cluster, so where a request originates plays no
-part. Two of its devices recur here. When the highest-valued action is invalid
-RLRP takes the next highest, which is action masking at selection time, as the
-agent here does. And when the node count grows it reuses the trained
-weights, zero-initializing the new inputs, which is the natural route past the
-fixed region count this work assumes. Neuroshard~\cite{eldeeb2022neuroshard} learns shard assignments from past
+system, Ceph. Its reward is load fairness, a placement is decided once per
+virtual node, data moved is not charged, and request origin plays no part.
+Two of its devices recur here: taking the next-highest action when the best is
+invalid, which is masking at selection time, and reusing trained weights with
+zero-initialized inputs when nodes are added, the natural route past this
+work's fixed region count. Neuroshard~\cite{eldeeb2022neuroshard} learns shard assignments from past
 queries with deep reinforcement learning, optimizing several objectives
 together, fanout and load balance among them, and Costa Filho et al.~\cite{costafilho2020adaptive} change replica
 placement in a key-value store incrementally with deep reinforcement learning

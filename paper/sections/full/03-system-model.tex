@@ -159,10 +159,14 @@ evaluation seeds, and the checkpoint with the lowest mean latency is kept.
 Two additions to the plain form are used, each because a measured failure
 called for it. Inapplicable actions are masked~\cite{huang2022masking,zahavy2018elimination},
 both when the agent selects an action and in the maximum taken by its
-bootstrap target, which removed an
-inapplicable share that had reached 80\% to 90\% without it. And returns are
-accumulated over three steps rather than one, because a move is charged in
-full when it is made whilst the latency it buys arrives in later windows. The
+bootstrap target: without the mask, 79.9 to 89.8\% of the agent's chosen
+actions were inapplicable, no better than a uniform policy's 80.4\%. And
+returns are accumulated over three steps rather than one, because a move is
+charged in full when it is made whilst the latency it buys arrives in later
+windows. Against one-step returns this improved held-out latency by 5.4\,ms
+over four learner seeds (paired 95\% interval $[-14.6, 3.8]$\,ms, at an
+earlier replication factor of 2): not significant, and kept because it costs
+nothing. The
 other extensions that Rainbow~\cite{hessel2018rainbow} combines, such as
 double Q-learning, a dueling head and prioritized replay, are not used, so that any later improvement is attributable to the extension
 that produced it.

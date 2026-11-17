@@ -127,3 +127,40 @@ def test_split_queue_runs_during_convergence_and_is_frozen_after() -> None:
     assert seen and set(seen) == {"true"}
     assert c.settings["kv.split_queue.enabled"] == "false"
     assert len(seen) >= 2                 # two clean polls before returning
+
+
+def test_release_hands_leases_and_replicas_back_but_keeps_boundaries() -> None:
+    from fragalloc.harness.cluster import REBALANCER_CRDB, release_rebalancer
+    c, clock = cluster_at(3), Clock()
+    converge_replication(c, LAYOUT, 3, sleep=clock.sleep, clock=clock)
+    release_rebalancer(c)
+    assert c.settings["kv.allocator.load_based_rebalancing"] == "leases and replicas"
+    assert c.settings["kv.replicate_queue.enabled"] == "true"
+    assert c.settings["kv.lease_queue.enabled"] == "true"
+    # Splits and merges would change the shards every policy is compared on.
+    assert c.settings["kv.split_queue.enabled"] == "false"
+    assert c.settings["kv.range_merge.queue.enabled"] == "false"
+    assert set(REBALANCER_CRDB) == set(REBALANCER_OFF)
+    freeze_rebalancer(c)
+    assert all(c.settings[k] == v for k, v in REBALANCER_OFF.items())
+
+
+def test_bytes_added_counts_new_replicas_only() -> None:
+    from fragalloc.harness.env import bytes_added
+    before = FragmentCatalog(CFG.catalog, CFG.workload.n_cells, len(NAMES))
+    after = before.copy()
+    assert bytes_added(before, after) == 0.0
+    after.move_lease(0, int(np.flatnonzero(after.replicas[0] & (np.arange(len(NAMES)) != after.primary[0]))[0]))
+    assert bytes_added(before, after) == 0.0, "a lease move copies nothing"
+    free = int(np.flatnonzero(~after.replicas[1])[0])
+    after.move_replica_to(1, free, CFG_RTT())
+    assert bytes_added(before, after) == pytest.approx(float(after.sizes_bytes[1]))
+    split = before.copy()
+    split.split(0)
+    with pytest.raises(ValueError):
+        bytes_added(before, split)
+
+
+def CFG_RTT() -> np.ndarray:
+    from fragalloc.topology import build_topology
+    return build_topology(CFG.topology, CFG.catalog.dataset_bytes).rtt

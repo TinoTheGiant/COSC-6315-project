@@ -38,6 +38,18 @@ REBALANCER_OFF: dict[str, str] = {
 }
 
 
+#: CockroachDB's own rebalancing, on: the ``crdb`` baseline (ADR-0021). Leases
+#: and replicas follow load; splits and merges stay off, so ranges keep the
+#: catalogue's boundaries and every policy is compared on the same shards.
+REBALANCER_CRDB: dict[str, str] = {
+    "kv.allocator.load_based_rebalancing": "leases and replicas",
+    "kv.replicate_queue.enabled": "true",
+    "kv.lease_queue.enabled": "true",
+    "kv.split_queue.enabled": "false",
+    "kv.range_merge.queue.enabled": "false",
+}
+
+
 def _literal(value: str) -> str:
     return value if value in ("true", "false") else f"'{value}'"
 
@@ -56,6 +68,12 @@ def set_and_verify(sql: Sql, name: str, value: str) -> None:
 def freeze_rebalancer(sql: Sql) -> None:
     """Turn the allocator off and verify every setting individually."""
     for name, value in REBALANCER_OFF.items():
+        set_and_verify(sql, name, value)
+
+
+def release_rebalancer(sql: Sql) -> None:
+    """Hand placement back to CockroachDB (the ``crdb`` baseline), verified."""
+    for name, value in REBALANCER_CRDB.items():
         set_and_verify(sql, name, value)
 
 

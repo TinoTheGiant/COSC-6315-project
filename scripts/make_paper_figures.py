@@ -112,6 +112,46 @@ def cluster_figure(plt) -> None:
     plt.close(fig)
 
 
+def tradeoff_figure(plt) -> None:
+    """Latency against data moved: where the agent's trade sits.
+
+    Baselines are gray points labeled in place; the heuristic slowed to act
+    every k windows is joined into a line, the frontier a cheaper heuristic
+    would trace. The agent is the one chromatic series.
+    """
+    d = pd.read_csv(REC / "tradeoff.csv", comment="#")
+    fig, axes = plt.subplots(1, 2, figsize=viz.FIG_1COL, sharey=False)
+    agent_color = viz.POLICY["agent"]["color"]
+    gray = viz.POLICY["static"]["color"]
+    for ax, panel, title in ((axes[0], "sim", "simulator"), (axes[1], "cluster", "cluster")):
+        p = d[d.panel == panel]
+        frontier = p[p.policy.isin(["follow", "follow2", "follow4", "follow8"])]
+        if len(frontier) > 1:
+            frontier = frontier.sort_values("gb_moved")
+            ax.plot(frontier.gb_moved, frontier.latency_ms, color=gray, lw=0.9,
+                    dashes=(1.5, 2), zorder=1)
+        for _, r in p.iterrows():
+            is_agent = r.policy == "agent"
+            ax.scatter(r.gb_moved, r.latency_ms, s=16 if is_agent else 12,
+                       marker="o" if is_agent else "s",
+                       color=agent_color if is_agent else gray, zorder=3 if is_agent else 2)
+            if not is_agent or panel == "cluster":
+                ax.annotate(r.label, (r.gb_moved, r.latency_ms), textcoords="offset points",
+                            xytext=(3, 3), fontsize=5.5,
+                            color=agent_color if is_agent else "#3d3c39")
+        if panel == "sim":
+            a = p[p.policy == "agent"]
+            ax.annotate("agent (4 seeds)", (a.gb_moved.min(), a.latency_ms.min()),
+                        textcoords="offset points", xytext=(2, -10), fontsize=5.5, color=agent_color)
+        ax.set_title(title, fontsize=7)
+        ax.set_xlabel("GB moved per episode", fontsize=6.5)
+        ax.tick_params(labelsize=6)
+    axes[0].set_ylabel("mean latency (ms)", fontsize=6.5)
+    fig.tight_layout()
+    fig.savefig(OUT / "tradeoff.png", dpi=300)
+    plt.close(fig)
+
+
 def main() -> None:
     import matplotlib
     matplotlib.use("Agg")
@@ -122,7 +162,8 @@ def main() -> None:
     sweep_figure(plt)
     movement_figure(plt)
     cluster_figure(plt)
-    print("wrote sweep.png, movement.png, cluster.png to", OUT)
+    tradeoff_figure(plt)
+    print("wrote sweep.png, movement.png, cluster.png, tradeoff.png to", OUT)
 
 
 if __name__ == "__main__":

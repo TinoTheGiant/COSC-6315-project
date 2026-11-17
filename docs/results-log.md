@@ -669,3 +669,20 @@ Held-out seeds 2000 to 2007: oracle 76.47 ms (was 91.02).
 - Also in this change: splitting claim narrowed (no split-disabled agent was
   trained), SLOG and the two masking papers cited, simulator's instant
   migration and split renumbering added to threats to validity.
+
+## Trade-off figure, ablation sentence and tail latency (17 November 2026)
+
+No new runs. From existing evidence:
+
+- `results/recorded/tradeoff.csv` and `paper/figures/ccgrid/tradeoff.png`
+  (Fig. 3): latency against data moved, simulator and cluster. Every learner
+  seed sits below the line traced by follow throttled to every 2, 4, 8 windows.
+- Ablations in Section III, from ADR-0013 (unmasked: 79.9 to 89.8%
+  inapplicable, uniform policy 80.4%) and the 14 November round (n = 3 vs 1:
+  -5.41 ms, paired 95% t-interval [-14.63, 3.81], RF 2).
+- Tails. Simulator, held-out seeds, mean per-window p95 (`mean_tail_latency_ms`
+  in the archived Train summaries): agents 528.87, 558.10, 517.27, 540.23;
+  follow 517.05; Lion 513.97; static 622.71. Cluster, mean per-step p95 from
+  the archived step CSVs, four seeds: follow 552.1, agent 618.2, static 689.8,
+  Lion 698.7; agent below static on every seed. Step-CSV means reproduce the
+  recorded cluster means to the hundredth on all sixteen episodes.

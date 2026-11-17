@@ -212,10 +212,24 @@ heuristic's data (183.6 against 867.7\,GB on average). Slowing the heuristic
 does not reproduce that trade. Allowed to start a move only every 4 or 8
 windows, and always to finish one, it reaches 171.8\,ms at 405.1\,GB and
 185.8\,ms at 157.6\,GB: the agent is faster than the first while moving less
-than half its data, and 20\,ms faster than the second for 26\,GB more. It buys its latency
+than half its data, and 20\,ms faster than the second for 26\,GB more
+(Fig.~\ref{fig:tradeoff}): every learner seed sits below the line the slowed
+heuristic traces. Tails agree: the agents' mean per-window p95 is 517 to
+558\,ms, against 517 for the heuristic, 514 for Lion-style and 623 for static
+hashing. It buys its latency
 mostly with lease moves, which carry no data: on the seed-2000 cluster
 episode in Q5, 131 of its 200 actions moved a lease, 55 moved a replica and
 14 split a shard.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{tradeoff.png}
+\caption{Mean latency against data moved per episode. Left: simulator,
+held-out seeds; the dotted line is the heuristic allowed to start a move only
+every 2, 4 or 8 windows. Right: cluster, means over workload seeds 2000 to
+2003. Source: \texttt{results/recorded/tradeoff.csv}.}
+\label{fig:tradeoff}
+\end{figure}
 
 Under the objective the comparison with the heuristic is close and goes
 against the agent. At $w=0.30$ the four agents score 1.738 to 1.832 against
@@ -272,20 +286,22 @@ no suspect or divergent step.
 \begin{table}[t]
 \caption{Cluster, one 200-window episode per policy on each of workload
 seeds 2000 to 2003, volatility 4: means over the four seeds, with the range
-of latency. Simulator column: the same seeds and settings. Imb.: imbalance.
+of latency. p95: mean of each step's p95 request latency (ms). Simulator
+column: the same seeds and settings. Imb.: imbalance.
 Source:
 \texttt{results/recorded/cluster-eval.csv}.}
 \label{tab:clustereval}
 \centering
 \small
-\begin{tabular}{lrrrrr}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
 \toprule
-Policy & Cluster ms & Sim. & GB & Imb. & Cost \\
+Policy & Cluster ms & p95 & Sim. & GB & Imb. & Cost \\
 \midrule
-Follow & 169.0 (161--175) & 148.8 & 827.4 & 0.96 & 1.910 \\
-Agent  & 192.4 (174--204) & 162.0 & 118.5 & 0.86 & 2.028 \\
-Static & 220.2 (206--234) & 193.5 &   0.0 & 0.41 & 2.243 \\
-Lion   & 226.8 (192--276) & 183.4 &  30.0 & 1.24 & 2.396 \\
+Follow & 169.0 (161--175) & 552 & 148.8 & 827.4 & 0.96 & 1.910 \\
+Agent  & 192.4 (174--204) & 618 & 162.0 & 118.5 & 0.86 & 2.028 \\
+Static & 220.2 (206--234) & 690 & 193.5 &   0.0 & 0.41 & 2.243 \\
+Lion   & 226.8 (192--276) & 699 & 183.4 &  30.0 & 1.24 & 2.396 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -296,7 +312,8 @@ seed, by 13.4 to 39.8\,ms (27.8\,ms, 12.6\%, on average), and slower than the
 heuristic on every seed, by 12.8 to 28.5\,ms (23.4\,ms), whilst moving 14\%
 of its data. It is faster than the Lion-style planner on three seeds, by up
 to 72.8\,ms, and level with it on seed 2000 (1.2\,ms slower), where its lower
-imbalance still gives it the lower cost.
+imbalance still gives it the lower cost. Its tail is lower than static
+hashing's on every seed (p95 524 to 707 against 621 to 783\,ms).
 
 The simulator's errors are systematic rather than random. For static hashing
 and the heuristic the cluster is slower on every seed, by 22.0 to 33.7\,ms

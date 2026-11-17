@@ -3,7 +3,9 @@
 The same policies as the simulator's evaluation, on CockroachDB: static
 (never acts), random (uniform over the legal actions), follow (the
 traffic-following heuristic, unchanged), lion (the Lion-style co-location
-rebalancer, unchanged), or agent (a saved model, loaded with
+rebalancer, unchanged), crdb (never acts, with CockroachDB's own lease and
+replica rebalancing switched back on: what the database does by itself,
+ADR-0021), or agent (a saved model, loaded with
 the simulator's own spaces and selection rule). One row per step: the action,
 the executor's outcome, measured latency, data moved, imbalance, reward, and
 how long the step took, which is what decides whether 200-window episodes fit
@@ -30,14 +32,15 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from fragalloc.config import FragAllocConfig                     # noqa: E402
 from fragalloc.harness.driver import port_connector               # noqa: E402
-from fragalloc.harness.env import ClusterFragAllocEnv             # noqa: E402
+from fragalloc.harness.cluster import freeze_rebalancer, release_rebalancer  # noqa: E402
+from fragalloc.harness.env import ClusterFragAllocEnv, bytes_added  # noqa: E402
 from fragalloc.harness.placement import PsycopgSql, resolve_stores  # noqa: E402
 from fragalloc.policies import FollowTrafficPolicy, LionStylePolicy  # noqa: E402
 
 
 def chooser(name: str, env: ClusterFragAllocEnv, model_path: str | None, seed: int):
     space = env.space
-    if name == "static":
+    if name in ("static", "crdb"):
         return lambda obs: space.noop_index
     if name == "random":
         rng = np.random.default_rng(seed)
@@ -69,7 +72,7 @@ def chooser(name: str, env: ClusterFragAllocEnv, model_path: str | None, seed: i
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--policy", choices=("static", "random", "follow", "lion", "agent"), default="static")
+    ap.add_argument("--policy", choices=("static", "random", "follow", "lion", "crdb", "agent"), default="static")
     ap.add_argument("--model", default=None)
     ap.add_argument("--seed", type=int, default=2000, help="workload seed (held-out range)")
     ap.add_argument("--windows", type=int, default=5)
@@ -103,15 +106,32 @@ def main() -> int:
     obs, info = env.reset(seed=args.seed)
     print(f"reset in {time.monotonic() - t0:.0f} s; {args.policy}, seed {args.seed}, "
           f"N={args.transactions}, reads {env.read_mode}")
+    crdb = args.policy == "crdb"
+    if crdb:
+        # The table is placed and measured once with the rebalancer frozen,
+        # exactly as for every other policy; only then does the database
+        # take over. Re-frozen in ``finally`` so later episodes are unaffected.
+        release_rebalancer(sql)
+        print("rebalancer released: CockroachDB places leases and replicas from here")
     rows = []
     try:
         for i in range(args.windows):
             a = choose(obs)
             t = time.monotonic()
+            before = env.catalog
             obs, r, _, trunc, info = env.step(a)
+            after = env.catalog
+            # Physical data copied this step, whoever copied it. Splits change
+            # boundaries, and then the executor's account is the only one.
+            same = np.array_equal(before.boundaries, after.boundaries)
+            observed = bytes_added(before, after) / 1e9 if same else info["bytes_moved"] / 1e9
+            lease_moves = int((before.primary != after.primary).sum()) if same else -1
             row = {"step": i, "window": info["window"], "action": env.space.describe(a),
                    "outcome": info["outcome"], "detail": info["detail"], "mean_ms": info["mean_latency_ms"],
-                   "p95_ms": info["tail_latency_ms"], "gb_moved": info["bytes_moved"] / 1e9,
+                   "p95_ms": info["tail_latency_ms"],
+                   # crdb never acts, so what it moved is what the database moved.
+                   "gb_moved": observed if crdb else info["bytes_moved"] / 1e9,
+                   "gb_observed": observed, "lease_changes": lease_moves,
                    "imbalance": info["load_imbalance"], "reward": r,
                    "executor_s": info["step_seconds"], "drive_s": info["drive"]["wall_s"],
                    "step_s": time.monotonic() - t, "retries": info["drive"]["retries"],
@@ -127,6 +147,8 @@ def main() -> int:
             if trunc:
                 break
     finally:
+        if crdb:
+            freeze_rebalancer(sql)
         env.close()
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -138,6 +160,9 @@ def main() -> int:
         "policy": args.policy, "seed": args.seed, "steps": len(rows),
         "mean_latency_ms": statistics.fmean(r["mean_ms"] for r in rows),
         "gb_moved_total": sum(r["gb_moved"] for r in rows),
+        "gb_observed_total": sum(r["gb_observed"] for r in rows),
+        "lease_changes_total": sum(max(0, r["lease_changes"]) for r in rows),
+        "mean_p95_ms": statistics.fmean(r["p95_ms"] for r in rows),
         "mean_step_s": statistics.fmean(r["step_s"] for r in rows),
         "mean_imbalance": statistics.fmean(r["imbalance"] for r in rows),
         "suspect_steps": sum(r["suspect"] for r in rows),
@@ -150,7 +175,9 @@ def main() -> int:
                             + 0.10 * summary["mean_imbalance"])
     Path(args.out).with_suffix(".json").write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary, indent=1))
-    ok = summary["suspect_steps"] == 0 and summary["divergent_steps"] == 0
+    # Under crdb a "divergence" is the database moving data, which is the point
+    # of the baseline, not a harness fault; it is reported, not failed.
+    ok = summary["suspect_steps"] == 0 and (crdb or summary["divergent_steps"] == 0)
     print("VERDICT:", "PASS, the cluster ran as an environment end to end."
           if ok else "CHECK, suspect or divergent steps above.")
     return 0 if ok else 1

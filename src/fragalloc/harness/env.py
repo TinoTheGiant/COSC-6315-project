@@ -69,6 +69,20 @@ class MeasuredCost:
     n_requests: int
 
 
+def bytes_added(before: FragmentCatalog, after: FragmentCatalog) -> float:
+    """Bytes of replicas present in ``after`` and not in ``before``.
+
+    The physical data a placement change copied, whoever made it. For an
+    applied action it equals the executor's account; for the ``crdb``
+    baseline, where the database moves data and the policy never acts, it is
+    the only account there is. Shards must not have changed boundaries.
+    """
+    if not np.array_equal(before.boundaries, after.boundaries):
+        raise ValueError("bytes_added needs the same shard boundaries on both sides")
+    new = after.replicas & ~before.replicas
+    return float((new.sum(axis=1) * after.sizes_bytes).sum())
+
+
 def coefficient_of_variation(values: np.ndarray) -> float:
     mean = float(np.mean(values))
     return 0.0 if mean <= 0.0 else float(np.std(values) / mean)

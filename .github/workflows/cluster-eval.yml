@@ -11,7 +11,7 @@ on:
         description: "Train agent run id whose model to evaluate (blank = baselines only)"
         default: ""
       policies:
-        description: "Policies to run, in order (agent needs model_run_id)"
+        description: "Policies to run, in order (agent needs model_run_id; crdb = CockroachDB rebalancing on, ADR-0021)"
         default: "agent static follow lion"
       windows:
         description: "Decision windows per episode (training used 200)"
@@ -255,11 +255,14 @@ jobs:
           python - <<'PY' | tee comparison.txt
           import glob, json
           rows = [json.load(open(f)) for f in sorted(glob.glob("results/episode_*.json"))]
-          print("| policy | steps | mean ms | GB moved | imbalance | cost (w=0.30) | s/step | suspect | divergent |")
-          print("|---|---|---|---|---|---|---|---|---|")
+          print("| policy | steps | mean ms | mean p95 ms | GB moved | GB observed | lease changes | imbalance | cost (w=0.30) | s/step | suspect | divergent |")
+          print("|---|---|---|---|---|---|---|---|---|---|---|---|")
           for r in sorted(rows, key=lambda r: r["cost_w030"]):
               print(f"| {r['policy']} | {r['steps']} | {r['mean_latency_ms']:.2f} | "
-                    f"{r['gb_moved_total']:.1f} | {r['mean_imbalance']:.3f} | {r['cost_w030']:.3f} | "
+                    f"{r.get('mean_p95_ms', float('nan')):.1f} | "
+                    f"{r['gb_moved_total']:.1f} | {r.get('gb_observed_total', float('nan')):.1f} | "
+                    f"{r.get('lease_changes_total', -1)} | "
+                    f"{r['mean_imbalance']:.3f} | {r['cost_w030']:.3f} | "
                     f"{r['mean_step_s']:.1f} | {r['suspect_steps']} | {r['divergent_steps']} |")
           PY
           { echo "### Cluster episodes: measured on CockroachDB"; cat comparison.txt; } >> "$GITHUB_STEP_SUMMARY"
