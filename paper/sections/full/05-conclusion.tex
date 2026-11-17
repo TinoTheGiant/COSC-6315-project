@@ -38,14 +38,36 @@ caught up, a rule the simulator does not model.
 % ---------------------------------------------------------------------
 \subsection{Future work}
 
-In the order they should be attempted. Add learner seeds to the cluster
-evaluation, so it has an interval, and train an agent with splitting
-disabled, to measure what fragmentation adds. Train at the migration weight a
-deployment cares about, which the rescoring in Table~\ref{tab:weight} can
-suggest but not answer. Teach the simulator the database's refusal rule, or
-retry a refused move in the next window. Address the plateau with the other
-Rainbow components~\cite{hessel2018rainbow}, and choose the checkpoint on
-more evaluation episodes and on the objective rather than latency alone.
-Finally, fine-tune on the cluster: the harness already executes actions,
-reads placement back and computes the simulator's reward, and at about 15\,s
-a step the budget, not the code, is the constraint.
+In the order they should be attempted.
+
+Add learner seeds to the cluster evaluation. Four workload seeds with one or
+two trained agents give a consistent ordering; an interval across learner
+seeds needs more of them.
+
+Measure what fragmentation adds. No agent with splitting disabled was trained,
+so the paper cannot say whether the \textsc{split} action earns its place.
+Training two or three agents with splits masked out, and comparing them on the
+same held-out seeds, would settle it.
+
+Train at the migration weight, and the volatility, a deployment cares about.
+The weight analysis rescales fixed behavior, and an agent trained at
+volatility 4 does not carry its advantage to volatility 2 unchanged; both call
+for training under the conditions the policy will meet, or for a policy
+conditioned on them.
+
+Teach the simulator the database's refusal rule. A lease transfer onto a
+replica that may need a snapshot is refused on the cluster and accepted in
+simulation. Modeling it, or retrying a refused move in the next window, would
+remove one source of the gap between the two.
+
+Address the plateau. Held-out latency stopped improving early in at least
+three of four runs, so the lever is not more steps. Double Q-learning, a
+dueling head and prioritized replay, as combined in
+Rainbow~\cite{hessel2018rainbow}, are the obvious next components, together
+with choosing the best checkpoint on more than three evaluation episodes and
+on the objective rather than latency alone.
+
+Fine-tune on the cluster. The harness already executes actions, reads the
+placement back and measures real transactions with the reward the simulator
+uses, which is the apparatus fine-tuning needs; at about 15\,s per step on
+the present runner the budget, not the code, is the constraint.

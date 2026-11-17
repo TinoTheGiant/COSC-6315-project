@@ -89,12 +89,16 @@ The p95 gap is 1337.8\,ms, with a bootstrap 95\% interval of
 [1168.5, 1407.8]\,ms. Placement is worth a great deal on real hardware, which
 is the assumption the rest of the work rests on.
 
-Two qualifications. ``Co-located'' means the leases, not the data: the three
-voters sit in three regions, so every write still pays a cross-region quorum,
-hence a co-located p50 of 293.6\,ms. The gate isolates the leaseholder effect,
-which is what \textsc{move\_lease} controls. And the co-located arm, with
-every lease on one node, did not saturate it: that node averaged 15.7\% of
-one core, with no drift in median latency.
+Two qualifications belong with that number. First, ``co-located'' means the
+leases, not the data. With one node per region the three voters sit in three
+regions, so every write still pays a cross-region quorum, which is why the
+co-located p50 is 293.6\,ms rather than single digits. What the gate isolates
+is the leaseholder effect, which is exactly what the \textsc{move\_lease}
+action controls. Second, the co-located arm places every lease on one node,
+so it is the arm most exposed to that node saturating. It did not: the
+leaseholder node averaged 15.7\% of one core, and the arm's median latency
+did not drift across the run. Earlier pilots that suggested saturation had
+run on a cluster that had not finished replicating, and are not reported.
 
 % ---------------------------------------------------------------------
 \subsection{Q2: the gain comes from choosing, not from moving}
@@ -137,10 +141,12 @@ Volatility controls how fast the geographic center of the workload drifts
 between windows. Table~\ref{tab:sweep} and Fig.~\ref{fig:sweep} sweep it over
 a factor of eight.
 
-Static hashing is flat, 195.5 to 196.8\,ms: it never tracked the workload.
-The oracle improves, from 100.1 to 85.0\,ms, because a more volatile workload
-is more sharply concentrated and so easier to serve with the data in the
-right place.
+Static hashing is flat, 195.5 to 196.8\,ms. It never tracked the workload, so
+it does not degrade as the workload moves faster. The oracle improves, from
+100.1 to 85.0\,ms, because a more volatile workload is a more sharply
+concentrated one, and a concentrated workload is easier to serve if the data
+is in the right place. Faster drift makes the problem harder for a policy and
+easier for an oracle.
 
 The heuristic goes the other way: 117.0\,ms rising to 160.4\,ms, whilst the
 data it moves rises from 322.5\,GB to 874 to 900\,GB. Its advantage over static hashing falls from
