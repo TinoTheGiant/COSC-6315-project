@@ -771,7 +771,10 @@ recorded in `results/recorded/cluster-eval.csv` and `tradeoff.csv`.
 - **CockroachDB (ADR-0021).** 209.07 / 205.70 / 226.57 ms on 2000 / 2002 /
   2003, GB 0, lease changes 15 / 8 / 2, cost 2.156 / 2.108 / 2.320. Seed 2001
   failed at reset (`PlacementError`, replicas [1, 2, 5] for [1, 2, 3]),
-  tech-debt 17; rerun pending.
+  tech-debt 17. Rerun alone as 44160407645 (commit 4334e5d): 248.46 ms,
+  p95 827.3, GB 0, lease changes 9, imbalance 0.467, cost 2.531, divergent
+  7. Four seeds: 222.45 ms (2.3 above static), p95 694, imbalance 0.542,
+  cost 2.279.
 - **w = 0.6 training.** Held-out (seeds 2000 to 2007, volatility 4): learner
   seed 1 169.46 ms [163.77, 174.71], 181.3 GB; learner seed 3 170.61 ms
   [165.98, 176.21], 224.5 GB. Same seeds at w = 0.30: 163.18 / 117.8 and

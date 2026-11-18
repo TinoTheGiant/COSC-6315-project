@@ -73,4 +73,6 @@ On seeds 2000, 2002 and 2003 CockroachDB moved no replicas and 2 to 15 leases
 per episode; latency 209.07, 205.70 and 226.57 ms against static hashing's
 206.17, 213.32 and 226.82. As this ADR expected, it barely moved anything,
 and the paper reports that rather than tuning it. The seed-2001 crdb episode
-failed at reset (`PlacementError`, tech-debt 17) and is being rerun alone.
+failed at reset (`PlacementError`, tech-debt 17); rerun alone as 44160407645:
+248.46 ms against static's 234.44, 9 lease moves, no replica moves. Four-seed
+mean 222.45 ms, 2.3 ms above static.

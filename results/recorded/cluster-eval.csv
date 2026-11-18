@@ -6,7 +6,7 @@
 # held-out summary.csv (results/archive/43674558770/), same model, same seeds.
 # Second agent (policy agent1) from Train agent run 43674067630 (learner seed 1), and CockroachDB's own
 # rebalancer (policy crdb, ADR-0021): Actions runs 44021436487 (2000), 44021534976 (2001, crdb episode failed at
-# reset with PlacementError and is being rerun), 44021600636 (2002), 44021771876 (2003), commit 153f6b8.
+# reset with PlacementError; rerun alone as 44160407645, commit 4334e5d), 44021600636 (2002), 44021771876 (2003), commit 153f6b8.
 # agent1 sim_ms from results/archive/43674067630/ held-out summary.csv. crdb has no simulator counterpart.
 # refused: lease moves the database refused ("target may need a Raft snapshot").
 # p95_ms: mean over the episode's 200 steps of each step's p95 request latency, from the archived
@@ -33,5 +33,6 @@ seed,policy,cluster_ms,gb_moved,imbalance,cost_w030,sim_ms,refused,p95_ms
 2002,agent1,190.53,38.7,0.714,1.983,153.91,134,548.2
 2003,agent1,198.00,89.3,0.804,2.074,175.45,1,620.0
 2000,crdb,209.07,0.0,0.653,2.156,,0,661.6
+2001,crdb,248.46,0.0,0.467,2.531,,0,827.3
 2002,crdb,205.70,0.0,0.507,2.108,,0,591.6
 2003,crdb,226.57,0.0,0.540,2.320,,0,696.3

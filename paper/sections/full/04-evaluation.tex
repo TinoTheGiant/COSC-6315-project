@@ -252,7 +252,7 @@ hashing.
 \caption{Mean latency against data moved per episode. Left: simulator,
 held-out seeds; the dotted line is the heuristic allowed to start a move only
 every 2, 4 or 8 windows. Right: cluster, means over workload seeds 2000 to
-2003 (CockroachDB: 2000, 2002 and 2003); agents labeled by learner seed. Source: \texttt{results/recorded/tradeoff.csv}.}
+2003; agents labeled by learner seed. Source: \texttt{results/recorded/tradeoff.csv}.}
 \label{fig:tradeoff}
 \end{figure}
 
@@ -332,15 +332,14 @@ each baseline and CockroachDB's own rebalancer
 (Table~\ref{tab:clustereval}). Every episode of a policy that chooses
 placements passed the harness checks, with no suspect or divergent step;
 CockroachDB's episodes diverge by design, since its rebalancer moves leases
-the harness did not ask for.
-% TODO(crdb-2001): CockroachDB's seed-2001 episode is being rerun; until then
-% its row and the sentences about it cover seeds 2000, 2002 and 2003.
+the harness did not ask for. Its seed-2001 episode ran in a job of its own,
+after a first attempt failed at reset.
 
 \begin{table}[t]
 \caption{Cluster, one 200-window episode per policy on each of workload
 seeds 2000 to 2003, volatility 4: means over the four seeds, with the range
-of latency. Agents are labeled by learner seed. CockroachDB$^{*}$: its own
-rebalancer, seeds 2000, 2002 and 2003; the simulator does not model it.
+of latency. Agents are labeled by learner seed. CockroachDB: its own
+rebalancer, which the simulator does not model.
 p95: mean of each step's p95 request latency (ms). Simulator
 column: the same seeds and settings. GB is in the simulator's units, which
 the 1\,GB cluster table is scaled to. Imb.: imbalance. Source:
@@ -356,7 +355,7 @@ Policy & Cluster ms & p95 & Sim. & GB & Imb. & Cost \\
 Follow & 169.0 (161--175) & 552 & 148.8 & 827.4 & 0.96 & 1.910 \\
 Agent 3 & 192.4 (174--204) & 618 & 162.0 & 118.5 & 0.86 & 2.028 \\
 Agent 1 & 198.4 (191--203) & 613 & 166.1 &  79.7 & 0.75 & 2.070 \\
-CockroachDB$^{*}$ & 213.8 (206--227) & 650 & -- & 0.0 & 0.57 & 2.195 \\
+CockroachDB & 222.5 (206--248) & 694 & -- & 0.0 & 0.54 & 2.279 \\
 Static & 220.2 (206--234) & 690 & 193.5 &   0.0 & 0.41 & 2.243 \\
 Lion   & 226.8 (192--276) & 699 & 183.4 &  30.0 & 1.24 & 2.396 \\
 \bottomrule
@@ -412,9 +411,9 @@ it.
 
 CockroachDB's own rebalancer, left to act for the 45 minutes of an episode,
 did little: no replica moves and 2 to 15 lease moves per episode. Its latency
-is within 8\,ms of static hashing's on each seed (209.1, 205.7 and 226.6\,ms
-against 206.2, 213.3 and 226.8), and its cost is above the heuristic's and
-both agents' on each. We used its default thresholds and did not establish why
+is 2.3\,ms above static hashing's on average and within 14\,ms of it on each
+seed (209.1, 248.5, 205.7 and 226.6\,ms against 206.2, 234.4, 213.3 and
+226.8), and its cost is above the heuristic's and both agents' on every seed. We used its default thresholds and did not establish why
 it found so little to do; a longer episode or more aggressive settings might
 do more. What the comparison shows is narrower: at this time scale the
 database does not, by itself, move placement after a drifting workload, which

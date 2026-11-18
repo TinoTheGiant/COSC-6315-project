@@ -136,8 +136,12 @@ def tradeoff_figure(plt) -> None:
                        marker="o" if is_agent else "s",
                        color=agent_color if is_agent else gray, zorder=3 if is_agent else 2)
             if not is_agent or panel == "cluster":
+                # Points that sit on top of each other at zero movement get
+                # their labels pushed apart; everything else sits up and right.
+                nudge = ({"crdb": (6, -1), "static": (6, -6)}.get(r.policy, (3, 3))
+                         if panel == "cluster" else (3, 3))
                 ax.annotate(r.label, (r.gb_moved, r.latency_ms), textcoords="offset points",
-                            xytext=(3, 3), fontsize=5.5,
+                            xytext=nudge, fontsize=5.5,
                             color=agent_color if is_agent else "#3d3c39")
         if panel == "sim":
             a = p[p.policy == "agent"]
