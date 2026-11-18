@@ -1,7 +1,0 @@
-# Volatility sweep, seeds 0-7, 200 windows, RF 3, read_consistency primary_only, w 0.30.
-# Means over eight seeds of results/runs/<run_id>/summary.csv (summary.csv regenerable from config.json).
-volatility,static,random,follow,lion,bound,follow_gb,random_gb,lion_gb,static_imb,follow_imb,lion_imb,bound_imb,run_id
-0.5,196.805,196.37,116.969,183.036,118.704,322.529,162.744,14.971,0.359,0.796,1.104,0.762,20261116T032622Z-990e3748-sweep-v0.5
-1.0,196.283,201.647,119.75,181.689,118.034,632.578,162.744,16.23,0.361,0.811,1.105,0.781,20261116T032622Z-676a2638-sweep-v1
-2.0,195.475,201.581,137.359,173.334,111.513,900.205,162.744,18.75,0.373,0.845,1.137,0.846,20261116T032622Z-1ead496b-sweep-v2
-4.0,196.146,203.04,160.376,177.801,102.845,873.662,162.744,23.76,0.401,0.887,1.14,0.944,20261116T032622Z-f4870a4f-sweep-v4

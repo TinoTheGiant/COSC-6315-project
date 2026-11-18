@@ -1,8 +1,0 @@
-# Volatility sweep, seeds 0-7, 200 windows, RF 3, read_consistency primary_only, w 0.30.
-# Means over eight seeds of results/runs/<run_id>/summary.csv (summary.csv regenerable from config.json).
-# 'bound' is the exact per-window oracle (fragalloc.oracle), rerun 17 Nov 2026.
-volatility,static,random,follow,lion,bound,follow_gb,random_gb,lion_gb,static_imb,follow_imb,lion_imb,bound_imb,run_id
-0.5,196.805,196.37,116.969,183.036,100.097,322.529,162.744,14.971,0.359,0.796,1.104,1.0,20261117T042521Z-990e3748-sweep-v0.5
-1.0,196.283,201.647,119.75,181.689,99.339,632.578,162.744,16.23,0.361,0.811,1.105,1.003,20261117T042521Z-676a2638-sweep-v1
-2.0,195.475,201.581,137.359,173.334,93.434,900.205,162.744,18.75,0.373,0.845,1.137,1.045,20261117T042521Z-1ead496b-sweep-v2
-4.0,196.146,203.04,160.376,177.801,84.955,873.662,162.744,23.76,0.401,0.887,1.14,1.118,20261117T042521Z-f4870a4f-sweep-v4

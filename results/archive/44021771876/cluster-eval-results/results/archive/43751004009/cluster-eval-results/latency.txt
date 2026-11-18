@@ -1,8 +1,0 @@
-pair                                  expected  measured
-us-east-1 -> us-west-2                 65.0      65.1
-us-east-1 -> eu-west-1                 68.0      68.1
-us-east-1 -> eu-central-1              88.0      88.1
-us-east-1 -> ap-southeast-1           215.0     215.1
-us-east-1 -> ap-northeast-1           145.0     145.1
-
-OK: injected latency matches the simulator's matrix.

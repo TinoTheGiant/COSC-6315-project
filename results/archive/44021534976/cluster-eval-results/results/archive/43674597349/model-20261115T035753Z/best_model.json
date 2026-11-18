@@ -1,6 +1,0 @@
-{
-  "timestep": 110000,
-  "mean_latency_ms": 160.38684704356277,
-  "mean_tail_latency_ms": 512.9684908789386,
-  "gb_moved": 164.921875
-}
