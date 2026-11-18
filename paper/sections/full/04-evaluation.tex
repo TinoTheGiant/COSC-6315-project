@@ -50,7 +50,7 @@ action.
 Two seed blocks appear and are never mixed in one table. The volatility sweep
 uses seeds 0 to 7. Agent evaluations use held-out seeds 2000 to 2007, disjoint from the training seeds (0 to 63) and from the seeds used to choose checkpoints (1000 to 1002).
 
-The cluster has six CockroachDB nodes in containers with inter-region
+The cluster has six CockroachDB v25.3.0 nodes in containers with inter-region
 round-trip times injected by \texttt{netem} (the Linux network emulator), on a four-core GitHub Actions
 runner, replication factor three. A harness executes each action as a
 synchronous relocation statement, reads the resulting placement back from the
@@ -98,7 +98,7 @@ the effect of where the leaseholder sits, which is what the \textsc{move\_lease}
 action controls. Second, the co-located arm places every lease on one node,
 so it is the arm most exposed to that node saturating. It did not: the
 leaseholder node averaged 15.7\% of one core, and the arm's median latency
-did not drift across the run. Earlier pilots that suggested saturation had
+showed no trend across the run. Earlier pilots that suggested saturation had
 run on a cluster that had not finished replicating, and are not reported.
 
 % ---------------------------------------------------------------------
@@ -145,7 +145,7 @@ a factor of eight.
 
 Static hashing is flat, 195.5 to 196.8\,ms. It never tracked the workload, so
 it does not degrade as the workload moves faster. The oracle improves, from
-100.1 to 85.0\,ms, because a more volatile workload is a more sharply
+100.1 to 85.0\,ms, presumably because a more volatile workload is a more sharply
 concentrated one, and a concentrated workload is easier to serve if the data
 is in the right place. Faster drift makes the problem harder for a policy and
 easier for an oracle.
@@ -153,9 +153,8 @@ easier for an oracle.
 The heuristic goes the other way: 117.0\,ms rising to 160.4\,ms, whilst the
 data it moves rises from 322.5\,GB at volatility 0.5 to 900.2\,GB at 2 and 873.7\,GB
 at 4. Its advantage over static hashing falls from
-40.6\% to 18.2\%. The heuristic reacts to the window just finished, so it chases a
-target that has already moved. Under fast drift, much of the gain from each move
-has gone by the time the move takes effect.
+40.6\% to 18.2\%. The heuristic reacts to the window just finished, so under fast drift it
+chases a target that has already moved.
 
 \begin{figure*}[t]
 \centering
@@ -174,7 +173,8 @@ on the room for a better policy, not a measure of it. The oracle
 re-places every shard for free each window and sees the window in advance,
 whereas a policy takes one action per window, pays for it, and sees only the
 last window. It is also a bound on latency, not on the objective; the oracle's
-imbalance, 1.12 at volatility 4, is above every policy's. Under slow drift the
+imbalance, 1.12 at volatility 4, is above every policy's except the
+Lion-style planner's (1.14). Under slow drift the
 heuristic is 16.9\% above the oracle and there is little worth learning;
 under fast drift it is 89\% above it. The case for a learned policy therefore depends on
 volatility, and this sweep measures that dependence. The
@@ -235,9 +235,9 @@ shard. The agents finish with 12 to 20 shards, and their replica moves carry
 Started on 12 or 20 equal shards, the heuristic reaches 177.5\,ms at
 448.8\,GB and 197.4\,ms at 257.6\,GB: slower than on six shards, because
 more transactions span several shards, and still moving more data than the
-agent. The agent's splits are selective, and that is part of what it learned.
+agent.
 
-Its latency is bought mostly with lease moves, which the objective does not
+Most of its actions are lease moves, which the objective does not
 charge. On the cluster, 131 to 188 of each 200-window episode's actions moved
 a lease, against 111 to 122 for the heuristic, and 36 to 81 of them returned a
 shard's lease to the region it had just left. The heuristic never did. A lease
@@ -249,7 +249,7 @@ taken after each move settles, does not see. Tail latency ranks the policies rou
 \includegraphics[width=\columnwidth]{tradeoff.png}
 \caption{Mean latency against data moved per episode. Left: simulator,
 held-out seeds; the dotted line is the heuristic allowed to start a move only
-every 2, 4 or 8 windows. Right: cluster, means over workload seeds 2000 to
+every 2, 4 or 8 windows, and random draws only applicable moves. Right: cluster, means over workload seeds 2000 to
 2003; agents labeled by learner seed. Source: \texttt{results/recorded/tradeoff.csv}.}
 \label{fig:tradeoff}
 \end{figure}
@@ -308,7 +308,7 @@ The agent does not adapt its trade to a slower workload. Run unchanged at volati
 More training does not help here: validation latency (seeds 1000 to 1002) stays between about 157 and 196\,ms from step 50{,}000 to $10^6$, and in three of four runs the best checkpoint fell at or before step 170{,}000, whilst exploration was still high. That fits either a plateau or instability after an early peak; the runs do not separate the two. The oracle, at 76.5\,ms, is still far below every agent.
 
 % ---------------------------------------------------------------------
-\subsection{Q5: the agent's place carries over to the cluster}
+\subsection{Q5: what carries over to the cluster}
 
 Two agents, which we call agent~3 and agent~1 after their learner seeds, ran unchanged for one 200-window cluster episode on each of workload seeds 2000 to 2003, as did each baseline and CockroachDB's own rebalancer (Table~\ref{tab:clustereval}). Every episode of a policy that chooses placements passed the harness checks: no step was suspect (a transaction drive that stalled, failed or was suspended) or divergent (a placement read back that differs from the one requested). CockroachDB's episodes diverge by design, since its rebalancer moves leases the harness did not ask for. Its seed-2001 episode ran in a job of its own,
 after a first attempt failed at reset.
@@ -319,7 +319,8 @@ seeds 2000 to 2003, volatility 4: means over the four seeds, with the range
 of latency. Agents are labeled by learner seed. CockroachDB: its own
 rebalancer, which the simulator does not model.
 p95: mean of each step's p95 request latency (ms). Simulator
-column: the same seeds and settings. GB is in the simulator's units, which
+column: the same seeds and settings; its mean also counts the starting window,
+before any action. GB is in the simulator's units, which
 the 1\,GB cluster table is scaled to. Imb.: imbalance. Source:
 \texttt{results/recorded/cluster-eval.csv}.}
 \label{tab:clustereval}
@@ -345,12 +346,13 @@ to 72.8\,ms, and level with it on seed 2000 (1.2\,ms slower), where its lower
 imbalance still gives it the lower cost. Its tail is lower than static
 hashing's on every seed (p95 524 to 707 against 621 to 783\,ms).
 
-The simulator's errors are systematic rather than random. For static hashing
+The simulator is optimistic on every seed. For static hashing
 and the heuristic the cluster is slower on every seed, by 22.0 to 33.7\,ms
 and 18.8 to 21.7\,ms respectively, 13.7\% and 13.5\% on average; for agent~3 it is slower by 27.6 to
 31.6\,ms, 18.7\%. Cluster imbalance and data moved
 are counted from the read-back placement and the requests sent, by the
-simulator's rule, not measured from storage. A
+simulator's rule, not measured from storage. The demand the agents observe on
+the cluster comes straight from the workload generator; only latency is measured. A
 simulator that is 13.5 to 19\% optimistic still ranks policies correctly only when their latencies
 differ by more than their offsets do. Here it does: on each seed, the three
 baselines fall in the same order on the cluster as in the simulator.
@@ -358,7 +360,7 @@ baselines fall in the same order on the cluster as in the simulator.
 The Lion-style planner slows more between simulator and cluster, by 38.6 to 53.5\,ms (about 24\%),
 and on seeds 2001 and 2002 it is slower than static hashing, in simulation as
 on the cluster. On seed 2000 the database refused 20 of its lease moves, all of them the same move, retried each time the planner re-planned, with the reason that the target ``may need a Raft snapshot: local replica not raft leader'' (Raft is the consensus protocol that keeps CockroachDB's replicas in agreement; the reason says the shard's current leaseholder was not its Raft leader). The simulator
-has no such rule. Refusals do not explain the rest of its loss, which is as
+never refuses a move. Refusals do not explain the rest of its loss, which is as
 large on seed 2001 with none. Its placements are also the most concentrated
 (imbalance 1.24), which is where queueing that the simulator does not model would show first.
 We did not measure this; it is a hypothesis. The heuristic met the same refusal on seeds 2002 and 2003 (6
@@ -373,9 +375,9 @@ of the refusals repeat the refused action of the window before, in runs of up
 to 43 windows. On those seeds it is 33.4 to 36.6\,ms slower than in
 simulation; on seed 2003, with one refusal, 22.6\,ms. On seed 2000 its cost (2.115) is above static hashing's (2.103) and the Lion-style planner's (2.041). Neither agent holds second place on every seed, so that place is not a property of every trained agent. Two agents are too few to describe the spread across training runs, but they do show that a policy that keeps choosing a move the database refuses, and that the simulator always applies, loses that move on the cluster and keeps repeating it.
 
-CockroachDB's own rebalancer, left to act for the 45 minutes of an episode,
+CockroachDB's own rebalancer, left to act for the 47 to 59 minutes of an episode,
 did little: no replica moves and 2 to 15 lease moves per episode. Its latency
-is 2.3\,ms above static hashing's on average and within 14\,ms of it on each
+is 2.3\,ms above static hashing's on average and within 15\,ms of it on each
 seed (209.1, 248.5, 205.7 and 226.6\,ms against 206.2, 234.4, 213.3 and
 226.8). Its cost is above the heuristic's and both agents' on every seed. We used its default thresholds and did not establish why
 it found so little to do; a longer episode or more aggressive settings might
@@ -400,17 +402,19 @@ Lease moves are free in the objective. The agent uses that, moving leases
 more often than the heuristic and sometimes back and forth; a deployment
 would need a charge on them, or a hysteresis rule that stops a lease moving back soon after it moved.
 
+We tested no rule that moves a shard only when the latency it expects to save
+outweighs the movement charge, so the agent's trade is not shown to need learning.
+
 The simulator's cost model is analytic, and the cluster runs on one host with
 \texttt{netem} latency and no injected jitter or loss. Q1 and Q5 establish that placement
-matters on hardware and that the agent's place among the policies, and the
-baselines' order on each seed, carry over; they do not establish that the
+matters on hardware and that the baselines' order on each seed carries over; they do not establish that the
 simulator's magnitudes are right. It is about 14\% optimistic for static
 hashing and the heuristic, 19\% for the agent and 24\% for the Lion-style
 planner.
 
 The cluster results rest on four workload seeds and two learner seeds, one
 episode each, which supports an ordering of the baselines but not an interval.
-The two agents differ by 6\,ms on average and in their rank on one seed.
+Agent~1 and CockroachDB ran in later jobs, at a later commit, than agent~3 and the baselines, and no baseline was rerun beside them, so differences between jobs are unmeasured.
 
 The simulator completes a move within the window it is issued, and a split
 renumbers the shards after it, so the agent's observation of a given shard
@@ -420,5 +424,8 @@ The weight analysis rescales fixed trajectories. It shows where the price of
 movement changes the verdict; the two agents trained at $w=0.6$ show that
 training at that price does not, as configured here, produce the behavior the rescoring assumes.
 
-Agents were trained at volatility 4 only; Q4 shows they do not carry their
-advantage to volatility 2 unchanged.
+Agents were trained at volatility 4 only; Q4 tests them unchanged at
+volatility 2.
+
+Seeds 2000 to 2007 also guided earlier design choices, among them the three-step
+returns, so they are not an untouched test set.

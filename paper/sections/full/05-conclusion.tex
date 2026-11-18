@@ -7,7 +7,7 @@
 This paper asked whether a reinforcement learning agent can act as an
 autonomous database administrator, re-fragmenting and re-allocating shards
 as a workload's geographic center moves. It establishes four things: a measured problem statement, a cluster test that confirms the premise, a learned policy that makes a different trade from the follow-traffic heuristic (about a fifth of the data moved, at higher latency and higher objective cost),
-and evidence that the agent's place among the policies carries over from
+and evidence that the baselines' order carries over from
 the simulator to the cluster.
 
 On a real six-node CockroachDB cluster, gathering leaseholders in the
@@ -45,11 +45,10 @@ policy does not yet respond to the conditions it is trained or run under. The ne
 step is to give the policy the weight and the volatility as inputs and to train it
 across a range of both.
 
-Teach the simulator the database's refusal rule. A lease transfer onto a
-replica that may need a snapshot is refused on the cluster and accepted in
-simulation, and one agent repeated refused moves for up to 43 windows.
-Modeling the rule, or masking a move the database has just refused, would
-remove one source of the gap between the two.
+Handle refused moves. The cluster refused lease transfers when a shard's
+leaseholder was not its Raft leader, which the simulator never does, and one
+agent repeated refused moves for up to 43 windows. Masking a move the database
+has just refused would remove one source of the gap between the two.
 
 Address the early plateau. Validation latency stopped improving early in at least
 three of four runs, so more training steps alone will not help. Double Q-learning, a
