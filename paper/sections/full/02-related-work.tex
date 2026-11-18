@@ -126,7 +126,7 @@ throughput, that migration cost and load balance belong in the objective, and
 that anticipating a shift does better than reacting to one. It also leaves three gaps. First, the adaptation is a heuristic pipeline rather
 than a learned policy: the LSTM forecasts, but a hand-written cost model
 decides, so the system never improves from the outcomes of its own decisions.
-Second, geographic distance does not appear in its cost function, which counts remastering and migration operations weighted by access frequency, so two placements that differ by an ocean score identically.
+Second, geographic distance does not appear in its cost function. That function counts remastering operations (changes of which replica is primary) and migration operations, weighted by access frequency, so two placements that differ by an ocean score identically.
 Third, fragment boundaries are fixed, so Lion moves replicas of a partition but never
 splits one.
 
@@ -149,7 +149,7 @@ distance but leaves placement fixed. This work addresses the gap between them.
 \subsection{Learning to administer a database}
 
 A separate line of work replaces hand-written database administration with
-learned policies. In configuration tuning, CDBTune~\cite{zhang2019cdbtune} treats the setting of database knobs (configuration parameters) as a reinforcement learning problem and learns from measured performance rather than from a regression over collected samples. QTune~\cite{li2019qtune} makes that tuning query-aware, at query, workload or cluster granularity, and the survey of Zhao et al.~\cite{zhao2023knob} covers the area. In query
+learned policies. In configuration tuning, CDBTune~\cite{zhang2019cdbtune} treats the setting of database knobs (configuration parameters) as a reinforcement learning problem and learns from measured performance rather than from a regression over collected samples. QTune~\cite{li2019qtune} makes that tuning take the queries into account and can tune per query, per workload or per cluster, and the survey of Zhao et al.~\cite{zhao2023knob} covers the area. In query
 optimization, Neo~\cite{marcus2019neo} learns to produce execution plans and
 improves from the plans it has run. UDO~\cite{wang2021udo} spans both, tuning
 index selection and system parameters together and distinguishing parameters
@@ -197,7 +197,7 @@ block is placed, never split. Neuroshard learns the shard assignment itself. Mah
 This work gives one learned policy both fragmentation and geographic
 placement actions, for transactional workloads. The workload-driven partitioners re-solve a
 hand-written cost model and do not learn from their own outcomes. Lion learns a
-forecast but not a policy, and its cost model counts replica operations rather than distance. GeoTP optimizes execution against a fixed placement. The
+forecast but not a policy, and its cost model counts replica operations and has no distance term. GeoTP optimizes execution against a fixed placement. The
 learned administration systems address knobs, plans and indexes. Akkio, SLOG, Fluidity and CockroachDB's multi-region design see geography but are
 not presented as learned policies.
 The learned placement systems address storage tiers, edge nodes and, in RLRP,

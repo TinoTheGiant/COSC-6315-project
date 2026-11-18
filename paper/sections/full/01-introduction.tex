@@ -26,7 +26,7 @@ coordinating every region it touches before it can commit. Latency therefore ris
 placement and traffic grows.
 
 One response is to move the data when the traffic moves. A simple rule
-does this: in each decision window (the fixed interval at which placement is reconsidered), find the worst-placed shard
+does this: in each decision window (the fixed interval at which placement is reconsidered), find the worst-placed shard (the one that would gain most by moving)
 and move it towards the region reading it. We implement that rule as a baseline
 and call it the \emph{follow-traffic heuristic}, or simply the heuristic. This paper asks whether
 anything is gained by replacing it with a policy learned from experience. How much
@@ -58,7 +58,7 @@ hashing and moves a fifth of the data the heuristic moves. It stays
 17\,ms slower than the heuristic, however, and the heuristic keeps the lower objective cost at the
 migration weight used in training (the price the reward puts on moving data). Agents trained at twice that weight move more
 data, not less. Finally we run two trained agents, unchanged, on the cluster
-on four workload seeds, beside CockroachDB's own rebalancer. The heuristic again has the lowest cost on every seed, and on every seed one of the two agents is second. On three seeds the database refuses many of one agent's lease moves, which that agent keeps repeating. The database's rebalancer, left to itself, barely moves anything.
+on four workload seeds, beside CockroachDB's own rebalancer. The heuristic again has the lowest cost on every seed, and one of the two agents is always second. On three seeds the database refuses many of one agent's lease moves, and that agent keeps repeating them. The database's rebalancer, left to itself, barely moves anything.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

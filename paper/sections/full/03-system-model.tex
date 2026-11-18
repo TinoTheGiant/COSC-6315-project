@@ -10,7 +10,7 @@
 
 A cluster has $R$ regions, each holding one database node. The keyspace is
 divided into $C$ atomic cells, and a \emph{shard} is a contiguous run of cells.
-Each shard is stored as several \emph{replicas}, which hold the same data. One of them is the \emph{primary}, which serves writes and, under the strong reads used throughout this work, all reads; CockroachDB calls it the \emph{leaseholder}. The number of replicas per shard, called the replication factor, is fixed at three throughout this work, and the agent does not control it.
+Each shard is stored as several \emph{replicas}, which hold the same data. One of them is the \emph{primary}, which CockroachDB calls the \emph{leaseholder}. The primary serves writes and, because this work uses strong reads throughout, all reads. The number of replicas per shard, called the replication factor, is fixed at three throughout this work, and the agent does not control it.
 
 Three decisions are open at any moment: which region holds a
 given shard's primary, which regions hold its replicas, and where the boundary
@@ -42,7 +42,7 @@ sit near its angle. The whole angular field rotates over a daily period, which
 is what makes a placement chosen at one time wrong at a later one. Cell
 popularity follows a Zipf distribution, so a minority of cells carry most of
 the traffic, and localized spikes, each of which multiplies one
-region's traffic for a short burst, arrive at random times (a Poisson process). The read and write mix and the Zipfian key popularity are in the style of YCSB, the Yahoo!\ Cloud Serving Benchmark~\cite{cooper2010ycsb}, though our values (read fraction 0.8, Zipf exponent 0.9) match none of its core workloads. Geographic origin is added as the dimension YCSB does not model.
+region's traffic for a short burst, arrive at random times (a Poisson process). The read and write mix and the Zipf skew in cell popularity follow the style of YCSB, the Yahoo!\ Cloud Serving Benchmark~\cite{cooper2010ycsb}. Our values (read fraction 0.8, Zipf exponent 0.9), however, match none of its core workloads. Geographic origin is added as the dimension YCSB does not model.
 
 Adjacent cells are given correlated but not identical angular positions by a
 random walk. This is the detail that makes splitting worthwhile: a wide shard
@@ -152,16 +152,16 @@ $10^5$ transitions, the batch size is 128, and the discount is 0.99. The target 
 (a lagged copy of the network, used to compute training targets) is refreshed every 2000 steps,
 and the exploration rate $\epsilon$ (the chance of taking a random action) falls from 1.0 to 0.05 over the
 first 30\% of training. Every $10^4$ steps the policy is scored on three
-evaluation seeds, and the checkpoint with the lowest mean latency is kept.
+validation seeds (1000 to 1002), and the checkpoint with the lowest mean latency is kept.
 
-We add two things to the plain Deep Q-Network. First, we mask inapplicable actions~\cite{huang2022masking,zahavy2018elimination}, both when the agent selects an action and when it computes its training target (the highest value it predicts for the state the return ends in). Under the earlier midterm protocol, without the mask, 79.9 to 89.8\% of the agent's chosen actions were inapplicable, no better than a uniform random policy's 80.4\%. Second,
+We add two things to the plain Deep Q-Network. First, we mask inapplicable actions~\cite{huang2022masking,zahavy2018elimination}, both when the agent selects an action and when it computes its training target (the highest value it predicts for the state the return ends in). In earlier runs under a different protocol, across several volatilities and migration weights, without the mask, 79.9 to 89.8\% of the agent's chosen actions were inapplicable, no better than a uniform random policy's 80.4\%. Second,
 returns are summed over three steps rather than one, because a move is
 charged in full when it is made whereas the latency it saves arrives in later
 windows. Against one-step returns this improved held-out latency by 5.4\,ms
 over four learner seeds. The difference is not significant (paired 95\% $t$-interval $[-14.6, 3.8]$\,ms,
 measured at an earlier replication factor of 2, so not under the protocol of
 Section~\ref{sec:metrics}); we kept three-step returns because they cost
-nothing. We do not use the other extensions that Rainbow~\cite{hessel2018rainbow} combines (double Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}, prioritized replay~\cite{schaul2016per}, distributional value learning and noisy networks), so that any later improvement can be traced to the extension that produced it.
+nothing. We do not use the other extensions that Rainbow~\cite{hessel2018rainbow} combines: double Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}, prioritized replay~\cite{schaul2016per}, distributional value learning and noisy networks. Leaving them out means any later improvement can be traced to the extension that produced it.
 
 Two choices in the training setup are easy to get wrong, so we state them.
 Training cycles through 64 workload seeds, not one, because an agent trained on

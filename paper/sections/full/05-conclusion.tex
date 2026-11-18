@@ -6,7 +6,7 @@
 
 This paper asked whether a reinforcement learning agent can act as an
 autonomous database administrator, re-fragmenting and re-allocating shards
-as a workload's geographic center moves. It establishes four things: a measured problem statement, a cluster test that confirms the premise, a learned policy that makes a different trade from the follow-traffic heuristic (about a fifth of the data moved, at higher latency and higher objective cost),
+as a workload's geographic center moves. It establishes four things: a measured problem statement; a cluster test that confirms the premise; a learned policy that makes a different trade from the follow-traffic heuristic, moving about a fifth of the data at higher latency and higher objective cost;
 and evidence that the baselines' order carries over from
 the simulator to the cluster.
 
@@ -21,7 +21,8 @@ At volatility 4 the agent is 13.7\% faster than static hashing on held-out seeds
 Neither throttling the heuristic nor splitting evenly reproduces that trade.
 It is 17\,ms slower than the heuristic, and at the migration weight it was trained with
 the heuristic still has the lower objective cost. Rescoring the same
-behavior shows that the verdict turns on the price of movement. In simulation the mean of the four agents is the cheapest policy for any migration weight between 0.49 and 2.18, but two agents trained at twice the weight moved more data, not less. On the cluster, over four workload seeds, the heuristic has the lowest cost on every seed, and one of the two agents is second on every seed. The agent from learner seed 3 is 12.6\% faster than static hashing on average. The agent from learner seed 1, refused many lease moves that it kept repeating, is 9.9\% faster, and on one seed costs more than static hashing and the Lion-style planner. CockroachDB's own rebalancer barely acted in these episodes. On every seed the simulator is optimistic for static hashing and the heuristic, by 13.7\% and 13.5\% on average. The Lion-style planner slowed more on the cluster, partly because on one seed the database refused the same lease move 20 times, a refusal the simulator never makes.
+behavior shows that the verdict turns on the price of movement. In simulation the mean of the four agents is the cheapest policy for any migration weight between 0.49 and 2.18, but two agents trained at twice the weight moved more data, not less. 
+On the cluster, the heuristic has the lowest cost on each of the four workload seeds, and one of the two agents is always second. Agent~3 (from learner seed 3) is 12.6\% faster than static hashing on average. Agent~1, refused many lease moves that it kept repeating, is 9.9\% faster, and on one seed costs more than static hashing and the Lion-style planner. CockroachDB's own rebalancer barely acted in these episodes. On every seed the simulator is optimistic for static hashing and the heuristic, by 13.7\% and 13.5\% on average. The Lion-style planner slowed more on the cluster, partly because on one seed the database refused the same lease move 20 times, a refusal the simulator never makes.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
@@ -46,9 +47,9 @@ step is to give the policy the weight and the volatility as inputs and to train 
 across a range of both.
 
 Handle refused moves. The cluster refused lease transfers when a shard's
-leaseholder was not its Raft leader, which the simulator never does, and one
+leaseholder was not its Raft leader, whereas the simulator never refuses a move. One
 agent repeated refused moves for up to 43 windows. Masking a move the database
-has just refused would remove one source of the gap between the two.
+has just refused would remove one source of the gap between simulator and cluster.
 
 Address the early plateau. Validation latency stopped improving early in at least
 three of four runs, so more training steps alone will not help. Double Q-learning, a

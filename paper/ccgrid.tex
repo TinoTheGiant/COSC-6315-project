@@ -1,8 +1,7 @@
 % Reinforcement Learning for Dynamic Data Fragmentation and Allocation.
 % CCGrid 2027 submission. Double-blind: no author names, institution, grant,
 % repository link or self-identifying acknowledgement may appear in this file
-% or in any section it inputs. main.tex is the course midterm draft and is
-% left as submitted.
+% or in any section it inputs.
 %
 % Build:  pdflatex ccgrid && bibtex ccgrid && pdflatex ccgrid && pdflatex ccgrid
 % Limit:  10 letter pages including references, figures and tables.
@@ -48,9 +47,9 @@ injected wide-area latency. A harness executes each action on the cluster and
 reads the resulting placement back before timing real transactions. We compare the agent with static hashing, a follow-traffic heuristic that each window moves the worst-placed shard towards its traffic, and a co-location planner modeled on Lion. In simulation the agent is 13.7\% faster
 than static hashing and moves about a fifth of the data the heuristic moves,
 but remains 17\,ms slower than that heuristic. On the cluster, over four
-workload seeds, the heuristic scores best under the agent's own reward on every seed. On every seed one of two trained
-agents is second. One is 12.6\% faster than static hashing on average;
-the other is 9.9\% faster but loses ground to lease moves the database
+workload seeds, the heuristic scores best under the agent's own reward on every seed. On every seed, one of the two trained
+agents is second. Averaged over the seeds, one agent is 12.6\% faster than static hashing,
+whereas the other is 9.9\% faster but loses ground to lease moves the database
 refuses. CockroachDB's own rebalancer, at its default settings, barely acts. On the cluster, static hashing and the
 heuristic both run about 14\% slower than the simulator predicts.
 \end{abstract}
