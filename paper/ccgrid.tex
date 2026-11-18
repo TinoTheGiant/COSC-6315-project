@@ -39,21 +39,19 @@ rather than to where the workload is heading. When the geographic center of a wo
 multi-region services and abruptly during local events, placement drifts away
 from the traffic and request latency rises. We train a Deep Q-Network
 agent that adjusts placement continuously. Its actions move a shard's
-leaseholder, move a replica, or split the shard, and its reward combines
+leaseholder (the copy that serves its reads and writes), move a replica, or split the shard, and its reward combines
 request latency, the volume of data moved, and load imbalance. We mask
-invalid actions and use multi-step returns, so that a move is credited with
-the latency it saves in later windows. The agent is trained in a simulator
-of a six-region cluster and evaluated on a six-node CockroachDB cluster with
+inapplicable actions, and we use multi-step returns so that a move is credited with
+the latency it saves in later windows. We train the agent in a simulator
+of a six-region cluster and evaluate it on a six-node CockroachDB cluster with
 injected wide-area latency. A harness executes each action on the cluster and
-reads the resulting placement back before timing real transactions. We compare
-the agent with static hashing, a traffic-following heuristic, and a
-co-location planner modeled on Lion. In simulation the agent is 14\% faster
+reads the resulting placement back before timing real transactions. We compare the agent with static hashing, a follow-traffic heuristic that each window moves the worst-placed shard towards its traffic, and a co-location planner modeled on Lion. In simulation the agent is 13.7\% faster
 than static hashing and moves about a fifth of the data the heuristic moves,
 but remains 17\,ms slower than that heuristic. On the cluster, over four
-workload seeds, the heuristic is cheapest on every seed. Of two trained
+workload seeds, the heuristic scores best under the agent's own reward on every seed. Of two trained
 agents, one is second on every seed and 12.6\% faster than static hashing;
 the other is 9.9\% faster but loses ground to lease moves the database
-refuses. CockroachDB's own rebalancer barely acts, and static hashing and the
+refuses. CockroachDB's own rebalancer barely acts. On the cluster, static hashing and the
 heuristic both run about 14\% slower than the simulator predicts.
 \end{abstract}
 
@@ -73,7 +71,7 @@ deep reinforcement learning, geo-distribution
 % AI tool used (for example Codex or Gemini) and what it did. Keep it
 % anonymous: no names, institution or grant until the camera-ready version.
 \section*{Acknowledgment}
-Anthropic's Claude was used throughout this work: to draft and revise text in
+The author(s) used Anthropic's Claude throughout this work: to draft and revise text in
 every section, to write and review the simulator, agent and cluster-harness
 code, to search for related work, and to check every reported number against
 the recorded runs. The author(s) reviewed and edited all of it and take full

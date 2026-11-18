@@ -7,8 +7,8 @@ A distributed database splits its data into pieces and spreads those pieces
 across machines in different places. The pieces are usually called shards, or
 fragments, and the two decisions that matter are where the boundaries between
 them fall and which machine holds each one. Both decisions are made once, when
-the database is designed. The boundaries are fixed by a schema, and the
-placement is decided by a function of the key, such as a hash, which maps a
+the database is designed. The designer fixes the boundaries in a schema, and a
+function of the key, such as a hash, decides the placement. That function maps a
 record to a machine without ever considering where the requests for that record
 come from.
 
@@ -20,50 +20,45 @@ center of the workload moves across the day as one region wakes and another
 sleeps, and it moves abruptly when something local draws attention to one
 region. A placement chosen for the morning is wrong by the evening. Every
 request that has to cross an ocean to reach its data pays the round-trip time
-of that ocean, and a transaction touching several shards held in several
-regions pays it repeatedly, because keeping such a transaction atomic means
-coordinating every region it touches before it can commit. The result is that latency degrades steadily as the mismatch between
+of that ocean. A transaction touching shards held in several
+regions pays it repeatedly, because keeping the transaction atomic means
+coordinating every region it touches before it can commit. Latency therefore rises steadily as the mismatch between
 placement and traffic grows.
 
-The obvious response is to move the data when the traffic moves. A simple rule
-does this: each decision window, find the shard whose placement costs the most
+One response is to move the data when the traffic moves. A simple rule
+does this: in each decision window (the fixed interval at which placement is reconsidered), find the shard whose placement costs the most
 and move it towards the region reading it. We implement that rule as a baseline
-and call it \emph{follow traffic}. The question this paper asks is whether
-anything is gained by replacing it with a policy learned from experience, and
-the answer turns out to depend entirely on how fast the workload moves. When
-drift is slow, the simple rule is 16.9\,ms above the lowest latency any
-placement of the same shards could reach, and there is little worth learning.
-When drift is fast, the same rule falls 75.4\,ms short of that bound, 47\% of
+and call it the \emph{follow-traffic heuristic}, or simply the heuristic. This paper asks whether
+anything is gained by replacing it with a policy learned from experience. The
+answer depends entirely on how fast the workload moves. When
+drift is slow, the heuristic is 16.9\,ms above the lowest latency any
+placement of the same shards could reach (a bound we find by exhaustive search and call the oracle), and there is little worth learning.
+When drift is fast, the heuristic sits 75.4\,ms above that bound, 47\% of
 its own latency, because it reacts one window behind a target that has
-already moved again. The room for a learned policy, bounded above by that
-oracle, is therefore largest exactly
-where the problem is hardest, and that is a measured observation rather than an
-assumption.
+already moved again. The room for a learned policy, bounded above by the
+oracle, is therefore largest where the problem is hardest.
 
-This paper reports the following. We build a simulator of a six-region cluster
+We build a simulator of a six-region cluster
 with a workload whose geographic center drifts on a daily cycle and spikes
-locally, and we define the placement problem on it as a Markov decision process
-with a flat action space of 261 declarative actions. We establish five reference
+locally. On it we define the placement problem as a Markov decision process
+with a flat list of 261 actions, each of which names the placement it wants to reach. We establish five reference
 points against which any learned policy must be judged: static hash
 partitioning, which never moves anything; a random control; the
 follow-traffic heuristic; a co-location planner modeled on Lion; and a
 per-window oracle that finds, by exhaustive search, the lowest latency any
 placement of the starting shards could reach. We measure how the
 gap between the heuristic and that oracle widens
-with workload volatility. We verify on a real six-node CockroachDB cluster, with
-wide-area latency injected between the nodes, that placement changes
-transaction latency by far more than the measurement noise, which is the
-precondition for any of this being learnable outside simulation. We train a
-Deep Q-Network with action masking and multi-step returns on the simulator:
-at volatility 4, on four learner seeds, it is 13.7\% faster than static
-hashing and moves a fifth of the data the heuristic moves, but it stays
-17\,ms slower than the heuristic, which keeps the lower objective cost at the
-trained migration weight, and agents trained at twice that weight move more
+with workload volatility (how fast the workload's center moves, and how often and how sharply it spikes). On a real six-node CockroachDB cluster, with
+wide-area latency injected between the nodes, we verify that placement changes
+transaction latency by far more than the measurement noise. This must hold
+for anything learned in simulation to matter on a real cluster. We train a
+Deep Q-Network agent on the simulator, with action masking and multi-step returns.
+At volatility 4, over four training runs with different random seeds (learner seeds), it is 13.7\% faster than static
+hashing and moves a fifth of the data the heuristic moves. It stays
+17\,ms slower than the heuristic, however, and the heuristic keeps the lower objective cost at the
+migration weight used in training (the price the reward puts on moving data). Agents trained at twice that weight move more
 data, not less. Finally we run two trained agents, unchanged, on the cluster
-on four workload seeds, beside CockroachDB's own rebalancer. The heuristic is
-again cheapest on every seed and one agent second on every seed; the other
-loses ground to lease moves the database refuses and it keeps repeating, and
-the database's rebalancer, left to itself, barely moves anything.
+on four workload seeds, beside CockroachDB's own rebalancer. The heuristic again has the lowest cost on every seed, and on every seed one of the two agents is second. On three seeds the database refuses many of one agent's lease moves, which that agent keeps repeating. The database's rebalancer, left to itself, barely moves anything.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

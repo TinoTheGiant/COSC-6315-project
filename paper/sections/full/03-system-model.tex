@@ -4,37 +4,34 @@
 % docs/adr/ADR-0002-flat-declarative-action-space.md. If either of those
 % changes, change this with it.
 
-\section{System Model and Methodology}
+\section{System Model and Methodology}\label{sec:model}
 
 \subsection{What is being decided}
 
 A cluster has $R$ regions, each holding one database node. The keyspace is
 divided into $C$ atomic cells, and a \emph{shard} is a contiguous run of cells.
-Each shard has one \emph{primary} copy, which serves writes, and some number of
-\emph{replicas}, which hold the same data and can serve reads. The number of
-replicas per shard, called the replication factor, is fixed at three throughout
-this work and is not something the agent controls.
+Each shard is stored as several \emph{replicas}, which hold the same data. One of them is the \emph{primary}, which serves writes and, under the strong reads used throughout this work, all reads; CockroachDB calls it the \emph{leaseholder}. The number of replicas per shard, called the replication factor, is fixed at three throughout this work, and the agent does not control it.
 
-Three decisions are therefore available at any moment. Which region holds a
-given shard's primary. Which regions hold its replicas. Where the boundary
+Three decisions are open at any moment: which region holds a
+given shard's primary, which regions hold its replicas, and where the boundary
 between two shards falls. The first two are allocation and the third is
-fragmentation, and this work treats them as one problem because they interact:
+fragmentation. We treat them as one problem because they interact:
 splitting a shard is only worth doing if the two halves are then placed
 differently.
 
 \subsection{The cost of a placement}
 
 Latency is computed analytically from a fixed matrix of round-trip times
-between regions. A read costs the round trip to the shard's primary, the leaseholder, because a strong read is served there on the real cluster and the simulator must price it the same way. A write costs
+between regions. A read costs the round trip to the shard's primary, because on the real cluster a strong read (one that must see the latest committed write) is served there, and the simulator must price it the same way. A write costs
 the round trip to the primary plus the time for a majority of replicas to
 acknowledge it, since a write is not durable until enough copies agree. A
 transaction touching several shards costs its member operations plus, if those
 shards' primaries sit in more than one region, an additional charge for the
-two-phase commit protocol that keeps it atomic.
+two-phase commit (2PC) protocol that keeps it atomic.
 
-That last term is the mechanism this work is built on. It is what makes placing
-together two shards that are used together worth something, and therefore what
-makes the fragmentation decision interact with the allocation decision.
+This work depends on that last term. It is what rewards placing the primaries
+of two shards that are used together in the same region, and so it is what
+links the fragmentation decision to the allocation decision.
 
 \subsection{The workload}
 
@@ -44,11 +41,8 @@ regions, and traffic for a cell originates predominantly from whichever regions
 sit near its angle. The whole angular field rotates over a daily period, which
 is what makes a placement chosen at one time wrong at a later one. Cell
 popularity follows a Zipf distribution, so a minority of cells carry most of
-the traffic, and localized spikes arrive as a Poisson process, multiplying one
-region's traffic for a short burst. The read and write mix and the skew
-parameter follow the YCSB conventions~\cite{cooper2010ycsb}, so the workload is
-recognizable rather than invented, with geographic origin added as the dimension
-YCSB does not model.
+the traffic, and localized spikes, each of which multiplies one
+region's traffic for a short burst, arrive at random times (a Poisson process). The read and write mix and the Zipfian key popularity are in the style of YCSB, the Yahoo!\ Cloud Serving Benchmark~\cite{cooper2010ycsb}, though our values (read fraction 0.8, Zipf exponent 0.9) match none of its core workloads. Geographic origin is added as the dimension YCSB does not model.
 
 Adjacent cells are given correlated but not identical angular positions by a
 random walk. This is the detail that makes splitting worthwhile: a wide shard
@@ -57,12 +51,12 @@ two halves can each be placed well.
 
 A single parameter, \emph{volatility}, scales the rotation speed, the spike
 rate and the spike size together, so one number moves the environment from
-placid to violent. It is the main axis the evaluation sweeps.
+slow drift with rare, small spikes to fast drift with frequent, large ones. It is the main setting the evaluation varies.
 
 \subsection{The decision problem}
 
-The problem is stated as a Markov decision process. The agent acts once per
-decision window.
+We state the problem as a Markov decision process: once per decision window
+the agent observes the state, takes one action, and receives a reward.
 
 \paragraph{Observation} The state is encoded as a fixed-length vector
 describing, for every shard, its read, write and transaction demand by
@@ -72,7 +66,7 @@ the recent history of data movement; the matrix of inter-region round-trip
 times; and a small set of scalars summarizing current cost.
 
 \paragraph{Actions} The action space is flat and declarative, with 261 actions
-at $R=6$ regions and a cap of 20 shards. Four kinds:
+at $R=6$ regions and a cap of 20 shards. There are four kinds of action:
 
 \begin{itemize}
 \item \textsc{move\_lease}$(f, r)$ makes region $r$ the primary for shard $f$.
@@ -85,35 +79,33 @@ replication factor stays constant. It costs one shard's worth of movement.
 \end{itemize}
 
 Two properties of this encoding matter. First, every action names a desired end
-state rather than an operation, so every action is defined in every state: an
-action that cannot be applied resolves to a small penalty rather than an
-error. Actions that would resolve to that penalty are in addition masked out
-for the agent, at selection and in its bootstrap target, so the declarative
-form keeps the environment total and the mask keeps the agent from wasting
-decisions on it.
-Second, the encoding was chosen by measurement rather than by taste. The
+state, not an operation, so every action is defined in every state: an
+action that cannot be applied costs a small penalty instead of raising an
+error. We also mask such actions out for the agent
+(Section~\ref{sec:agent}), so it does not waste decisions on them.
+Second, we chose the encoding by measuring the alternatives. The
 destination-only form of \textsc{move\_replica\_to} gives 261 actions against
-861 for the naive source-and-destination form, with a higher fraction of
-actions applicable in a typical state, and a breadth-first search over the
+861 for the naive source-and-destination form, and a higher fraction of its
+actions apply in a typical state. A breadth-first search over the
 reachability graph confirms that no placement becomes unreachable.
 
 \paragraph{Reward} The reward is the negative weighted sum of three normalized
 terms: mean latency divided by a scale constant, data moved as a fraction of
-the total dataset, and load imbalance. Expressing movement as a fraction of the
-dataset rather than in bytes is deliberate and necessary: the simulator holds
-60\,GB and the real cluster used for validation holds about 1\,GB, and a reward
-denominated in bytes would score the same physical move sixty times
-differently in the two environments, making a policy trained in one
-meaningless in the other.
+the total dataset, and load imbalance. Movement is counted as a fraction of the
+dataset, not in bytes, because the simulator holds
+60\,GB whereas the real cluster used for validation holds about 1\,GB. A reward
+counted in bytes would score the same physical move sixty times
+differently in the two environments, so a policy trained in one would
+mean nothing in the other.
 
 \subsection{Baselines}
 
-Five reference points. Four are policies and one is an oracle.
+We compare against six reference points: five policies, one of which (CockroachDB) runs only on the cluster, and an oracle.
 
 \begin{itemize}
 \item \textbf{Static hash} never moves anything. The initial placement is what
 a consistent-hash partitioner~\cite{karger1997consistent} produces, and it is
-held for the whole episode. This is what a key-hash partitioner does, and it
+held for the whole episode. It
 is the floor any policy must clear.
 \item \textbf{Random} selects an action uniformly from the whole space. It is a control: it
 proves that any gain comes from choosing \emph{where} to move data rather than
@@ -122,33 +114,32 @@ from moving data at all.
 primary placement costs the most relative to the best available region, and
 moves it towards that region. It is the idea behind CockroachDB's built-in
 follow-the-workload lease rebalancing~\cite{crdb2025ftw}, applied every window
-and to replicas as well as leases, and it is myopic by construction, weighing
-no migration cost and anticipating no drift.
+and to replicas as well as leases. It looks only at the last window: it weighs
+no migration cost and anticipates no drift.
 \item \textbf{Lion-style} is a co-location planner after
-Lion~\cite{lion2024}. Every ten windows it groups shards that are accessed
+Lion~\cite{lion2024}. Every 10 windows it groups shards that are accessed
 together, chooses a region for each group with a cost model that prefers a
-lease move (a cheap remaster) over a replica move (a copy), and then
+lease move (cheap, since it only changes which replica is primary) over a replica move (which copies a shard), and then
 rebalances load. It is the closest published system we could adapt to this
 action space, and unlike the heuristic it weighs movement cost. Like Lion, its
 cost model has no distance term, and we omit Lion's workload predictor, so it
 plans from the last window; it does nothing in about 89\% of windows.
 \item \textbf{CockroachDB} hands placement back to the database, on the
 cluster only. From the common starting placement the harness re-enables its
-load-based lease and replica rebalancing, follow-the-workload
-included~\cite{crdb2025ftw}, and then chooses nothing. Splits and merges stay
+load-based lease and replica rebalancing~\cite{crdb2025settings}, follow-the-workload included~\cite{crdb2025ftw}, and then chooses nothing. Splits and merges stay
 off, as for every policy. It is the comparison an operator would make first,
 and the simulator has no model of it.
 \item \textbf{Per-window oracle (fixed shards)} is not a policy. Each window,
 it searches every assignment of primaries to regions ($6^6$ for the six
-starting shards), with followers in the regions nearest each primary, and
+starting shards), with the other replicas in the regions nearest each primary, and
 keeps the one with the lowest latency under the full cost model, commit
 coordination included. Movement is free and the window is seen in advance.
-With strong reads only commit coordination couples shards, so the search is
-exact, and it is a lower bound on the latency of any placement of the
+Under strong reads, commit coordination is the only cost that links one shard's
+placement to another's, so the search is exact. Its result is a lower bound on the latency of any placement of the
 starting shards; only a policy that splits can score below it.
 \end{itemize}
 
-\subsection{The agent}
+\subsection{The agent}\label{sec:agent}
 
 The agent is a Deep Q-Network. A Q-network is a function that, given the
 current state, estimates the long-run value of each available action; the
@@ -157,45 +148,42 @@ has two hidden layers of 256 units and is trained with the standard
 Stable-Baselines3 implementation~\cite{raffin2021sb3} against a Gymnasium
 environment~\cite{towers2025gymnasium}, following Mnih et
 al.~\cite{mnih2015dqn}. The learning rate is $10^{-4}$, the replay buffer holds
-$10^5$ transitions, batches are 128, the discount is 0.99, the target network
-is copied every 2000 steps, and $\epsilon$ falls from 1.0 to 0.05 over the
+$10^5$ transitions, the batch size is 128, and the discount is 0.99. The target network
+(a lagged copy of the network, used to compute training targets) is refreshed every 2000 steps,
+and the exploration rate $\epsilon$ (the chance of taking a random action) falls from 1.0 to 0.05 over the
 first 30\% of training. Every $10^4$ steps the policy is scored on three
 evaluation seeds, and the checkpoint with the lowest mean latency is kept.
 
-Two additions to the plain form are used. Inapplicable actions are masked~\cite{huang2022masking,zahavy2018elimination},
-both when the agent selects an action and in the maximum taken by its
-bootstrap target: without the mask, 79.9 to 89.8\% of the agent's chosen
-actions were inapplicable, no better than a uniform policy's 80.4\%. And
-returns are accumulated over three steps rather than one, because a move is
-charged in full when it is made whilst the latency it buys arrives in later
+We add two things to the plain Deep Q-Network. First, we mask inapplicable actions~\cite{huang2022masking,zahavy2018elimination}, both when the agent selects an action and when it computes its training target (the highest value it predicts for the state the return ends in). Under the earlier midterm protocol, without the mask, 79.9 to 89.8\% of the agent's chosen actions were inapplicable, no better than a uniform random policy's 80.4\%. Second,
+returns are summed over three steps rather than one, because a move is
+charged in full when it is made whereas the latency it saves arrives in later
 windows. Against one-step returns this improved held-out latency by 5.4\,ms
-over four learner seeds (paired 95\% $t$-interval $[-14.6, 3.8]$\,ms, at an
-earlier replication factor of 2, so not the protocol of Section~\ref{sec:metrics}): not significant, and kept because it costs
-nothing. The
-other extensions that Rainbow~\cite{hessel2018rainbow} combines, double
-Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}
-and prioritized replay~\cite{schaul2016per}, are not used, so that any later improvement is attributable to the extension
-that produced it.
+over four learner seeds. The difference is not significant (paired 95\% $t$-interval $[-14.6, 3.8]$\,ms,
+measured at an earlier replication factor of 2, so not under the protocol of
+Section~\ref{sec:metrics}); we kept three-step returns because they cost
+nothing. We do not use the other extensions that Rainbow~\cite{hessel2018rainbow} combines (double Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}, prioritized replay~\cite{schaul2016per}, distributional value learning and noisy networks), so that any later improvement can be traced to the extension that produced it.
 
-Two choices in the training setup are worth stating because they are easy to
-get wrong. Training resets onto a rotating set of 64 workload seeds rather than
-one, because an agent trained on a single realization learns that realization
-rather than the structure behind it. Evaluation uses a block of seeds disjoint
-from the training seeds and acts greedily rather than exploring, so the
-reported number is generalization rather than recall.
+Two choices in the training setup are easy to get wrong, so we state them.
+Training cycles through 64 workload seeds, not one, because an agent trained on
+a single random workload learns that one workload instead of the pattern behind it.
+Evaluation uses a block of seeds disjoint from the training seeds, and the agent
+always takes its highest-valued action (no exploration), so the reported number
+measures performance on workloads the agent has not seen.
 
 \subsection{Metrics}\label{sec:metrics}
 
-Results report mean latency in milliseconds, averaged over the windows of an
-episode; p95 latency where the tail matters; data moved, in gigabytes per
-episode, which is the price paid for whatever latency was bought; and load
-imbalance, how unevenly requests are spread across regions, which stops a
-policy lowering latency by piling all the work onto one region.
+Results report four measures. Mean latency is in milliseconds, averaged over
+the windows of an episode (one run of 200 decision windows). The 95th-percentile
+latency (p95) is given where the tail matters. Data moved, in gigabytes per
+episode, is the price paid for whatever latency was gained. Load
+imbalance is how unevenly requests are spread across regions; charging for it
+stops a policy lowering latency by piling all the work onto one region.
 
 Simulator results are means over eight workload seeds. Where a comparison
 turns on a difference, we give a 95\% percentile
-bootstrap~\cite{efron1979bootstrap} interval over those seeds, paired by seed.
-The bootstrap is used rather than a $t$ interval because eight is a small
+bootstrap~\cite{efron1979bootstrap} interval over those seeds, paired by seed
+(the interval comes from resampling the per-seed differences with replacement).
+We use the bootstrap rather than a $t$ interval because eight is a small
 sample and nothing guarantees the per-seed means are normally distributed.
 
 \subsection{Experimental apparatus}
@@ -206,10 +194,10 @@ list, the commit the code was at, the package versions, the machine, the raw
 per-window record, the per-seed summary, and the exact command that reproduces
 the run. Training and cluster runs execute on GitHub Actions rather than on a
 personal machine, so each is unattended and each records the hardware it
-received; agent and cluster figures are copied from those runs' summaries and
+received. Agent and cluster figures are copied from those runs' summaries and
 archived artifacts, and each recorded table names the run it came from. The
 simulator is deterministic, so a simulator run reproduces exactly from its
-recorded configuration wherever it is executed. An anonymised copy of the
+recorded configuration wherever it is executed. An anonymized copy of the
 code, configurations, run records and archived artifacts accompanies the
 submission.
 
@@ -219,19 +207,18 @@ Training in a cheap simulator and deploying on expensive real hardware is
 borrowed from robotics, where it is standard and where the gap between the two
 is the central difficulty~\cite{tobin2017domain}. Here the trained agent is
 run on the cluster unchanged; fine-tuning it there is left to future work. The
-gap is narrower and more checkable than in robotics: the simulator and the
-cluster can be made to agree on the observation space, the action space and the
-cost structure by construction, which is why the database was chosen for that
-property.
+gap is narrower and easier to check than in robotics, because the simulator and the
+cluster can be built to agree on the observation space, the action space and the
+cost structure. We chose the database so that this agreement would hold.
 
 The simulator's cost model is an assumption, and the assumption is testable.
 We deploy six CockroachDB~\cite{taft2020cockroachdb} nodes, one per simulated
 region, in containers on a single host, with wide-area round-trip times injected
-between them using the Linux kernel's traffic control facility. CockroachDB was
-selected from more than twenty surveyed systems because it offers a \emph{synchronous}
-statement for each of the agent's three actions: relocating a shard's lease,
+between them using the Linux kernel's traffic control facility. We chose CockroachDB from more than twenty systems we surveyed because it offers a \emph{synchronous}
+statement, one that returns only after the change has taken effect, for each of
+the agent's three actions: relocating a shard's lease,
 relocating its replicas, and splitting it. Synchrony is
-essential rather than convenient. If a placement command returns before the
+required. If a placement command returns before the
 placement has changed, the reward observed after an action belongs to a state
 the action did not produce, and the decision problem is no longer well defined.
 

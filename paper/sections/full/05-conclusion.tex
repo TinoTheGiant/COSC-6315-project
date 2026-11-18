@@ -6,43 +6,27 @@
 
 This paper asked whether a reinforcement learning agent can act as an
 autonomous database administrator, re-fragmenting and re-allocating shards
-as a workload's geographic center of gravity moves. What it establishes is a
-measured problem statement, a cluster that confirms the premise, a learned
-policy that makes a different and cheaper trade than the obvious heuristic,
+as a workload's geographic center moves. It establishes four things: a measured problem statement, a cluster test that confirms the premise, a learned policy that makes a different trade from the follow-traffic heuristic (about a fifth of the data moved, at higher latency and higher objective cost),
 and evidence that the agent's place among the policies carries over from
 the simulator to the cluster.
 
 On a real six-node CockroachDB cluster, gathering leaseholders in the
 issuing region rather than spreading them changes p95 latency by
-1337.8\,ms. A reactive heuristic that follows the traffic is 16.9\,ms above
+1337.8\,ms. The follow-traffic heuristic is 16.9\,ms above
 an exact per-window oracle under slow drift and 75.4\,ms above it under fast
 drift,
-so the case for a learned policy is conditional on volatility, and this work
-measures the condition.
+so the case for a learned policy depends on volatility.
 
-At volatility 4 the agent is 13.7\% faster than static hashing on held-out
-seeds, faster on average than a Lion-style co-location planner though not
-distinguishably across workload seeds, and moves about a fifth of the data the
-heuristic moves, partly by splitting shards selectively before moving them.
+At volatility 4 the agent is 13.7\% faster than static hashing on held-out seeds. It is faster on average than the Lion-style co-location planner, though the 95\% interval includes zero, and it moves about a fifth of the data the heuristic moves, partly by splitting shards before moving them.
 Neither throttling the heuristic nor splitting evenly reproduces that trade.
 It is 17\,ms slower than the heuristic, and at the migration weight it was trained with
 the heuristic still has the lower objective cost. Rescoring the same
-behavior shows the verdict turns on the price of movement: in simulation the
-agent is the cheapest policy for any migration weight between 0.49 and
-2.18, though two agents trained at twice the weight moved more data rather
-than less. On the cluster, over four workload seeds, the heuristic is
-cheapest on every seed and one agent second on every seed, 12.6\% faster
-than static hashing on average; a second agent, refused many lease moves it
-kept repeating, is 9.9\% faster and on one seed falls to last. CockroachDB's
-own rebalancer barely acted in these episodes, and the simulator is
-optimistic by a steady 14\% for static hashing and the heuristic. The Lion-style planner lost more in transfer,
-partly to lease moves the database refused onto replicas that had not yet
-caught up, a rule the simulator does not model.
+behavior shows that the verdict turns on the price of movement. In simulation the mean of the four agents is the cheapest policy for any migration weight between 0.49 and 2.18, but two agents trained at twice the weight moved more data, not less. On the cluster, over four workload seeds, the heuristic has the lowest cost on every seed, and one of the two agents is second on every seed. The agent from learner seed 3 is 12.6\% faster than static hashing on average. The agent from learner seed 1, refused many lease moves that it kept repeating, is 9.9\% faster, and on one seed costs more than static hashing and the Lion-style planner. CockroachDB's own rebalancer barely acted in these episodes. On every seed the simulator is optimistic for static hashing and the heuristic, by 13.7\% and 13.5\% on average. The Lion-style planner slowed more on the cluster, partly because on one seed the database refused the same lease move 20 times, a refusal the simulator never makes.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
 
-In the order they should be attempted.
+We list these in the order we would attempt them.
 
 Add learner seeds to the cluster evaluation. Four workload seeds with two
 trained agents order the baselines but already disagree about the agent's
@@ -54,12 +38,12 @@ Training two or three agents with splits masked out, and comparing them on the
 same held-out seeds, would settle it.
 
 Condition the policy on the migration weight and the volatility.
-The weight analysis rescales fixed behavior, two agents trained at twice the
-weight moved more rather than less, and an agent trained at
+The weight analysis only rescales fixed behavior. Two agents trained at twice the
+weight moved more data, not less, and an agent trained at
 volatility 4 does not carry its advantage to volatility 2 unchanged. The
-policy does not yet respond to the conditions it is trained or run under; a
-policy conditioned on the weight and the volatility, trained across a range of
-both, is the next thing to try.
+policy does not yet respond to the conditions it is trained or run under. The next
+step is to give the policy the weight and the volatility as inputs and to train it
+across a range of both.
 
 Teach the simulator the database's refusal rule. A lease transfer onto a
 replica that may need a snapshot is refused on the cluster and accepted in
@@ -67,14 +51,14 @@ simulation, and one agent repeated refused moves for up to 43 windows.
 Modeling the rule, or masking a move the database has just refused, would
 remove one source of the gap between the two.
 
-Address the plateau. Held-out latency stopped improving early in at least
-three of four runs, so the lever is not more steps. Double Q-learning, a
+Address the early plateau. Validation latency stopped improving early in at least
+three of four runs, so more training steps alone will not help. Double Q-learning, a
 dueling head and prioritized replay, as combined in
-Rainbow~\cite{hessel2018rainbow}, are the obvious next components, together
-with choosing the best checkpoint on more than three evaluation episodes and
+Rainbow~\cite{hessel2018rainbow}, are the next components to try. The best checkpoint
+should also be chosen on more than three evaluation episodes, and
 on the objective rather than latency alone.
 
 Fine-tune on the cluster. The harness already executes actions, reads the
 placement back and measures real transactions with the reward the simulator
-uses, which is the apparatus fine-tuning needs; at about 15\,s per step on
-the present runner the budget, not the code, is the constraint.
+uses, which is the apparatus fine-tuning needs. At about 15\,s per step on
+the present runner, the compute budget is what limits this.
