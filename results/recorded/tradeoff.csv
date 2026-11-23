@@ -5,9 +5,9 @@
 # panel=cluster: means over workload seeds 2000-2003 (results/recorded/cluster-eval.csv).
 panel,policy,label,latency_ms,gb_moved
 sim,agent,learner seed 1,163.18,117.8
-sim,agent,learner seed 2,170.73,278.1
-sim,agent,learner seed 3,162.74,121.7
-sim,agent,learner seed 4,166.88,216.7
+sim,agent,learner seed 2,164.36,186.9
+sim,agent,learner seed 3,168.50,139.6
+sim,agent,learner seed 4,166.58,250.8
 sim,follow,follow,148.81,867.7
 sim,follow2,every 2,157.18,696.3
 sim,follow4,every 4,171.82,405.1

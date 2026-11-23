@@ -53,7 +53,7 @@ wide-area latency injected between the nodes, we verify that placement changes
 transaction latency by far more than the measurement noise. This must hold
 for anything learned in simulation to matter on a real cluster. We train a
 Deep Q-Network agent on the simulator, with action masking and multi-step returns.
-At volatility 4, over four training runs with different random seeds (learner seeds), it is 13.7\% faster than static
+At volatility 4, over four training runs with different random seeds (learner seeds), it is 13.8\% faster than static
 hashing and moves a fifth of the data the heuristic moves. It stays
 17\,ms slower than the heuristic, however, and the heuristic keeps the lower objective cost at the
 migration weight used in training (the price the reward puts on moving data). Agents trained at twice that weight move more

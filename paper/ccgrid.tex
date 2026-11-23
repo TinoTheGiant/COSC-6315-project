@@ -44,7 +44,7 @@ inapplicable actions, and we use multi-step returns so that a move is credited w
 the latency it saves in later windows. We train the agent in a simulator
 of a six-region cluster and evaluate it on a six-node CockroachDB cluster with
 injected wide-area latency. A harness executes each action on the cluster and
-reads the resulting placement back before timing real transactions. We compare the agent with static hashing, a follow-traffic heuristic that each window moves the worst-placed shard towards its traffic, and a co-location planner modeled on Lion. In simulation the agent is 13.7\% faster
+reads the resulting placement back before timing real transactions. We compare the agent with static hashing, a follow-traffic heuristic that each window moves the worst-placed shard towards its traffic, and a co-location planner modeled on Lion. In simulation the agent is 13.8\% faster
 than static hashing and moves about a fifth of the data the heuristic moves,
 but remains 17\,ms slower than that heuristic. On the cluster, over four
 workload seeds, the heuristic scores best under the agent's own reward on every seed. On every seed, one of the two trained

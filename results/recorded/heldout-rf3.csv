@@ -1,14 +1,17 @@
-# Training round, 15 November 2026: Train agent runs 43674067630, 43674455394, 43674558770, 43674597349,
-# commit 6babfc6, volatility 4, 1e6 steps, w 0.30, primary_only, held-out seeds 2000-2007. From the job summaries.
+# Agents: learner seeds 1-4 = Train agent runs 43674067630 (15 Nov, commit 6babfc6), 44223156822, 44223258603,
+# 44223466130 (18 Nov, commit 4e0b643; retrained because the 15 Nov runs for seeds 2-4 used n_steps 1). All four:
+# n_steps 3, volatility 4, 1e6 steps, w 0.30, primary_only, held-out seeds 2000-2007. Superseded 15 Nov runs for
+# seeds 2-4: 43674455394, 43674558770, 43674597349 (docs/results-log.md).
 # load_imbalance: agent rows from results/archive/<run>/run-*/summary.csv; baselines from
-# run_experiment.py --seeds 8 --seed-start 2000 (16 Nov). Means over seeds 2000-2007.
+# run_experiment.py --seeds 8 --seed-start 2000 (16 Nov; oracle row from run
+# results/runs/20261117T042521Z-f4870a4f-heldout-oracle). Means over seeds 2000-2007.
 # mean_tail_ms: mean over windows of the window's p95 request latency (summary.csv mean_tail_latency_ms),
 # from the archived Train runs' held-out summaries; oracle and random not recorded there for this code.
 policy,learner_seed_run,latency_ms,gb_moved,load_imbalance,mean_tail_ms
-agent,43674067630,163.18,117.8,0.888,528.87
-agent,43674455394,170.73,278.1,0.825,558.10
-agent,43674558770,162.74,121.7,0.934,517.27
-agent,43674597349,166.88,216.7,0.923,540.23
+agent,43674067630,163.18,117.8,0.889,528.87
+agent,44223156822,164.36,186.9,0.918,528.17
+agent,44223258603,168.50,139.6,0.855,532.41
+agent,44223466130,166.58,250.8,0.971,525.49
 static,,192.11,0.0,0.382,622.71
 random,,195.46,134.6,,
 follow,,148.81,867.7,0.935,517.05

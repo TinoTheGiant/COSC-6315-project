@@ -1,11 +1,11 @@
 # Agents trained at w_migration 0.6 (Train agent runs 44018419041, learner seed 1 = code seed 0; 44018524015,
 # learner seed 3 = code seed 2; commit 9d5de71), against the same learner seeds trained at w 0.30 (43674067630,
-# 43674558770). Held-out seeds 2000-2007, volatility 4. Means over seeds from results/archive/<run>/run-*/summary.csv.
+# 44223258603; the n_steps 3 retrain of seed 3, which replaced 43674558770). Held-out seeds 2000-2007, volatility 4. Means over seeds from results/archive/<run>/run-*/summary.csv.
 # cost_w06 = ms/100 + 0.6*GB/2000 + 0.10*imbalance. Paired diffs by workload seed, bootstrap_ci from
 # scripts/run_experiment.py (10000 reps, seed 12345).
 learner_seed,w_trained,run,latency_ms,gb_moved,imbalance,cost_w06,diff_vs_follow,ci_vs_follow,diff_vs_w030,ci_vs_w030
 1,0.6,44018419041,169.46,181.3,0.735,1.823,-0.019,[-0.067 0.028],0.066,[0.014 0.114]
-3,0.6,44018524015,170.61,224.5,0.874,1.861,0.019,[-0.026 0.066],0.103,[0.052 0.155]
+3,0.6,44018524015,170.61,224.5,0.874,1.861,0.019,[-0.026 0.066],0.048,[-0.033 0.117]
 1,0.3,43674067630,163.18,117.8,0.889,1.756,,,,
-3,0.3,43674558770,162.74,121.7,0.934,1.757,,,,
+3,0.3,44223258603,168.50,139.6,0.855,1.812,,,,
 follow,,,148.81,867.7,0.935,1.842,,,,

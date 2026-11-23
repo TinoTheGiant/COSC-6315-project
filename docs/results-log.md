@@ -320,7 +320,11 @@ random 151.64 ms / 184.2 GB. The masked agent before the NOOP fix: 144.96 ms,
   (sd 5.80), 95% t-interval [−14.63, 3.81], paired t p = 0.16; Wilcoxon
   p = 0.25, which with four pairs cannot go below 0.125. Not distinguishable
   at this sample size. It is better on both latency and data moved in the
-  point estimate, and costs nothing, so **the RF 3 runs use n_steps 3**.
+  point estimate, and costs nothing, so the RF 3 runs were meant to use n_steps 3.
+  **Correction (22 November 2026):** only learner seed 1 (43674067630) did. The
+  15 November runs for seeds 2 to 4 (43674455394, 43674558770, 43674597349) ran
+  at the workflow default, n_steps 1. They were retrained at n_steps 3 on
+  18 November; see "Retrain of learner seeds 2 to 4 at n_steps 3".
 - Latency plus migration terms at w = 0.30 (imbalance omitted): n=1 1.502,
   n=3 1.443, follow 1.454, static 1.501. Not a claim of a win: the imbalance
   term is missing and the runs are RF 2.
@@ -448,7 +452,7 @@ Four reruns on commit 532e3b0 (43677110819, 43677169901, 43677848382,
 - **Cores.** Static episodes: 231.7 to 233.1 ms pinned to 2 CPUs, 232.4 ms on
   all 4. No effect at this load. The gate comparison is still outstanding.
 
-## Training round, 15 November 2026: RF 3, strong reads, n_steps 3
+## Training round, 15 November 2026: RF 3, strong reads (n_steps 3 for learner seed 1 only; seeds 2 to 4 ran at n_steps 1 and are superseded)
 
 Four Train agent runs on commit 6babfc6 (43674067630, 43674455394,
 43674558770, 43674597349): volatility 4.0, 1,000,000 steps, w_migration 0.30,
@@ -799,3 +803,44 @@ CSV/JSON, logs and health files. `cluster-eval.yml` now uploads only
 `results/*.csv` and `results/*.json`. `agent-runs.csv`, `baselines-heldout.csv`,
 `score_objective.py` and `plot_agent_frontier.py` are marked superseded (early
 round, commit f459c44; not used by the paper).
+
+## Retrain of learner seeds 2 to 4 at n_steps 3 (18 November 2026; recorded 22 November)
+
+The 15 November Train runs for learner seeds 2 to 4 (43674455394, 43674558770,
+43674597349) used n_steps 1, the workflow default, although the paper and this
+log said n_steps 3; only seed 1 (43674067630) used 3. Seeds 2 to 4 were
+retrained on commit 4e0b643 (training code identical to 6babfc6 apart from the
+n_steps input): 44223156822, 44223258603, 44223466130. All four learner seeds
+are now n_steps 3, volatility 4.0, 1,000,000 steps, w_migration 0.30,
+primary_only, held-out seeds 2000 to 2007. The baselines are identical to before.
+
+| learner seed | run | ms | GB | imbalance | mean p95 | best checkpoint |
+|---|---|---|---|---|---|---|
+| 1 | 43674067630 | 163.18 | 117.8 | 0.889 | 528.9 | 900,000 |
+| 2 | 44223156822 | 164.36 | 186.9 | 0.918 | 528.2 | 580,000 |
+| 3 | 44223258603 | 168.50 | 139.6 | 0.855 | 532.4 | 40,000 |
+| 4 | 44223466130 | 166.58 | 250.8 | 0.971 | 525.5 | 810,000 |
+
+- Four-agent mean 165.66 ms and 173.8 GB. Against static: 26.5 ms faster
+  (13.8%) [21.3, 31.2]. Against follow: 16.8 ms slower [11.3, 22.6], moving 20%
+  of its data. Against Lion-style: 14.3 ms faster [-1.9, 30.7]. All paired
+  bootstrap intervals over workload seeds (bootstrap_ci, 10,000 reps, seed 12345).
+- Objective cost at w = 0.30: agents 1.738 to 1.801, follow 1.712, mean
+  difference +0.062 [0.006, 0.118]. The agents' mean is cheapest for w in
+  [0.48, 2.34]. Per learner seed the follow crossing is 0.37 to 0.59.
+- n_steps 3 minus n_steps 1, same code seeds, RF 3: -6.4, +5.8 and -0.3 ms
+  (mean -0.3 [-3.0, 2.3]). No measurable effect under the reported protocol.
+- w = 0.6 against w = 0.30 at w = 0.6: seed 1 +0.066 [0.014, 0.114]; seed 3
+  +0.048 [-0.033, 0.117], no longer distinguishable from zero.
+- Validation (seeds 1000 to 1002) after step 50,000: 158 to 202 ms, drifting
+  down by 0.2 to 1.3 ms per 100,000 steps. The earlier "plateaued, not
+  under-run" note no longer holds for this round.
+- Volatility 2, unchanged agents: 170.50 (seed 1, existing run), 167.40, 168.52,
+  170.09 ms; 127 to 252 GB. Follow is 126.93 ms, 42 ms ahead.
+- `Not claimed:` that three-step returns help, or that seed 3's step-40,000
+  checkpoint is representative. The cluster agent 3 rows predate this
+  retrain and are pending a cluster rerun.
+- Volatility 2 (agents trained at 4, run unchanged): seeds 2 to 4 rerun with the
+  retrained models, results/runs/20261123T0358*-gen-v2-<run>: 167.40, 168.52,
+  170.09 ms; with seed 1 (170.50) mean 169.13 ms, follow 126.93 (42.2 ms ahead).
+  Recorded in results/recorded/generalization-v2.csv.

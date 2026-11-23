@@ -161,7 +161,8 @@ windows. Against one-step returns this improved held-out latency by 5.4\,ms
 over four learner seeds. The difference is not significant (paired 95\% $t$-interval $[-14.6, 3.8]$\,ms,
 measured at an earlier replication factor of 2, so not under the protocol of
 Section~\ref{sec:metrics}); we kept three-step returns because they cost
-nothing. We do not use the other extensions that Rainbow~\cite{hessel2018rainbow} combines: double Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}, prioritized replay~\cite{schaul2016per}, distributional value learning and noisy networks. Leaving them out means any later improvement can be traced to the extension that produced it.
+nothing. Under that protocol, three learner seeds trained both ways differ by
+0.3\,ms on average (95\% interval $[-3.0, 2.3]$\,ms over workload seeds). We do not use the other extensions that Rainbow~\cite{hessel2018rainbow} combines: double Q-learning~\cite{vanhasselt2016double}, a dueling head~\cite{wang2016dueling}, prioritized replay~\cite{schaul2016per}, distributional value learning and noisy networks. Leaving them out means any later improvement can be traced to the extension that produced it.
 
 Two choices in the training setup are easy to get wrong, so we state them.
 Training cycles through 64 workload seeds, not one, because an agent trained on

@@ -2,11 +2,13 @@
 # 200 windows, primary_only. scripts/run_experiment.py --model <archived best_model.zip>, run on
 # Tino's laptop 17 Nov 2026; runs results/runs/20261117T051144Z-1ead496b-gen-v2-<train run>/.
 # Check: the same code and archived model at volatility 4 reproduce 162.74 ms / 121.7 GB exactly.
+# Learner seeds 2-4 rerun 23 Nov 2026 (sandbox, same command) with the n_steps 3 retrains 44223156822,
+# 44223258603, 44223466130: results/runs/20261123T0358*-1ead496b-gen-v2-<run>/. Superseded rows removed.
 policy,learner_seed_run,latency_ms,gb_moved,load_imbalance,mean_tail_ms
 agent,43674067630,170.50,127.0,0.817,572.09
-agent,43674455394,166.47,252.6,0.819,546.21
-agent,43674558770,166.40,100.8,0.922,532.34
-agent,43674597349,167.53,368.4,0.967,537.12
+agent,44223156822,167.40,174.8,0.918,540.74
+agent,44223258603,168.52,200.5,0.910,529.57
+agent,44223466130,170.09,252.2,0.870,558.85
 follow,,126.93,877.4,0.888,457.98
 lion,,177.24,25.0,1.075,517.35
 static,,192.83,0.0,0.333,631.38
