@@ -1,0 +1,15 @@
+{
+ "policy": "static",
+ "seed": 2001,
+ "steps": 200,
+ "mean_latency_ms": 235.3583467860735,
+ "gb_moved_total": 0.0,
+ "gb_observed_total": 0.0,
+ "lease_changes_total": 0,
+ "mean_p95_ms": 785.527512769961,
+ "mean_step_s": 15.017024102505008,
+ "mean_imbalance": 0.41422603163050004,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.395006071023785
+}

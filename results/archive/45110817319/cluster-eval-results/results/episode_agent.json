@@ -1,0 +1,15 @@
+{
+ "policy": "agent",
+ "seed": 2003,
+ "steps": 200,
+ "mean_latency_ms": 213.73996067247572,
+ "gb_moved_total": 745.078125,
+ "gb_observed_total": 745.078125,
+ "lease_changes_total": 125,
+ "mean_p95_ms": 668.0468454499867,
+ "mean_step_s": 15.363486987344976,
+ "mean_imbalance": 0.6613258290272788,
+ "suspect_steps": 0,
+ "divergent_steps": 0,
+ "cost_w030": 2.3152939083774853
+}

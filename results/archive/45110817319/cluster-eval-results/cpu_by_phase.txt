@@ -1,0 +1,20 @@
+100% = one core (docker stats); a pinned cluster shares its k cores
+phase             node                       samples   mean %    max %
+episode:agent     crdb-ap-northeast-1            773      7.1     17.7
+episode:agent     crdb-ap-southeast-1            773      7.6     53.4
+episode:agent     crdb-eu-central-1              773      8.6     51.3
+episode:agent     crdb-eu-west-1                 773      7.1     20.3
+episode:agent     crdb-us-east-1                 773      9.5     68.2
+episode:agent     crdb-us-west-2                 773      6.4     18.4
+episode:static    crdb-ap-northeast-1            720      7.1     18.6
+episode:static    crdb-ap-southeast-1            720      7.7     84.4
+episode:static    crdb-eu-central-1              720      7.9     87.1
+episode:static    crdb-eu-west-1                 720      6.9     17.8
+episode:static    crdb-us-east-1                 720     10.0     88.1
+episode:static    crdb-us-west-2                 720      6.7     21.8
+idle              crdb-ap-northeast-1             22      8.7     12.8
+idle              crdb-ap-southeast-1             22     10.4     19.8
+idle              crdb-eu-central-1               22     10.9     27.3
+idle              crdb-eu-west-1                  22      9.4     15.6
+idle              crdb-us-east-1                  22     26.0     94.5
+idle              crdb-us-west-2                  22      8.5     14.2

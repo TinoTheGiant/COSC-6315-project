@@ -1,0 +1,4 @@
+| policy | steps | mean ms | mean p95 ms | GB moved | GB observed | lease changes | imbalance | cost (w=0.30) | s/step | suspect | divergent |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| static | 200 | 225.13 | 694.9 | 0.0 | 0.0 | 0 | 0.373 | 2.289 | 14.4 | 0 | 0 |
+| agent | 200 | 213.74 | 668.0 | 745.1 | 745.1 | 125 | 0.661 | 2.315 | 15.4 | 0 | 0 |
