@@ -6,9 +6,7 @@
 
 This paper asked whether a reinforcement learning agent can act as an
 autonomous database administrator, re-fragmenting and re-allocating shards
-as a workload's geographic center moves. It establishes four things: a measured problem statement; a cluster test that confirms the premise; a learned policy that makes a different trade from the follow-traffic heuristic, moving about a fifth of the data at higher latency and higher objective cost;
-and evidence that the baselines' order carries over from
-the simulator to the cluster.
+as a workload's geographic center moves. It measures the problem and confirms its premise on a real cluster. A learned policy moves about a fifth of the heuristic's data at higher latency and higher objective cost, and the baselines' order carries over from the simulator to the cluster.
 The follow-traffic heuristic
 is 16.9\,ms above an exact per-window oracle under slow drift and 75.4\,ms above
 it under fast drift, so the case for a learned policy depends on volatility. At
@@ -20,8 +18,8 @@ agents' mean is the cheapest policy for any migration weight between 0.48 and
 2.34, but two agents trained at twice the weight moved more data, not less. On
 the cluster the heuristic has the lowest cost on every seed, second place goes
 to one of the two agents on three of the four, the agents are 9.2\% and 9.9\%
-faster than static hashing on average, and CockroachDB's own rebalancer barely
-acted.
+faster than static hashing on average, and CockroachDB's own rebalancer, at its default settings,
+barely acted.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
@@ -34,7 +32,7 @@ fragmentation adds: no agent with splitting disabled was trained, so the paper
 cannot say whether the \textsc{split} action earns its place; two or three
 agents trained with splits masked out, compared on the same held-out seeds,
 would settle it. Third, condition the policy on the migration weight and the
-volatility. Agents trained at twice the weight moved more data, not less, and
+volatility. Agents trained at twice the weight moved more data, and
 agents trained at volatility 4 fall further behind the heuristic at
 volatility 2, so the policy does not yet respond to the conditions it is
 trained or run under; the next step is to give it the weight and the

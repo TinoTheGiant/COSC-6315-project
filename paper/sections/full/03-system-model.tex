@@ -190,8 +190,7 @@ record, per-seed summary and the command that reproduces it; the simulator is de
 exactly. Training and cluster runs execute unattended on GitHub Actions, each
 recording the hardware it received. Agent and cluster figures are copied from
 those runs' summaries and archived artifacts, and each recorded table names
-the run it came from. An anonymized copy of the code, configurations, run
-records and archived artifacts accompanies the submission.
+the run it came from. \ifanonymous An anonymized copy of the code, configurations, run records and archived artifacts accompanies the submission.\else The code, configurations, run records and archived artifacts are in the project repository.\fi
 
 The trained agent runs on the cluster unchanged. Training in simulation and
 deploying on hardware is borrowed from robotics~\cite{tobin2017domain}, but here

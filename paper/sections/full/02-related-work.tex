@@ -108,7 +108,7 @@ draws between moving a replica and moving a lease.
 Placement has received less attention in this line of work. RLRP~\cite{lu2022rlrp} is the nearest
 in method: a Deep Q-Network places the replicas of each virtual node in an
 object store, a second agent migrates replicas when a node joins, and the whole
-is validated on Ceph. Its reward is load fairness. A placement is decided once, when a virtual node is created or
+is validated on Ceph. Its reward is load fairness, or read response time on heterogeneous hardware. A placement is decided once, when a virtual node is created or
 the cluster changes size; data moved does not enter the reward; and the nodes
 share one cluster, so request origin plays no part. Two of its techniques recur
 here: taking the next-highest action when the best is inapplicable, which is

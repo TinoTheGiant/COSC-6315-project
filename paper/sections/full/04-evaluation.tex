@@ -129,7 +129,7 @@ The gap between the heuristic and the oracle is 16.9\,ms at volatility 0.5,
 20.4\,ms at 1, 43.9\,ms at 2 and 75.4\,ms at 4 (paired 95\% interval [70.2,
 82.9]\,ms), where it is 47\% of the heuristic's own latency. The gap is an
 upper bound on the room for a better policy, not a measure of it, because the
-oracle moves data for free and sees each window in advance
+oracle re-places every shard for free each window and sees the window in advance, whereas a policy takes one paid action per window
 (Section~\ref{sec:model}). It is also a bound on latency, not on the objective; the oracle's
 imbalance, 1.12 at volatility 4, is above every policy's except the Lion-style
 planner's (1.14). The Lion-style planner, which

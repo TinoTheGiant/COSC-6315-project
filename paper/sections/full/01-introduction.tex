@@ -35,15 +35,14 @@ drift is slow, the heuristic is 16.9\,ms above the lowest latency any
 placement of the same shards could reach (a bound we find by exhaustive search and call the oracle), and there is little worth learning.
 When drift is fast, the heuristic sits 75.4\,ms above that bound, 47\% of
 its own latency, partly because it reacts one window behind a target that has
-already moved again. The room for a learned policy, bounded above by the
-oracle, is therefore largest where the problem is hardest.
+already moved again. The room for a learned policy is therefore largest under fast drift.
 
 We build a simulator of a six-region cluster whose workload center drifts on a
 daily cycle and spikes locally, and on it we state the placement problem as a
 Markov decision process with 261 actions, each of which names the placement it
-wants to reach. Against static hash partitioning, which never moves anything, a
+wants to reach. We compare static hash partitioning, which never moves anything, a
 random control, the follow-traffic heuristic, a co-location planner modeled on
-Lion and the oracle, we measure how the gap between the heuristic and the
+Lion and the oracle, and measure how the gap between the heuristic and the
 oracle widens with workload volatility (how fast the workload's center moves,
 and how often and how sharply it spikes). On a real six-node CockroachDB
 cluster, with wide-area latency injected between the nodes, we verify that
