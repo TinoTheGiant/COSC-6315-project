@@ -26,8 +26,17 @@
 \title{Reinforcement Learning for Dynamic Data\\
 Fragmentation and Allocation}
 
+% Course copy: named. For the CCGrid submission, set \anonymoustrue.
+\newif\ifanonymous
+\anonymousfalse
+\ifanonymous
 \author{\IEEEauthorblockN{Anonymous Author(s)}
 \IEEEauthorblockA{\textit{Submitted for double-blind review}}}
+\else
+\author{\IEEEauthorblockN{Tino Kaseke}
+\IEEEauthorblockA{University of Texas Permian Basin, Odessa, Texas, USA\\
+tinokaseke@gmail.com}}
+\fi
 
 \maketitle
 
@@ -37,18 +46,14 @@ place those shards by key, or by rebalancing rules that react to current load
 rather than to where the workload is heading. When the geographic center of a workload moves, as it does daily in
 multi-region services and abruptly during local events, placement drifts away
 from the traffic and request latency rises. We train a Deep Q-Network
-agent that adjusts placement continuously. Its actions move a shard's
-leaseholder (the copy that serves its reads and writes), move a replica, or split the shard, and its reward combines
-request latency, the volume of data moved, and load imbalance. We mask
-inapplicable actions, and we use multi-step returns so that a move is credited with
-the latency it saves in later windows. We train the agent in a simulator
+agent whose actions move a shard's leaseholder (the copy that serves its reads and writes), move a replica, or split the shard, and whose reward combines
+request latency, the volume of data moved, and load imbalance. We train the agent in a simulator
 of a six-region cluster and evaluate it on a six-node CockroachDB cluster with
-injected wide-area latency. A harness executes each action on the cluster and
-reads the resulting placement back before timing real transactions. We compare the agent with static hashing, a follow-traffic heuristic that each window moves the worst-placed shard towards its traffic, and a co-location planner modeled on Lion. In simulation the agent is 13.8\% faster
+injected wide-area latency, through a harness that executes each action and reads the resulting placement back before timing real transactions. We compare the agent with static hashing, a follow-traffic heuristic that each window moves the worst-placed shard towards its traffic, and a co-location planner modeled on Lion. In simulation the agent is 13.8\% faster
 than static hashing and moves about a fifth of the data the heuristic moves,
 but remains 17\,ms slower than that heuristic. On the cluster, over four
-workload seeds, the heuristic scores best under the agent's own reward on every seed. On average the two trained
-agents are 9.2\% and 9.9\% faster than static hashing. One of them is second on three of the
+workload seeds, the heuristic scores best under the agent's own reward on every seed. The two trained
+agents are 9.2\% and 9.9\% faster than static hashing on average; second place goes to one of them on three of the
 four seeds, and one loses ground to lease moves the database
 refuses. CockroachDB's own rebalancer, at its default settings, barely acts. On the cluster, static hashing and the
 heuristic both run about 14\% slower than the simulator predicts.
@@ -70,11 +75,12 @@ deep reinforcement learning, geo-distribution
 % AI tool used (for example Codex or Gemini) and what it did. Keep it
 % anonymous: no names, institution or grant until the camera-ready version.
 \section*{Acknowledgment}
-The author(s) used Anthropic's Claude throughout this work: to draft and revise text in
+\ifanonymous The author(s)\else The author\fi{} used Anthropic's Claude throughout this work: to draft and revise text in
 every section, to write and review the simulator, agent and cluster-harness
-code, to search for related work, and to check every reported number against
-the recorded runs. The author(s) reviewed and edited all of it and take full
-responsibility for the content.
+code, to search for related work, to check every cited source and every
+reported number against the recorded runs, and, in separate sessions, to
+review the paper adversarially and copy-edit it. \ifanonymous The author(s) reviewed\else The author reviewed\fi{} and edited all of it and
+\ifanonymous take\else takes\fi{} full responsibility for the content.
 
 % IEEEtran.bst is not obtainable in this environment, so the build uses
 % ieeetr, which ships with texlive base. On Overleaf, change this line to

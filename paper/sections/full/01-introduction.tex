@@ -15,15 +15,15 @@ come from.
 That arrangement works whilst the traffic stays where the designer expected it.
 In a service with users on several continents, served by a database spread
 across regions in the manner of Spanner~\cite{corbett2013spanner} or
-CockroachDB~\cite{taft2020cockroachdb}, it does not. The geographic
-center of the workload moves across the day as one region wakes and another
-sleeps, and it moves abruptly when something local draws attention to one
-region. A placement chosen for the morning is wrong by the evening. Every
-request that has to cross an ocean to reach its data pays the round-trip time
-of that ocean. A transaction touching shards held in several
-regions pays it repeatedly, because keeping the transaction atomic means
-coordinating every region it touches before it can commit. Latency therefore rises steadily as the mismatch between
-placement and traffic grows.
+CockroachDB~\cite{taft2020cockroachdb}, it does not. The geographic center of
+the workload moves across the day as one region wakes and another sleeps, and
+abruptly when something local draws attention to one region, so a placement
+chosen for the morning is wrong by the evening. Every request that has to cross
+an ocean to reach its data pays the round-trip time of that ocean, and a
+transaction touching shards held in several regions pays it repeatedly,
+because keeping it atomic means coordinating every region it touches before it
+can commit. Latency therefore rises steadily as the mismatch between placement
+and traffic grows.
 
 One response is to move the data when the traffic moves. A simple rule
 does this: in each decision window (the fixed interval at which placement is reconsidered), find the worst-placed shard (the one that would gain most by moving)
@@ -38,27 +38,26 @@ its own latency, partly because it reacts one window behind a target that has
 already moved again. The room for a learned policy, bounded above by the
 oracle, is therefore largest where the problem is hardest.
 
-We build a simulator of a six-region cluster
-with a workload whose geographic center drifts on a daily cycle and spikes
-locally. On it we define the placement problem as a Markov decision process
-with a flat list of 261 actions, each of which names the placement it wants to reach. We establish five reference
-points against which any learned policy must be judged: static hash
-partitioning, which never moves anything; a random control; the
-follow-traffic heuristic; a co-location planner modeled on Lion; and a
-per-window oracle that finds, by exhaustive search, the lowest latency any
-placement of the starting shards could reach. We measure how the
-gap between the heuristic and that oracle widens
-with workload volatility (how fast the workload's center moves, and how often and how sharply it spikes). On a real six-node CockroachDB cluster, with
-wide-area latency injected between the nodes, we verify that placement changes
-transaction latency by far more than the measurement noise. This must hold
-for anything learned in simulation to matter on a real cluster. We train a
-Deep Q-Network agent on the simulator, with action masking and multi-step returns.
-At volatility 4, over four training runs with different random seeds (learner seeds), it is 13.8\% faster than static
-hashing and moves a fifth of the data the heuristic moves. It stays
-17\,ms slower than the heuristic, however, and the heuristic keeps the lower objective cost at the
-migration weight used in training (the price the reward puts on moving data). Agents trained at twice that weight move more
-data, not less. Finally we run two trained agents, unchanged, on the cluster
-on four workload seeds, beside CockroachDB's own rebalancer. The heuristic again has the lowest cost on every seed, and one of the two agents is second on three of the four. On three seeds the database refuses many of one agent's lease moves, and that agent keeps repeating them. The database's rebalancer, left to itself, barely moves anything.
+We build a simulator of a six-region cluster whose workload center drifts on a
+daily cycle and spikes locally, and on it we state the placement problem as a
+Markov decision process with 261 actions, each of which names the placement it
+wants to reach. Against static hash partitioning, which never moves anything, a
+random control, the follow-traffic heuristic, a co-location planner modeled on
+Lion and the oracle, we measure how the gap between the heuristic and the
+oracle widens with workload volatility (how fast the workload's center moves,
+and how often and how sharply it spikes). On a real six-node CockroachDB
+cluster, with wide-area latency injected between the nodes, we verify that
+placement changes transaction latency by far more than the measurement noise,
+which must hold for anything learned in simulation to matter on a real
+cluster. We then train a Deep Q-Network agent. At volatility 4, over four
+training runs with different random seeds (learner seeds), it is 13.8\% faster
+than static hashing and moves a fifth of the data the heuristic moves, but it
+stays 17\,ms slower than the heuristic, which keeps the lower objective cost at
+the migration weight used in training (the price the reward puts on moving
+data). Run unchanged on the cluster on four workload seeds, beside
+CockroachDB's own rebalancer, two trained agents again lose to the heuristic on
+every seed, second place goes to one of them on three of the four, and the
+rebalancer, left to itself, barely moves anything.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

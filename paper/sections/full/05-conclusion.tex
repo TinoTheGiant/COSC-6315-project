@@ -9,56 +9,42 @@ autonomous database administrator, re-fragmenting and re-allocating shards
 as a workload's geographic center moves. It establishes four things: a measured problem statement; a cluster test that confirms the premise; a learned policy that makes a different trade from the follow-traffic heuristic, moving about a fifth of the data at higher latency and higher objective cost;
 and evidence that the baselines' order carries over from
 the simulator to the cluster.
-
-On a real six-node CockroachDB cluster, gathering leaseholders in the
-issuing region rather than spreading them changes p95 latency by
-1337.8\,ms. The follow-traffic heuristic is 16.9\,ms above
-an exact per-window oracle under slow drift and 75.4\,ms above it under fast
-drift,
-so the case for a learned policy depends on volatility.
-
-At volatility 4 the agent is 13.8\% faster than static hashing on held-out seeds. It is faster on average than the Lion-style co-location planner, though the 95\% interval includes zero, and it moves about a fifth of the data the heuristic moves, partly by splitting shards before moving them.
-Neither throttling the heuristic nor splitting evenly reproduces that trade.
-It is 17\,ms slower than the heuristic, and at the migration weight it was trained with
-the heuristic still has the lower objective cost. Rescoring the same
-behavior shows that the verdict turns on the price of movement. In simulation the mean of the four agents is the cheapest policy for any migration weight between 0.48 and 2.34, but two agents trained at twice the weight moved more data, not less. 
-On the cluster, the heuristic has the lowest cost on each of the four workload seeds, and one of the two agents is second on three of them. Agent~3 (from learner seed 3) is 9.2\% faster than static hashing on average. Agent~1, refused many lease moves that it kept repeating, is 9.9\% faster, and on one seed costs more than static hashing and the Lion-style planner. CockroachDB's own rebalancer barely acted in these episodes. On every seed the simulator is optimistic for static hashing and the heuristic, by 13.7\% and 13.5\% on average. The Lion-style planner slowed more on the cluster, partly because on one seed the database refused the same lease move 20 times, a refusal the simulator never makes.
+The follow-traffic heuristic
+is 16.9\,ms above an exact per-window oracle under slow drift and 75.4\,ms above
+it under fast drift, so the case for a learned policy depends on volatility. At
+volatility 4 the agent is 13.8\% faster than static hashing on held-out seeds
+and moves about a fifth of the data the heuristic moves, partly by splitting
+shards before moving them, but it is 17\,ms slower than the heuristic and has
+the higher objective cost at the weight it was trained with. Rescored, the four
+agents' mean is the cheapest policy for any migration weight between 0.48 and
+2.34, but two agents trained at twice the weight moved more data, not less. On
+the cluster the heuristic has the lowest cost on every seed, second place goes
+to one of the two agents on three of the four, the agents are 9.2\% and 9.9\%
+faster than static hashing on average, and CockroachDB's own rebalancer barely
+acted.
 
 % ---------------------------------------------------------------------
 \subsection{Future work}
 
-We list these in the order we would attempt them.
-
-Add learner seeds to the cluster evaluation. Four workload seeds with two
-trained agents order the baselines but already disagree about the agent's
-rank; an interval across learner seeds needs more of them.
-
-Measure what fragmentation adds. No agent with splitting disabled was trained,
-so the paper cannot say whether the \textsc{split} action earns its place.
-Training two or three agents with splits masked out, and comparing them on the
-same held-out seeds, would settle it.
-
-Condition the policy on the migration weight and the volatility.
-The weight analysis only rescales fixed behavior. Two agents trained at twice the
-weight moved more data, not less, and agents trained at
-volatility 4 fall further behind the heuristic at volatility 2. The
-policy does not yet respond to the conditions it is trained or run under. The next
-step is to give the policy the weight and the volatility as inputs and to train it
-across a range of both.
-
-Handle refused moves. The cluster refused lease transfers when a shard's
-leaseholder was not its Raft leader, whereas the simulator never refuses a move. One
-agent repeated refused moves for up to 43 windows. Masking a move the database
-has just refused would remove one source of the gap between simulator and cluster.
-
-Improve the learner. Validation latency drifts down only slowly after the first
-50{,}000 steps, and one run's best checkpoint came at step 40{,}000. Double Q-learning, a
-dueling head and prioritized replay, as combined in
-Rainbow~\cite{hessel2018rainbow}, are the next components to try. The best checkpoint
-should also be chosen on more than three evaluation episodes, and
-on the objective rather than latency alone.
-
-Fine-tune on the cluster. The harness already executes actions, reads the
-placement back and measures real transactions with the reward the simulator
-uses, which is the apparatus fine-tuning needs. At about 15\,s per step on
-the present runner, the compute budget is what limits this.
+Five steps follow, in the order we would attempt them. First, add learner
+seeds to the cluster evaluation: four workload seeds with two trained agents
+order the baselines but already disagree about the agent's rank, and an
+interval across learner seeds needs more of them. Second, measure what
+fragmentation adds: no agent with splitting disabled was trained, so the paper
+cannot say whether the \textsc{split} action earns its place; two or three
+agents trained with splits masked out, compared on the same held-out seeds,
+would settle it. Third, condition the policy on the migration weight and the
+volatility. Agents trained at twice the weight moved more data, not less, and
+agents trained at volatility 4 fall further behind the heuristic at
+volatility 2, so the policy does not yet respond to the conditions it is
+trained or run under; the next step is to give it the weight and the
+volatility as inputs and to train it across a range of both. Fourth, handle
+refused moves. The cluster refused lease transfers when a shard's leaseholder
+was not its Raft leader, whereas the simulator never refuses a move, and one
+agent repeated refused moves for up to 43 windows; masking a move the database
+has just refused would remove one source of the gap between simulator and
+cluster. Fifth, improve the learner. Validation latency drifts down only slowly
+after the first 50{,}000 steps, and one run's best checkpoint came at step
+40{,}000. Rainbow's other components~\cite{hessel2018rainbow} are the next to
+try, and the best checkpoint should be chosen on more than three validation
+episodes and on the objective rather than latency alone.

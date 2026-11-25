@@ -17,207 +17,142 @@
 
 \section{Related Work}
 
-Three bodies of work meet in this problem: the classical treatment of
-fragmentation and allocation as an optimization to be solved, recent systems
-that adapt placement to a moving workload, and the use of learning to replace
-hand-written database administration.
-
 \subsection{Fragmentation and allocation as an optimization problem}
 
-The classical treatment of how to divide a database and where to put the
-pieces is to state it as an optimization problem and solve it once. A cost model scores a candidate
-arrangement against an expected workload, and a solver searches for the
-arrangement that minimizes it. The result is then installed and the database
-runs with it.
-
-The literature divides the problem in two. Fragmentation asks how to cut the
-data; allocation asks where to put the pieces. Ceri et al.~\cite{ceri1982horizontal}
+The classical treatment states fragmentation (how to cut the data) and
+allocation (where to put the pieces) as an optimization problem: a cost model
+scores a candidate arrangement against an expected workload, a solver finds the
+best one, and the result is installed once. Ceri et al.~\cite{ceri1982horizontal}
 treat horizontal fragmentation, dividing a relation by rows, and Navathe et
-al.~\cite{navathe1984vertical} treat vertical fragmentation, dividing it by
-columns so that a fragment matches the attributes a transaction actually uses.
-Both optimize against an expected access pattern supplied in advance. On the
-allocation side, Apers~\cite{apers1988allocation} formalizes the placement of
-fragments across network sites as a cost minimization and analyzes its
-complexity. Sacc{\`a} and Wiederhold~\cite{sacca1985clustering} give a greedy
-construction for a cluster of processors, and March and
-Rho~\cite{march1995allocating} extend the objective to place operations as well
-as data, under capacity constraints. The standard synthesis of this material is
-the textbook treatment of {\"O}zsu and Valduriez~\cite{ozsu2011principles}, and
-Nashat and Amer~\cite{nashat2018taxonomy} give a taxonomy of the techniques that
-followed. The formulation remains current: Amer et
-al.~\cite{amer2017optimized} solve fragmentation and allocation together as one
-heuristic optimization, and Niu et al.~\cite{niu2026allocation} state the
-allocation problem as a balanced cut.
+al.~\cite{navathe1984vertical} vertical fragmentation, dividing it by
+columns so that a fragment matches the attributes a transaction uses; both
+optimize against an access pattern supplied in advance.
+Apers~\cite{apers1988allocation} formalizes allocation across network sites as
+a cost minimization.
 
-A second tradition avoids the optimization entirely. Consistent
+A second tradition avoids the optimization. Consistent
 hashing~\cite{karger1997consistent} assigns a key to a node through a function
 of the key alone, so that adding or removing a node moves only a small share of
-the data and no central directory is needed. CRUSH~\cite{weil2006crush} extends
-that to replicated data under user-defined failure domains, and a recent survey
-compares the family~\cite{coluzzi2023hashing}. The static baseline
-in this paper uses it, as do many key-value and object stores. It is also the
-root of the problem studied here: a function of the key cannot observe where a
-request came from.
-
-A placement solved once degrades as the real workload departs from the one it
-was solved against. That is tolerable under slow drift, but not when the workload's
-geographic center moves daily. The systems in the next group re-solve the
-problem as the workload changes.
+the data. The static baseline here uses it, as do many
+key-value and object stores. It is also the root of the problem studied here: a
+function of the key cannot observe where a request came from.
 
 \subsection{Adapting placement to a moving workload}
 
-A line of work makes the partitioning decision from the observed workload
-rather than from a design-time estimate. Schism~\cite{curino2010schism} builds a
-graph in which tuples accessed by the same transaction are joined by an edge,
-then partitions that graph to minimize distributed transactions whilst keeping
-partitions balanced. Pavlo et al.~\cite{pavlo2012skew} search the design space
-with an analytical cost model that accounts for skew as well as coordination
-cost. E-Store~\cite{taft2014estore} addresses the case where a small number of
-tuples carry most of the traffic, placing hot ranges individually whilst
-distributing cold data in large chunks. Clay~\cite{serafini2016clay} removes the
-restriction to hierarchical schemas, migrating blocks built around hot tuples
-together with the tuples co-accessed with them. Kamal et
-al.~\cite{kamal2016repartitioning} make the repartitioning incremental,
-recutting only the sub-graph that distributed transactions touch so that the
-scheme is refreshed as the workload drifts rather than recomputed.
-Promi~\cite{ding2025promi} addresses the migration itself rather than the
-decision, moving data at a finer granularity so that rebalancing does not stop
-transactions.
+Workload-driven partitioners decide from the observed workload instead of a
+design-time estimate. Schism~\cite{curino2010schism} partitions a graph whose
+edges join tuples accessed by the same transaction, minimizing distributed
+transactions whilst keeping partitions balanced. E-Store~\cite{taft2014estore} places
+a few hot ranges individually and distributes cold data in large chunks, and
+Clay~\cite{serafini2016clay} migrates blocks built around hot tuples together
+with the tuples co-accessed with them.
 
-A related line treats placement and replication as one problem rather than two
-stages. Atrey et al.~\cite{atrey2019unifying} make that argument directly for
-geo-distributed clouds, solving placement and replication jointly by overlapping
-correlation clustering, and Adnan et al.~\cite{adnan2025network} optimize
-placement against network cost in the same setting. Atrey et al. reach the joint framing this work uses, and both they and Adnan et al. reach their results with a solver rather than a learned policy.
-Akkio~\cite{annamalai2018akkio}, in production at Facebook, migrates small
-units of data between datacenters to cut access latency and cross-datacenter
-traffic, and SLOG~\cite{ren2019slog} gives each granule of data a home region
-by where it is accessed. Fluidity~\cite{kostler2023fluidity} moves the replicas of a replicated state
+Atrey et al.~\cite{atrey2019unifying} solve placement and replication jointly
+for geo-distributed clouds by overlapping correlation clustering, the joint
+framing this work uses, with a solver rather than a learned policy. Akkio~\cite{annamalai2018akkio}, in production at
+Facebook, migrates small units of data between datacenters to cut access
+latency and cross-datacenter traffic, SLOG~\cite{ren2019slog} gives each granule
+of data a home region by where it is accessed, and
+Fluidity~\cite{kostler2023fluidity} moves the replicas of a replicated state
 machine at run time towards the locations its client requests come from.
 CockroachDB's multi-region abstractions~\cite{vanbenschoten2022multiregion}
 let a developer declare data locality in SQL, which the database maps to
 replica placement and partitioning. In all four, geography drives placement,
 and none is presented as a learned policy.
 
-The workload-driven partitioners above (Schism, E-Store, Clay and their
-successors) share the premise of this work, that placement should follow the
-workload, and they share a limitation. Each re-solves an optimization problem
-when a trigger fires, using a cost model written by hand, and none improves from
-the outcomes of its own past decisions. Their cost models also carry no term
-for geographic distance, because they were designed for clusters in one data
-center; the geo-aware systems just described supply that term but are not
-learned. DynaMast~\cite{abebe2020dynamast} comes closest to this work's lease-move action
-(Section~\ref{sec:model}): it changes which replica is the master (the primary, in this paper's terms) as the workload shifts.
+The workload-driven partitioners share the premise of this work, that placement should
+follow the workload, and a limitation: each re-solves a hand-written cost model
+when a trigger fires, and none improves from the outcomes of its own decisions.
+Their cost models also have no term for geographic distance, because they were
+designed for clusters in one data center; the geo-aware systems supply that
+term but are not learned. DynaMast~\cite{abebe2020dynamast} comes closest to
+this work's lease move (Section~\ref{sec:model}): it changes which replica is
+the master (the primary, in this paper's terms) as the workload shifts.
 
 Lion~\cite{lion2024} is the closest system to this work in intent. It observes
-that a transaction is slow mainly because it spans machines. It therefore
+that a transaction is slow mainly because it spans machines, and it therefore
 arranges replicas so that some single node holds a copy of every partition a
-given transaction touches. That transaction can then commit locally, without
-the multi-round agreement protocol that a distributed commit
-requires. A graph-based analyzer groups partitions that are accessed together,
-a cost model assigns those groups to nodes subject to a load-balance
-constraint, and an LSTM predictor (a recurrent neural network for sequences) forecasts the workload so that replicas are
-provisioned before the shift rather than after it. Lion reports up to 2.7 times
-higher throughput and 76.4\% better scalability than the approaches it is
-compared against.
+transaction touches, which lets the transaction commit locally. A graph-based
+analyzer groups partitions accessed together, a cost model assigns the groups
+to nodes under a load-balance constraint, and an LSTM predictor (a recurrent
+neural network for sequences) forecasts the workload so that replicas are in
+place before the shift. It shows
+that adapting placement to a moving workload raises throughput, that migration
+cost and load balance belong in the objective, and that anticipating a shift
+does better than reacting to one. It also leaves three gaps. First, a
+hand-written cost model decides, so the system never improves from the outcomes
+of its own decisions. Second, its cost function counts remastering operations
+(changes of which replica is primary) and migration operations, weighted by
+access frequency, and has no distance term, so two placements that differ by an
+ocean score identically. Third, fragment boundaries are fixed: Lion moves
+replicas of a partition but never splits one.
 
-Lion shows that adapting placement to a moving workload raises
-throughput, that migration cost and load balance belong in the objective, and
-that anticipating a shift does better than reacting to one. It also leaves three gaps. First, the adaptation is a heuristic pipeline rather
-than a learned policy: the LSTM forecasts, but a hand-written cost model
-decides, so the system never improves from the outcomes of its own decisions.
-Second, geographic distance does not appear in its cost function. That function counts remastering operations (changes of which replica is primary) and migration operations, weighted by access frequency, so two placements that differ by an ocean score identically.
-Third, fragment boundaries are fixed, so Lion moves replicas of a partition but never
-splits one.
-
-GeoTP~\cite{geotp2025} supplies the geographic dimension that Lion does not
-have. It targets database middleware connecting heterogeneous data sources
-across regions, where the dominant costs are the network latency between the
-middleware and its data sources and the length of time a transaction holds
-locks whilst waiting on remote work. GeoTP reduces both: a decentralized
-prepare phase (the first, voting round of two-phase commit) cuts the number of network round trips a distributed transaction
-needs, and a latency-aware scheduler delays lock acquisition so that the
-contention window is shorter.
-
-GeoTP shows that a latency-aware scheduler is worth building, and
-its cost accounting is the model for the one used here. It optimizes the
-execution of transactions against a given placement, however, and does not
-change where the data sits. The two papers are therefore complementary:
-Lion adapts placement but ignores distance, whereas GeoTP accounts for
-distance but leaves placement fixed. This work addresses the gap between them.
+GeoTP~\cite{geotp2025} supplies the geographic dimension that Lion lacks. It
+targets middleware over heterogeneous data sources across regions, where the
+dominant costs are the network latency to those sources and the time a
+transaction holds locks whilst waiting on remote work, and it reduces both. Its cost
+accounting is the model for the one used here, but it optimizes execution
+against a given placement and does not change where the data sits. Lion thus
+adapts placement but ignores distance, whereas GeoTP accounts for distance but
+leaves placement fixed; this work addresses the gap between them.
 
 \subsection{Learning to administer a database}
 
-A separate line of work replaces hand-written database administration with
-learned policies. In configuration tuning, CDBTune~\cite{zhang2019cdbtune} treats the setting of database knobs (configuration parameters) as a reinforcement learning problem and learns from measured performance rather than from a regression over collected samples. QTune~\cite{li2019qtune} makes that tuning take the queries into account and can tune per query, per workload or per cluster, and the survey of Zhao et al.~\cite{zhao2023knob} covers the area. In query
-optimization, Neo~\cite{marcus2019neo} learns to produce execution plans and
-improves from the plans it has run. UDO~\cite{wang2021udo} spans both, tuning
-index selection and system parameters together and distinguishing parameters
-that are expensive to change from those that are cheap, which is the same
-distinction this work draws between moving a lease and moving a replica.
+Learned policies have also replaced hand-written administration in knob
+(configuration parameter) tuning, as in CDBTune~\cite{zhang2019cdbtune}, and in
+query optimization, as in Neo~\cite{marcus2019neo}. UDO~\cite{wang2021udo}
+tunes index selection and system parameters together, separating parameters
+that are expensive to change from cheap ones, the same distinction this work
+draws between moving a replica and moving a lease.
 
-Placement has received less attention within this family than tuning or
-optimization. RLRP~\cite{lu2022rlrp} is the nearest in method: a Deep Q-Network
-places the replicas of each virtual node in an object store, a second agent
-migrates replicas when a node joins, and the whole is validated on a real
-system, Ceph. Its objective is fairness. The reward is the negative standard
-deviation of node load, or, on heterogeneous hardware, the reciprocal of mean
-read response time. A placement is decided once, when a virtual node is created
-or the cluster changes size. The volume of data moved does not enter the
-reward, and the nodes share one cluster, so where a request originates plays no
-part. Two of its techniques recur here. When the highest-valued action is inapplicable,
-RLRP takes the next highest, which is action masking at selection time, as the
-agent here does. When the node count grows, it reuses the trained
-weights and starts the weights of the new inputs at zero, which is a direct way past the
-fixed region count this work assumes. Hilprecht et al.~\cite{hilprecht2020partitioning} learn a partitioning advisor for
-cloud databases with deep reinforcement learning, deciding how tables are
-partitioned rather than where their pieces sit geographically.
+Placement has received less attention in this line of work. RLRP~\cite{lu2022rlrp} is the nearest
+in method: a Deep Q-Network places the replicas of each virtual node in an
+object store, a second agent migrates replicas when a node joins, and the whole
+is validated on Ceph. Its reward is load fairness. A placement is decided once, when a virtual node is created or
+the cluster changes size; data moved does not enter the reward; and the nodes
+share one cluster, so request origin plays no part. Two of its techniques recur
+here: taking the next-highest action when the best is inapplicable, which is
+action masking at selection time, and, when the node count grows, reusing the
+trained weights with the new inputs' weights started at zero, a direct way past
+the fixed region count this work assumes.
+Hilprecht et al.~\cite{hilprecht2020partitioning} learn how cloud tables are
+partitioned, not where the pieces sit geographically.
 Neuroshard~\cite{eldeeb2022neuroshard} learns shard assignments from past
-queries with deep reinforcement learning, optimizing several objectives
-together, fanout (the number of shards a query touches) and load balance among them. Costa Filho et al.~\cite{costafilho2020adaptive} change replica
-placement in a key-value store incrementally with deep reinforcement learning
-to balance load. Sibyl~\cite{singh2022sibyl} places data across
-hybrid storage devices with online reinforcement learning, and
-Harmonia~\cite{nadig2026harmonia} builds on that to coordinate placement and
-migration as two agents. Zheng et al.~\cite{zheng2024replica} place replicas in
-an edge--cloud setting where geography does enter the objective, alongside
-reliability and load, and Liao et al.~\cite{liao2019deep} place data blocks inside a data center to cut latency, with a model learned from historical accesses rather than with reinforcement learning. Closest of all in problem
-statement, Mahmoud et al.~\cite{mahmoud2025rlfawm} formulate fragment allocation
-and replication as a Markov decision process and solve it with tabular
-Q-learning, driven by read, write and co-access matrices.
+queries, optimizing several objectives together, fanout (the number of shards a
+query touches) and load balance among them, and Costa Filho et
+al.~\cite{costafilho2020adaptive} change replica placement in a key-value store
+incrementally to balance load, both with deep reinforcement learning.
+Others learn placement across hybrid storage devices, as in
+Sibyl~\cite{singh2022sibyl} and Harmonia~\cite{nadig2026harmonia}, which adds a
+migration agent, or across edge and cloud nodes, as in Zheng et
+al.~\cite{zheng2024replica}, where geography enters the objective alongside
+reliability and load. Closest in
+problem statement, Mahmoud et al.~\cite{mahmoud2025rlfawm} formulate fragment
+allocation and replication as a Markov decision process and solve it with
+tabular Q-learning over read, write and co-access matrices.
 
-These differ from the present work in one or both of two ways. Most place data
-across \emph{devices or tiers} that differ in speed, or across edge nodes that
-differ in capacity, rather than across regions that differ in distance from the
-traffic. And most hold the unit of placement fixed: a fragment, an object or a
-block is placed, never split. Neuroshard learns the shard assignment itself. Mahmoud et al.~\cite{mahmoud2025rlfawm} come closest on the first axis but, as their abstract describes the method, still allocate given fragments. A tabular Q-function (one stored value per state and action) also does not extend to the state space that a six-region cluster with 20 shards produces.
+Most of these place data across devices, tiers or edge nodes that differ in
+speed or capacity, not across regions that differ in distance from the
+traffic, and most hold the unit of placement fixed: a fragment, an object or a
+block is placed, never split. Neuroshard learns the shard assignment itself.
+Mahmoud et al. come closest on the first point but, as their abstract describes
+the method, still allocate given fragments, and a tabular Q-function (one stored
+value per state and action) does not extend to the state space of a six-region
+cluster with 20 shards.
 
-\subsection{Positioning}
-
-This work gives one learned policy both fragmentation and geographic
-placement actions, for transactional workloads. The workload-driven partitioners re-solve a
-hand-written cost model and do not learn from their own outcomes. Lion learns a
-forecast but not a policy, and its cost model counts replica operations and has no distance term. GeoTP optimizes execution against a fixed placement. The
-learned administration systems address knobs, plans and indexes. Akkio, SLOG, Fluidity and CockroachDB's multi-region design see geography but are
-not presented as learned policies.
-The learned placement systems address storage tiers, edge nodes and, in RLRP,
-the even spread of load within one cluster. None addresses a transactional workload whose
-geographic center moves, and only Neuroshard learns the shard assignment
-itself.
-
-The contribution is this: the agent chooses, in one action space,
-where a shard's primary copy sits, where its replicas sit, and where the
-boundary between two shards falls. Its reward is the negative of a cost that combines
-request latency, the volume of data moved, and load imbalance. We do not show that
-splitting is what earns its result: splits are at the midpoint,
-irreversible and capped at 20 shards, and we trained no agent with splitting disabled
-for comparison.
+Of the learned placement systems above, none addresses a transactional
+workload whose geographic center moves, and only Neuroshard learns the shard
+assignment itself. The contribution here is that one agent chooses, in one
+action space, where a shard's primary sits, where its replicas sit, and where
+the boundary between two shards falls, with a reward that is the negative of a
+cost combining request latency, the volume of data moved, and load imbalance.
+We do not show that splitting is what earns its result: splits are at the
+midpoint, irreversible and capped at 20 shards, and we trained no agent with
+splitting disabled for comparison.
 
 Two qualifications apply. First, we do not claim the contribution is new. Searches of Semantic Scholar, OpenAlex and arXiv returned no paper that learns
 fragmentation and geographic placement jointly for transactional workloads.
 However, we reached IEEE Xplore and the ACM Digital Library only through those
 aggregators, so the search does not go as far as a novelty claim would
 require. Second, on latency alone the agent does not outperform the
-hand-written heuristic it is meant to replace. What this paper establishes is
-the problem, the measurement apparatus, the baselines, and the conditions under
-which a learned policy has room to win.
+hand-written heuristic it is meant to replace.
