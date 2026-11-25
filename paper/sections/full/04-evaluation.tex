@@ -238,9 +238,9 @@ more transactions span several shards, and still moving more data than the
 agent.
 
 Lease moves, which the objective does not charge, make up 49 to 88\% of the
-agents' actions in simulation. On the cluster, 131 to 188 of each 200-window episode's actions moved
-a lease, against 111 to 122 for the heuristic, and 36 to 81 of them returned a
-shard's lease to the region it had just left. The heuristic never did. A lease
+agents' actions in simulation. On the cluster, 125 to 193 of each 200-window episode's actions moved
+a lease, against 111 to 122 for the heuristic, and 61 to 175 of them returned a
+shard's lease, in the next window, to the region it had left in the window before. The heuristic never did. A lease
 transfer can briefly delay requests to that shard, which the measurement,
 taken after each move settles, does not see. Tail latency ranks the policies as the means do, with one exception: the Lion-style planner has the lowest p95 of all, although its mean is higher than every agent's. The agents' mean per-window p95 is 525 to 532\,ms, against 517 for the heuristic, 514 for Lion-style and 623 for static hashing.
 
@@ -295,10 +295,10 @@ Simulator & 0.0 & 1.747 & \textbf{1.582} & 1.917 & 1.959 \\
           & 0.6 & \textbf{1.800} & 1.842 & 1.925 & 1.959 \\
           & 1.0 & \textbf{1.834} & 2.015 & 1.931 & 1.959 \\
 \addlinespace
-Cluster   & 0.0 & 2.010 & \textbf{1.785} & 2.391 & 2.243 \\
-          & 0.3 & 2.028 & \textbf{1.910} & 2.396 & 2.243 \\
-          & 0.6 & 2.045 & \textbf{2.034} & 2.400 & 2.243 \\
-          & 1.0 & \textbf{2.069} & 2.199 & 2.406 & 2.243 \\
+Cluster   & 0.0 & 2.083 & \textbf{1.785} & 2.391 & 2.243 \\
+          & 0.3 & 2.121 & \textbf{1.910} & 2.396 & 2.243 \\
+          & 0.6 & 2.160 & \textbf{2.034} & 2.400 & 2.243 \\
+          & 1.0 & 2.210 & \textbf{2.199} & 2.406 & 2.243 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -332,8 +332,8 @@ the 1\,GB cluster table is scaled to. Imb.: imbalance. Source:
 Policy & Cluster ms & p95 & Sim. & GB & Imb. & Cost \\
 \midrule
 Follow & 169.0 (161--175) & 552 & 148.8 & 827.4 & 0.96 & 1.910 \\
-Agent 3 & 192.4 (174--204) & 618 & 162.0 & 118.5 & 0.86 & 2.028 \\
 Agent 1 & 198.4 (191--203) & 613 & 166.1 &  79.7 & 0.75 & 2.070 \\
+Agent 3 & 200.0 (175--215) & 628 & 169.2 & 253.9 & 0.83 & 2.121 \\
 CockroachDB & 222.5 (206--248) & 694 & -- & 0.0 & 0.54 & 2.279 \\
 Static & 220.2 (206--234) & 690 & 193.5 &   0.0 & 0.41 & 2.243 \\
 Lion   & 226.8 (192--276) & 699 & 183.4 &  30.0 & 1.24 & 2.396 \\
@@ -341,15 +341,13 @@ Lion   & 226.8 (192--276) & 699 & 183.4 &  30.0 & 1.24 & 2.396 \\
 \end{tabular}
 \end{table}
 
-On every one of the four seeds the heuristic has the lowest cost. Agent~3 is second on seeds 2000 and 2002 and third, behind agent~1, on 2001 and 2003. Agent~3 is faster than static hashing on every seed, by 13.4 to 39.8\,ms (27.8\,ms, 12.6\%, on average). It is slower than the heuristic on every seed, by 12.8 to 28.5\,ms (23.4\,ms on average), whilst moving 14\% of the heuristic's data. It is faster than the Lion-style planner on three seeds, by up
-to 72.8\,ms, and level with it on seed 2000 (1.2\,ms slower), where its lower
-imbalance still gives it the lower cost. Its tail is lower than static
-hashing's on every seed (p95 524 to 707 against 621 to 783\,ms).
+On every one of the four seeds the heuristic has the lowest cost. Second place goes to the Lion-style planner on seed 2000, to agent~1 on 2001 and 2003, and to agent~3 on 2002; on 2003 agent~3 is fifth of six. Agent~3 is faster than static hashing on every seed, by 10.5 to 38.1\,ms (20.2\,ms, 9.2\%, on average), and by 10.4 to 37.1\,ms against a static control run in its own jobs. It is slower than the heuristic on every seed, by 14.5 to 40.9\,ms (31.0\,ms on average), whilst moving 31\% of the heuristic's data. It is faster than the Lion-style planner on seeds 2001 and 2002, by 60.9 and 58.9\,ms, and slower on 2000 and 2003, by 4.0 and 8.9\,ms. Its tail is lower than static
+hashing's on every seed (p95 517 to 726 against 621 to 783\,ms). On seed 2003 it moved 745\,GB, against 302\,GB in simulation, with 74 replica moves against 30; on seed 2001 the database refused 17 of its lease moves, all with the reason given below.
 
 The simulator is optimistic on every seed. On the cluster, static hashing is
 slower by 22.0 to 33.7\,ms (13.7\% on average), the heuristic by 18.8 to 21.7\,ms
-(13.5\%) and agent~3 by 27.6 to 31.6\,ms (18.7\%). A
-simulator that is 13.5 to 19\% optimistic still ranks policies correctly only when their latencies
+(13.5\%), agent~3 by 20.0 to 39.3\,ms (18.0\%) and agent~1 by 22.6 to 36.6\,ms (19.6\%). A
+simulator that is 13.5 to 24\% optimistic still ranks policies correctly only when their latencies
 differ by more than their offsets do. Here it does: on each seed, the three
 baselines fall in the same order on the cluster as in the simulator.
 
@@ -367,7 +365,7 @@ large on seed 2001 with none. Its placements are also the most concentrated
 We did not measure this; it is a hypothesis. The heuristic met the same refusal on seeds 2002 and 2003 (6
 and 4 actions), so its data moved there falls short of the simulator's.
 
-Agent~1 slows more on the cluster than agent~3, and most of the difference comes on the three seeds where the database refused many of its lease moves. It is slower than the heuristic on
+On average agent~1 slows on the cluster by about as much as agent~3 (19.6\% against 18.0\%), but by more on the three seeds where the database refused many of its lease moves than on the fourth. It is slower than the heuristic on
 every seed, by 25.1 to 35.2\,ms, and faster than static hashing on every
 seed, by 3.8 to 31.9\,ms (21.8\,ms, 9.9\%, on average), with a lower tail on
 every seed. But on seeds 2000 to 2002 the database refused 108 to 134 of its
@@ -387,9 +385,9 @@ database does not, by itself, change placement to follow a drifting workload, an
 is what the heuristic and the agents add.
 
 On the cluster's four-seed means (Table~\ref{tab:weight}) the heuristic is
-cheapest up to $w=0.63$ and agent~3 beyond it; the Lion-style planner never
-is. Per seed the crossing falls between 0.36 and 0.73, around the simulator's
-0.48.
+cheapest up to $w=1.04$, agent~3 from there to 1.26 and static hashing beyond; the Lion-style planner never
+is. Per seed, agent~3's crossing with the heuristic ranges from 0.35 to 6.8, against 0.52 for
+learner seed 3 in simulation.
 
 % ---------------------------------------------------------------------
 \subsection{Threats to validity}
@@ -410,12 +408,12 @@ The simulator's cost model is analytic, and the cluster runs on one host with
 \texttt{netem} latency and no injected jitter or loss. Q1 and Q5 establish that placement
 matters on hardware and that the baselines' order on each seed carries over; they do not establish that the
 simulator's magnitudes are right. It is about 14\% optimistic for static
-hashing and the heuristic, 19\% for the agent and 24\% for the Lion-style
+hashing and the heuristic, 18 to 20\% for the agents and 24\% for the Lion-style
 planner.
 
 The cluster results rest on four workload seeds and two learner seeds, one
 episode each, which supports an ordering of the baselines but not an interval.
-Agent~1 and CockroachDB ran in later GitHub Actions jobs, at a later code commit, than agent~3 and the baselines. No baseline was rerun beside them, so we have not measured how much results differ between jobs.
+The agents and CockroachDB ran in later GitHub Actions jobs, at later code commits, than the baselines. A static control run beside agent~3 came within 1.7\,ms of the original static episodes on every seed; agent~1 and CockroachDB had no such control.
 
 The simulator completes a move within the window it is issued, and a split
 renumbers the shards after it, so the agent's observation of a given shard

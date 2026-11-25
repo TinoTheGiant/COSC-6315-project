@@ -58,7 +58,7 @@ hashing and moves a fifth of the data the heuristic moves. It stays
 17\,ms slower than the heuristic, however, and the heuristic keeps the lower objective cost at the
 migration weight used in training (the price the reward puts on moving data). Agents trained at twice that weight move more
 data, not less. Finally we run two trained agents, unchanged, on the cluster
-on four workload seeds, beside CockroachDB's own rebalancer. The heuristic again has the lowest cost on every seed, and one of the two agents is always second. On three seeds the database refuses many of one agent's lease moves, and that agent keeps repeating them. The database's rebalancer, left to itself, barely moves anything.
+on four workload seeds, beside CockroachDB's own rebalancer. The heuristic again has the lowest cost on every seed, and one of the two agents is second on three of the four. On three seeds the database refuses many of one agent's lease moves, and that agent keeps repeating them. The database's rebalancer, left to itself, barely moves anything.
 Fig.~\ref{fig:architecture} shows how the simulator, the agent and the
 cluster fit together, and which three things have to agree between them for a
 policy trained in one to mean anything in the other.

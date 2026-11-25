@@ -844,3 +844,40 @@ primary_only, held-out seeds 2000 to 2007. The baselines are identical to before
   retrained models, results/runs/20261123T0358*-gen-v2-<run>: 167.40, 168.52,
   170.09 ms; with seed 1 (170.50) mean 169.13 ms, follow 126.93 (42.2 ms ahead).
   Recorded in results/recorded/generalization-v2.csv.
+
+## Cluster: retrained agent 3 with a same-job static control (23 November 2026)
+
+Actions 45110441027 (2000), 45110634600 (2001), 45110678608 (2002),
+45110817319 (2003). Policies `agent static`. Model from Train agent run
+44223258603 (learner seed 3, n_steps 3, checkpoint step 40,000), run
+unchanged. Volatility 4, RF 3, strong reads, N = 200, 200 windows. Checkout
+commit aa75491 as printed by the jobs (local aa75491; reconcile). Numbers
+copied from each job summary. The per-step lines are in the job logs; the
+episode CSVs are still to be archived.
+
+| seed | agent ms | GB | imbalance | cost | p95 | lease changes | refused | static_ctl ms | sim ms (agent) |
+|---|---|---|---|---|---|---|---|---|---|
+| 2000 | 195.66 | 100.1 | 1.016 | 2.073 | 601.4 | 186 | 0 | 206.11 | 168.63 |
+| 2001 | 215.48 | 120.5 | 0.781 | 2.251 | 726.1 | 170 | 17 | 235.36 | 176.23 |
+| 2002 | 175.18 | 49.9 | 0.870 | 1.846 | 517.1 | 193 | 0 | 212.28 | 155.22 |
+| 2003 | 213.74 | 745.1 | 0.661 | 2.315 | 668.0 | 125 | 0 | 225.13 | 176.81 |
+
+- The same-job static control is within 1.7 ms of the original static
+  episodes on every seed, so cross-job comparisons with the baselines hold for
+  this agent.
+- Means: 200.0 ms, 253.9 GB, imbalance 0.83, cost 2.121. Against static:
+  20.2 ms faster (9.2%); against follow: 31.0 ms slower, moving 31% of its
+  data. Simulator offset 18.0% (per-seed mean).
+- Second place by cost: Lion-style (2000), agent 1 (2001, 2003), agent 3
+  (2002). Agent 3 is fifth of six on 2003.
+- Seed 2003: 745 GB on the cluster against 302 GB in simulation (74 replica
+  moves against 30). Seed 2001: 17 lease moves refused, reason "local replica
+  not raft leader", target n1.
+- Lease reversals (same shard, three consecutive windows): 112, 99, 175, 61,
+  parsed from the job logs.
+- Cluster weight analysis with this agent: follow cheapest to w = 1.04,
+  agent 3 to 1.26, static beyond.
+- The one-step agent 3 rows (43674558770) are kept in cluster-eval.csv as
+  `agent_n1` and are no longer used by the paper.
+- `Not claimed:` that agent 3's seed-2003 behaviour is understood; it is
+  reported as observed.
